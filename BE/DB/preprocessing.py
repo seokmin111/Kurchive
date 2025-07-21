@@ -1,5 +1,10 @@
 import csv
 import pandas as pd
+import re
+import requests
+
+from BE.AddressExtraction import get_address
+from BE.AddressLatLong import get_coords_from_address
 
 df = pd.read_csv('restaurants/restaurants.csv')
 '''
@@ -19,3 +24,36 @@ price_max           -- 생략 (null로)
 created_at          -- CURRENT_TIMESTAMP 또는 null로
 
 '''
+processed_data = []
+for idx, row in df.iterrows():
+    name = row["Name"]
+    summary = row["한줄평"]
+    description = row["추천 메뉴/대표 메뉴"]
+    rating = row["별점"] if not pd.isna(row["별점"]) else None
+
+    raw_location = row["링크"]
+    match = re.search(r"\((https?://[^\s\)]+)\)", raw_location)
+    location_link = match.group(1) if match else None
+    address = re.sub(r"\(https?://[^\s\)]+\)", "", raw_location).strip()
+
+    lat, lon = get_coords_from_address(address) if address else (None, None)
+
+    processed_data.append({
+        "name": name,
+        "address": address,
+        "location_link": location_link,
+        "latitude": lat,
+        "longitude": lon,
+        "location_tag_id": None,
+        "uploaded_by": 1,
+        "rating": rating,
+        "summary": summary,
+        "description": description,
+        "price_min": None,
+        "price_max": None,
+        "created_at": None
+    })
+
+# 4. 저장
+output_df = pd.DataFrame(processed_data)
+output_df.to_csv("restaurants_ready.csv", index=False)
