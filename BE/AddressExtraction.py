@@ -1,5 +1,8 @@
 import sys
 import os
+import sys, os
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, BASE_DIR)
 
 from set_path import *  
 from urllib.parse import urlparse, parse_qs
@@ -8,7 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-from keys import KAKAO_REST_API_KEY
+from BE.keys import KAKAO_REST_API_KEY
 
 # 단축 URL 풀기
 def expand_short_url(short_url: str) -> str:
