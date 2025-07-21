@@ -32,12 +32,12 @@ def extract_kakao_place_id(full_url: str) -> str:
 
 # 주소 추출
 ## 1. 네이버
-def get_address(url : str):
+def get_naver_address(url : str):
     full_url = expand_short_url(url)
     place_id = extract_naver_place_id(full_url)
     
-    print("Full URL:", full_url)
-    print("Place ID:", place_id)
+    # print("Full URL:", full_url)
+    # print("Place ID:", place_id)
     
     url = f'https://map.naver.com/p/api/place/summary/{place_id}'
     headers = {
@@ -89,7 +89,7 @@ def search_place_and_get_address(place_name: str, api_key: str) -> str:
         if result["documents"]:
             doc = result["documents"][0]  # 가장 상위 검색 결과
             address = doc.get("road_address_name") or doc.get("address_name")
-            print("검색된 주소:", address)
+            # print("검색된 주소:", address)
             return address
         else:
             print("장소 검색 결과 없음")
@@ -108,19 +108,37 @@ def get_kakao_address(short_url: str) -> str:
     if not place_id:
         return "place_id를 추출할 수 없습니다."
 
-    print("Full URL:", full_url)
-    print("Place ID:", place_id)
+    #print("Full URL:", full_url)
+    #print("Place ID:", place_id)
 
     place_name = extract_place_name_from_html(place_id)
     
     if not place_name:
         return "장소명을 추출할 수 없습니다."
 
-    print("장소명:", place_name)
+    #print("장소명:", place_name)
 
     address = search_place_and_get_address(place_name, KAKAO_REST_API_KEY)
     return address if address else "주소를 찾을 수 없습니다."
 
+# 네이버 카카오 통합
+def get_address(url):
+    full_url = expand_short_url(url)
+    
+    if full_url is None:
+        return "No full url"
+    
+    if "naver.com" in full_url:
+        print("네이버")
+        return get_naver_address(url)
+    
+    elif "kakao.com" in full_url or "place.map.kakao.com" in full_url:
+        print("카카오")
+        return get_kakao_address(url)
+    
+    else:
+        message = "지원하지 않는 링크 형식입니다."
+        return message
 
 # # 네이버 예시
 # url = "https://naver.me/GubwElwt"
