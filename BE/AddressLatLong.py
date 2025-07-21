@@ -1,4 +1,6 @@
+from set_path import * 
 import requests
+
 
 from AddressExtraction import get_address
 from keys import KAKAO_REST_API_KEY
@@ -30,7 +32,7 @@ def get_coords_from_address(address: str) -> tuple[str, str] | None:
         return None
     
 # 예시
-
+'''
 address = get_address("https://naver.me/GubwElwt")
 print(address)
 
@@ -39,3 +41,4 @@ coords = get_coords_from_address(address)
 if coords:
     print("위도 :", coords[0])
     print("경도 :", coords[1])
+'''

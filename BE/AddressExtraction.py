@@ -1,3 +1,7 @@
+import sys
+import os
+
+from set_path import *  
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 

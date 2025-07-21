@@ -1,7 +1,19 @@
+import sys
+import os
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 import csv
 import pandas as pd
 import re
 import requests
+
+# 커카이브 디렉토리를 명시적으로 path에 추가
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 from BE.AddressExtraction import get_address
 from BE.AddressLatLong import get_coords_from_address
