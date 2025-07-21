@@ -47,8 +47,11 @@ for idx, row in df.iterrows():
     match = re.search(r"\((https?://[^\s\)]+)\)", raw_location)
     location_link = match.group(1) if match else None
     address = re.sub(r"\(https?://[^\s\)]+\)", "", raw_location).strip()
-
-    lat, lon = get_coords_from_address(address) if address else (None, None)
+    try:
+        lat, lon = get_coords_from_address(address) if address else (None, None)
+    except Exception as e:
+        print(f"[{idx}] 주소 변환 에러: {address} → {e}")
+        lat, lon = (None, None)
 
     processed_data.append({
         "name": name,
