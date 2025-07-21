@@ -111,6 +111,7 @@ Table ingredient_units {
 Table recipes {
   id int [pk, increment]
   title varchar(100) [not null]
+  description text //이 음식에 대한 간략한 설명
   uploader_id int [ref: > users.id]
   base_serving int [not null]             // 기준 인분
   thumbnail_url  text // 대표 이미지. 선택
