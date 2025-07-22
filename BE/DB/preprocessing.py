@@ -38,31 +38,39 @@ for idx, row in df.iterrows():
     name = row["Name"]
     summary = row["한줄평"]
     description = row["추천 메뉴/대표 메뉴"]
-    rating = row["별점"] if not pd.isna(row["별점"]) else None
+    
+    # 별점
+    raw_rating = row["별점"]
+    if isinstance(raw_rating, str):
+        rating = raw_rating.count("★")
+    elif not pd.isna(raw_rating):
+        # 혹시 숫자형으로 들어올 경우 (예외 처리용)
+        rating = float(raw_rating)
+    else:
+        rating = None
 
-    raw_location = row["링크"]
+    raw_location = row["위치"]
     location_link = None
     address = None
 
-    # NaN 방지: raw_location이 문자열일 때만 파싱
     if isinstance(raw_location, str):
-        # 괄호 안 링크 추출
-        match = re.search(r"\((https?://[^\s\)]+)\)", raw_location)
-        location_link = match.group(1) if match else None
+        # 🔧 줄바꿈 기준 분리
+        parts = raw_location.strip().splitlines()
+        address = parts[0].strip() if len(parts) > 0 else None
+        location_link = parts[1].strip() if len(parts) > 1 else None
 
-        # 링크로부터 주소 추출
-        if location_link:
-            try:
-                address = get_address(location_link)
-            except Exception as e:
-                print(f"[{idx}] 주소 추출 실패: {location_link} → {e}")
-
-    # 주소로 위경도 추출
+    # 주소 → 위경도
     try:
         lat, lon = get_coords_from_address(address) if address else (None, None)
     except Exception as e:
         print(f"[{idx}] 좌표 변환 실패: {address} → {e}")
         lat, lon = (None, None)
+
+    print(f"\n========== [{idx}] {name} ==========")
+    print(f"📍 address: {address}")
+    print(f"🔗 location_link: {location_link}")
+    print(f"🧭 lat/lon: {lat}, {lon}")
+
 
     processed_data.append({
         "name": name,
