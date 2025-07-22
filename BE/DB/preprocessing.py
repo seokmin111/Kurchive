@@ -10,13 +10,10 @@ import pandas as pd
 import re
 import requests
 
-# 커카이브 디렉토리를 명시적으로 path에 추가
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
 
 from BE.AddressExtraction import get_address
 from BE.AddressLatLong import get_coords_from_address
+
 
 df = pd.read_csv('restaurants/restaurants.csv')
 '''
@@ -44,13 +41,27 @@ for idx, row in df.iterrows():
     rating = row["별점"] if not pd.isna(row["별점"]) else None
 
     raw_location = row["링크"]
-    match = re.search(r"\((https?://[^\s\)]+)\)", raw_location)
-    location_link = match.group(1) if match else None
-    address = re.sub(r"\(https?://[^\s\)]+\)", "", raw_location).strip()
+    location_link = None
+    address = None
+
+    # NaN 방지: raw_location이 문자열일 때만 파싱
+    if isinstance(raw_location, str):
+        # 괄호 안 링크 추출
+        match = re.search(r"\((https?://[^\s\)]+)\)", raw_location)
+        location_link = match.group(1) if match else None
+
+        # 링크로부터 주소 추출
+        if location_link:
+            try:
+                address = get_address(location_link)
+            except Exception as e:
+                print(f"[{idx}] 주소 추출 실패: {location_link} → {e}")
+
+    # 주소로 위경도 추출
     try:
         lat, lon = get_coords_from_address(address) if address else (None, None)
     except Exception as e:
-        print(f"[{idx}] 주소 변환 에러: {address} → {e}")
+        print(f"[{idx}] 좌표 변환 실패: {address} → {e}")
         lat, lon = (None, None)
 
     processed_data.append({
@@ -68,7 +79,10 @@ for idx, row in df.iterrows():
         "price_max": None,
         "created_at": None
     })
+    
+    # print(processed_data)
+
 
 # 4. 저장
 output_df = pd.DataFrame(processed_data)
-output_df.to_csv("restaurants_ready.csv", index=False)
+output_df.to_csv("restaurants_ready.csv", index=False, encoding = "utf-8-sig")
