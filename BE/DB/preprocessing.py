@@ -93,4 +93,9 @@ for idx, row in df.iterrows():
 
 # 4. 저장
 output_df = pd.DataFrame(processed_data)
+output_df["summary"] = output_df["summary"].fillna("한줄평이 없습니다.")
+output_df["description"] = output_df["description"].fillna("후기가 없습니다.")
+output_df["price_min"] = 0
+output_df["price_max"] = 0
+output_df["location_tag_id"] = 0
 output_df.to_csv("restaurants_ready.csv", index=False, encoding = "utf-8-sig")
