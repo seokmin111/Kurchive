@@ -14,3 +14,6 @@ venv/
 # 문서 파일 (기획서 등)
 *.pptx
 *.hwp
+
+# Secret keys
+BE/keys.py
