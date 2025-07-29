@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-from BE.keys import KAKAO_REST_API_KEY
+KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 
 # 단축 URL 풀기
 def expand_short_url(short_url: str) -> str:
@@ -39,28 +39,29 @@ def extract_kakao_place_id(full_url: str) -> str:
 
 # 주소 추출
 ## 1. 네이버
-def get_naver_address(url : str):
-    full_url = expand_short_url(url)
-    place_id = extract_naver_place_id(full_url)
-    
-    # print("Full URL:", full_url)
-    # print("Place ID:", place_id)
-    
-    url = f'https://map.naver.com/p/api/place/summary/{place_id}'
+def get_naver_address_from_name(place_name: str) -> dict | None:
+    """
+    네이버 Local API: 식당 이름으로 주소 + 위경도 검색
+    """
+    url = "https://naveropenapi.apigw.ntruss.com/map-place/v1/search"
     headers = {
-        'User-Agent': 'Mozilla/5.0',
-        'Referer': f'https://map.naver.com/p/entry/place/{place_id}'
+        "X-NCP-APIGW-API-KEY-ID": NAVER_CLIENT_ID,
+        "X-NCP-APIGW-API-KEY": NAVER_CLIENT_SECRET,
     }
-
-    res = requests.get(url, headers=headers)
+    params = {"query": place_name}
+    res = requests.get(url, headers=headers, params=params)
     data = res.json()
-    road_address = data.get("data", {}).get("nmapSummaryBusiness", {}).get("roadAddress")
-    
-    if not road_address:
-        message = "주소 정보가 없습니다."
-        print(message)
-    else:
-        return road_address
+    places = data.get("places")
+    if not places:
+        return None
+
+    p = places[0]
+    return {
+        "road_address": p.get("road_address"),
+        "address": p.get("jibun_address"),
+        "lat": p.get("y"),
+        "lon": p.get("x"),
+    }
 
 ## 2. 카카오에서 주소 파싱
 ### 1단계 : 장소 이름 추출
@@ -82,51 +83,22 @@ def extract_place_name_from_html(place_id: str) -> str:
         print("HTML 파싱 실패:", e)
         return None
 
-### 2단계 : 카카오맵 API로 장소명 입력 -> 도로명 주소 추출
-def search_place_and_get_address(place_name: str, api_key: str) -> str:
-    url = "https://dapi.kakao.com/v2/local/search/keyword.json"
-    headers = {'Authorization': f'KakaoAK {KAKAO_REST_API_KEY}'}
-    params = {'query': place_name}
-    
-    try:
-        res = requests.get(url, headers=headers, params=params)
-        res.raise_for_status()
-        result = res.json()
-
-        if result["documents"]:
-            doc = result["documents"][0]  # 가장 상위 검색 결과
-            address = doc.get("road_address_name") or doc.get("address_name")
-            # print("검색된 주소:", address)
-            return address
-        else:
-            print("장소 검색 결과 없음")
-            return None
-    except Exception as e:
-        print("장소 검색 API 실패:", e)
-        return None
-
  ### 3단계 : 카카오 1, 2단계 전체 통합   
-def get_kakao_address(short_url: str) -> str:
-    full_url = expand_short_url(short_url)
+# 카카오: URL 기반으로 수정
+def get_kakao_address(url: str) -> dict | None:
+    full_url = expand_short_url(url)
     if not full_url:
-        return "단축 URL을 확장할 수 없습니다."
+        return None
 
     place_id = extract_kakao_place_id(full_url)
     if not place_id:
-        return "place_id를 추출할 수 없습니다."
-
-    #print("Full URL:", full_url)
-    #print("Place ID:", place_id)
+        return None
 
     place_name = extract_place_name_from_html(place_id)
-    
     if not place_name:
-        return "장소명을 추출할 수 없습니다."
+        return None
 
-    #print("장소명:", place_name)
-
-    address = search_place_and_get_address(place_name, KAKAO_REST_API_KEY)
-    return address if address else "주소를 찾을 수 없습니다."
+    return place_name
 
 # 네이버 카카오 통합
 def get_address(url):
@@ -149,6 +121,7 @@ def get_address(url):
 
 # # 네이버 예시
 # url = "https://naver.me/GubwElwt"
+# 심포니오브차이나
 # road_address = get_address(url)
 # print("도로명 : ",road_address)
 

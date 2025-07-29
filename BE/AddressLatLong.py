@@ -3,7 +3,8 @@ import requests
 
 
 from BE.AddressExtraction import get_address
-from BE.keys import KAKAO_REST_API_KEY
+
+KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 
 def get_coords_from_address(address: str) -> tuple[str, str] | None:
     url = "https://dapi.kakao.com/v2/local/search/address.json"
