@@ -2,6 +2,7 @@ import pandas as pd
 import sqlite3
 import numpy as np
 
+
 # 1. 전처리된 CSV 불러오기
 df = pd.read_csv("ingredients_cleaned.csv", encoding="utf-8")
 
@@ -9,7 +10,8 @@ df = pd.read_csv("ingredients_cleaned.csv", encoding="utf-8")
 df = df.where(pd.notnull(df), None)
 
 # 3. SQLite 연결
-conn = sqlite3.connect("BE/DB/Data.db")
+# conn = sqlite3.connect("BE/DB/Data.db")
+conn = sqlite3.connect("Data.db")
 cursor = conn.cursor()
 
 # 4. INSERT 실행
@@ -33,8 +35,9 @@ print("✅ Data.db에 ingredients 테이블 삽입 완료!")
 
 
 '''
+
 # 1. CSV 파일 불러오기
-df = pd.read_csv("recipes/ingredients_info.csv", encoding="utf-8")
+df = pd.read_csv("../recipes/ingredients_info.csv", encoding="utf-8")
 
 # 2. 컬럼 이름 정리
 df.columns = df.columns.str.strip().str.lower()
@@ -63,7 +66,6 @@ df['category_id'] = np.nan
 # 8. 저장
 df.to_csv("ingredients_cleaned.csv", index=False, encoding="utf-8")
 print("전처리 완료: ingredients_cleaned.csv 로 저장됨!")
-
 '''
 '''
 import sqlite3
