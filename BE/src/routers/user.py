@@ -2,7 +2,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+
+import os
+
 from passlib.context import CryptContext
+from datetime import datetime, timedelta
+from jose import jwt
 
 from BE.src.dependencies import get_db
 from BE.src.models.users import User
@@ -10,6 +15,11 @@ from BE.src.models.signup_code import SignupCode
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# 로그인용 환경변수 읽기
+JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-key")
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = int(os.environ.get("JWT_EXPIRE_MINUTES", "60"))
 
 class SignupRequest(BaseModel):
     userid: str
@@ -119,13 +129,21 @@ def validate_code(data: ValidateCodeRequest, db: Session = Depends(get_db)):
 
 # 1.2 로그인
 @router.post("/login", response_model=LoginResponse)
-async def login(data: LoginRequest):
-    # 실제 인증 로직 필요
+def login(data: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.userid == data.ID).first()
+    if not user or not pwd_context.verify(data.PW, user.password):
+        raise HTTPException(status_code=400, detail="아이디 또는 비밀번호가 잘못되었습니다.")
+
+    expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRE_MINUTES)
+    payload = {"sub": str(user.id), "exp": expire}
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
     return {
-        "user_id": "1",
-        "username": data.ID,
-        "role": "member",
+        "user_id": str(user.id),
+        "username": user.userid,
+        "role": user.role,
         "loginSuccess": True,
         "message": "로그인 성공",
         "status": "ok",
+        "access_token": token,
     }

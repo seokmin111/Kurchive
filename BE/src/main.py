@@ -1,5 +1,5 @@
-import sys
-# print("sys.path >>>", sys.path)
+from dotenv import load_dotenv
+load_dotenv()  # .env 파일의 환경변수를 로드
 
 from fastapi import FastAPI
 
