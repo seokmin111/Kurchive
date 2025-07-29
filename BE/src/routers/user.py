@@ -1,15 +1,22 @@
 # 회원가입과 로그인 담당 API
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from passlib.context import CryptContext
+
+from BE.src.dependencies import get_db
+from BE.src.models.users import User
+from BE.src.models.signup_code import SignupCode
 
 router = APIRouter()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# --- Pydantic 모델 ---
 class SignupRequest(BaseModel):
-    id: str
+    userid: str
     pw: str
     pwConfirm: str
     nickname: str
+    name : str
     code: str
 
 class SignupResponse(BaseModel):
@@ -39,10 +46,51 @@ class LoginResponse(BaseModel):
 
 
 # 1.1 회원가입
-@router.post("/signup", response_model=SignupResponse)
-async def signup(data: SignupRequest):
-    # 여기에 실제 DB 저장 로직 추가 예정
-    return {"success": True, "message": "회원가입 성공", "status": "ok"}
+@router.post("/signup")
+def signup(data: SignupRequest, db: Session = Depends(get_db)):
+    # 비밀번호 확인
+    if data.pw != data.pwConfirm:
+        raise HTTPException(status_code=400, detail="비밀번호 확인 불일치")
+
+    # ID 중복 검사
+    existing = db.query(User).filter(User.userid == data.userid).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="이미 존재하는 ID입니다.")
+
+    # 닉네임 중복 검사
+    existing_nick = db.query(User).filter(User.nickname == data.nickname).first()
+    if existing_nick:
+        raise HTTPException(status_code=400, detail="이미 존재하는 닉네임입니다.")
+
+    # 커손연 코드
+    signup_code = (
+        db.query(SignupCode)
+        .filter(SignupCode.code == data.code)
+        .first()
+    )
+
+    if not signup_code:
+        raise HTTPException(status_code=400, detail="가입 코드가 존재하지 않습니다.")
+
+    if not bool(signup_code.is_active):
+        raise HTTPException(status_code=400, detail="비활성화된 가입 코드입니다.")
+
+    # 비밀번호 해싱
+    hashed_pw = pwd_context.hash(data.pw)
+
+    new_user = User(
+    userid=data.userid,
+    password=hashed_pw,
+    nickname=data.nickname,
+    name=data.name,     # 여기 추가
+    role="member",
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {"success": True, "message": "회원가입 성공", "user_id": new_user.id}
 
 
 # ID 중복 확인
