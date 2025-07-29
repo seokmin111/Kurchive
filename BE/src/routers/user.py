@@ -95,21 +95,25 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
 
 # ID 중복 확인
 @router.get("/signup/check_id")
-async def check_id(username: str):
-    # DB 조회 로직 필요
-    return {"isDuplicate": False, "status": "ok"}
-
+def check_id(userid: str, db: Session = Depends(get_db)):
+    exists = db.query(User).filter(User.userid == userid).first()
+    return {"isDuplicate": bool(exists), "status": "ok"}
 
 # 닉네임 중복 확인
 @router.get("/check_nickname")
-async def check_nickname(nickname: str):
-    return {"isDuplicate": False, "status": "ok"}
-
+def check_nickname(nickname: str, db: Session = Depends(get_db)):
+    exists = db.query(User).filter(User.nickname == nickname).first()
+    return {"isDuplicate": bool(exists), "status": "ok"}
 
 # 커손연 코드 검증
 @router.post("/validate_code", response_model=ValidateCodeResponse)
-async def validate_code(data: ValidateCodeRequest):
-    # code 검증 로직
+def validate_code(data: ValidateCodeRequest, db: Session = Depends(get_db)):
+    signup_code = db.query(SignupCode).filter(SignupCode.code == data.code).first()
+
+    if not signup_code:
+        return {"status": "invalid"}
+    if not bool(signup_code.is_active):
+        return {"status": "inactive"}
     return {"status": "valid"}
 
 
