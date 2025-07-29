@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from src.database import Base
+from BE.src.database import Base
 
 class SignupCode(Base):
     __tablename__ = "signup_code"

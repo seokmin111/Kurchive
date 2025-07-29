@@ -1,8 +1,13 @@
+import sys
+# print("sys.path >>>", sys.path)
+
 from fastapi import FastAPI
 
 from BE.src.routers import user
-from src import models
-from src.database import Base, engine
+from BE.src import models
+from BE.src.database import Base, engine
+
+
 
 # 앱 시작 시 테이블 생성 (이미 DB에 있으면 건너뜀)
 Base.metadata.create_all(bind=engine)

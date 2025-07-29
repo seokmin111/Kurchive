@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean
-from src.database import Base
+from BE.src.database import Base
 
 class RolePermission(Base):
     __tablename__ = "role_permissions"
