@@ -294,7 +294,27 @@ def create_recipe(data: RecipeCreateDTO, db: Session = Depends(get_db), current_
 
     db.commit()
     db.refresh(recipe)
-    return recipe
+
+    # create_recipe의 반환 데이터 가공
+    ingredients = [
+        {
+            "ingredient_id": ri.ingredient_id,
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity,
+            "unit_name": ri.unit_name,
+        }
+        for ri in recipe.ingredients
+    ]
+
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": ingredients,
+    }
 
 @router.put("/{recipe_id}", response_model=RecipeResponseDTO)
 def update_recipe(recipe_id: int, data: RecipeUpdateDTO, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker("임원진"))):
