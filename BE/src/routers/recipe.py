@@ -188,6 +188,7 @@ def scale_recipe(
         "ingredients": ingredients,
     }
 
+
 ## 단위 변환 API
 @router.get("/{recipe_id}/convert", response_model=RecipeResponseDTO)
 def convert_recipe(
@@ -196,12 +197,15 @@ def convert_recipe(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker("member"))
 ):
-    unit_map = json.loads(units)  # {ingredient_id: target_unit_id}
+    """
+    각 재료별로 다른 단위를 선택할 수 있음.
+    단, ingredient_units 테이블에 해당 재료-단위 조합이 있어야 변환.
+    """
+    try:
+        unit_map = json.loads(units)
+    except Exception:
+        raise HTTPException(400, "Invalid units JSON format")
 
-    """
-    각 재료별로 다르게 선택할 수 있음.
-    단, ingredient_units 테이블에 해당 재료에 해당하는 단위가 존재해야 함.
-    """
     recipe = (
         db.query(Recipe)
         .options(
@@ -215,21 +219,34 @@ def convert_recipe(
         raise HTTPException(404, "Recipe not found")
 
     converted_ingredients = []
+
     for ri in recipe.ingredients:
         ingredient = ri.ingredient
         qty = ri.quantity
         unit_name = ri.unit_name
 
+        # 사용자가 보낸 target_unit_id
         target_unit_id = unit_map.get(str(ri.ingredient_id))
+
         if target_unit_id:
-            # allowed_unit_ids 체크 후 convert_unit 호출
-            qty, unit_name = convert_unit(
-                db=db,
-                ingredient=ingredient,
-                qty=ri.quantity,
-                from_unit_name=ri.unit_name,
-                to_unit_id=target_unit_id
-            )
+            # 이 재료에 허용된 단위 목록 가져오기
+            allowed_units = db.query(IngredientUnit).filter(
+                IngredientUnit.ingredient_id == ri.ingredient_id
+            ).all()
+
+            # allowed_unit_ids는 반드시 unit_id 기준!
+            allowed_unit_ids = {u.unit_id for u in allowed_units}
+
+            # 허용된 단위라면 변환
+            if target_unit_id in allowed_unit_ids:
+                qty, unit_name = convert_unit(
+                    db=db,
+                    ingredient=ingredient,
+                    qty=ri.quantity,
+                    from_unit_name=ri.unit_name,
+                    to_unit_id=target_unit_id
+                )
+            # else: 허용되지 않은 단위라면 변환 없이 그대로 두기
 
         converted_ingredients.append({
             "ingredient_id": ri.ingredient_id,
@@ -247,7 +264,6 @@ def convert_recipe(
         "steps": recipe.steps,
         "ingredients": converted_ingredients,
     }
-
 
 
 @router.post("", response_model=RecipeResponseDTO, status_code=status.HTTP_201_CREATED)

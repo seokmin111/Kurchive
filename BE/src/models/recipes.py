@@ -59,9 +59,9 @@ class Unit(Base):
     unit_name = Column(String, unique=True, nullable=False)
     unit_type = Column(String, nullable=False)
 
-    # 관계성 추가
+    # 관계 (ingredient_units와 연결)
     ingredient_units = relationship("IngredientUnit", back_populates="unit")
-
+    
 class UnitConversion(Base):
     __tablename__ = "unit_conversions"
 
