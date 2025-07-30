@@ -30,11 +30,12 @@ def fake_current_user():
 
 class IngredientDTO(BaseModel):
     ingredient_id: int
-    amount: float
-    unit: str
+    quantity: float
+    unit_name: str   # unit -> unit_name 로 변경
+
 
 class RecipeStepDTO(BaseModel):
-    step_number: int = Field(alias="step_order")
+    step_order: int
     description: str
     image_url: Optional[str] = None
 
@@ -48,10 +49,10 @@ class RecipeCreateDTO(BaseModel):
     steps: List[RecipeStepDTO]
 
 class RecipeUpdateDTO(BaseModel):
-    title: Optional[str]
-    base_serving: Optional[int]
-    ingredients: Optional[List[IngredientDTO]]
-    steps: Optional[List[RecipeStepDTO]]
+    title: Optional[str] = None
+    base_serving: Optional[int] = None
+    ingredients: Optional[List[IngredientDTO]] = None
+    steps: Optional[List[RecipeStepDTO]] = None
 
 class RecipeResponseDTO(BaseModel):
     id: int
@@ -92,12 +93,12 @@ def create_recipe(data: RecipeCreateDTO, db: Session = Depends(get_db), current_
     db.refresh(recipe)
 
     for ing in data.ingredients:
-        db.add(RecipeIngredient(recipe_id=recipe.id, ingredient_id=ing.ingredient_id, amount=ing.amount, unit=ing.unit))
+        db.add(RecipeIngredient(recipe_id=recipe.id, ingredient_id=ing.ingredient_id, quantity=ing.quantity, unit_name=ing.unit_name))
 
     for step in data.steps:
         db.add(RecipeStep(
             recipe_id=recipe.id,
-            step_order=step.step_number,
+            step_order=step.step_order,
             description=step.description,
             image_url=step.image_url
         ))
@@ -112,7 +113,7 @@ def update_recipe(recipe_id: int, data: RecipeUpdateDTO, db: Session = Depends(g
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    if recipe.uploader_id != current_user.id and current_user.role not in ("관리자", "임원진"):
+    if recipe.uploader_id != current_user.id and current_user.role not in ("admin", "staff"):
         raise HTTPException(403, "Permission denied")
 
     if data.title:
@@ -124,14 +125,14 @@ def update_recipe(recipe_id: int, data: RecipeUpdateDTO, db: Session = Depends(g
     if data.ingredients:
         db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe_id).delete()
         for ing in data.ingredients:
-            db.add(RecipeIngredient(recipe_id=recipe.id, ingredient_id=ing.ingredient_id, amount=ing.amount, unit=ing.unit))
+            db.add(RecipeIngredient(recipe_id=recipe.id, ingredient_id=ing.ingredient_id, quantity=ing.quantity, unit_name=ing.unit_name))
 
     if data.steps:
         db.query(RecipeStep).filter(RecipeStep.recipe_id == recipe_id).delete()
         for step in data.steps:
             db.add(RecipeStep(
                 recipe_id=recipe.id,
-                step_order=step.step_number,
+                step_order=step.step_order,
                 description=step.description,
                 image_url=step.image_url
             ))
@@ -146,7 +147,7 @@ def delete_recipe(recipe_id: int, db: Session = Depends(get_db), current_user: U
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    if recipe.uploader_id != current_user.id and current_user.role != "관리자":
+    if recipe.uploader_id != current_user.id and current_user.role != "admin":
         raise HTTPException(403, "Permission denied")
 
     db.delete(recipe)
