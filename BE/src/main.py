@@ -3,12 +3,17 @@ load_dotenv()  # .env 파일의 환경변수를 로드
 
 from fastapi import FastAPI
 
+import logging
+
 from BE.src.routers import user, map, recipe
 from BE.src import models
 from BE.src.database import Base, engine
 
 
-
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(levelname)s:%(name)s:%(message)s"
+)
 # 앱 시작 시 테이블 생성 (이미 DB에 있으면 건너뜀)
 Base.metadata.create_all(bind=engine)
 

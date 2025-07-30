@@ -67,7 +67,7 @@ class Unit(Base):
 
 ## 단위 변환
 class ConvertRequestDTO(BaseModel):
-    units: Dict[int, int]
+    units: Dict[int, str]
     # key: ingredient_id, value: target_unit_id
     
 class UnitConversion(Base):
@@ -87,12 +87,13 @@ class IngredientUnit(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
-    unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
+    unit_name = Column(String, nullable=False)
     is_default = Column(Boolean, default=False)
 
+    # unit 관계 제거 (unit_id 외래키 없음)
     ingredient = relationship("Ingredient", back_populates="ingredient_units")
-    unit = relationship("Unit", back_populates="ingredient_units")
 
     __table_args__ = (
-        UniqueConstraint('ingredient_id', 'unit_id', name='uq_ingredient_unit'),
+        UniqueConstraint('ingredient_id', 'unit_name', name='uq_ingredient_unit'),
     )
+

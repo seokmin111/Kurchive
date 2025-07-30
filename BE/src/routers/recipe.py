@@ -11,6 +11,10 @@ from BE.src.database import SessionLocal
 from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit, Unit, UnitConversion, ConvertRequestDTO
 from BE.src.utils.units import get_conversion_coefficient, convert_unit
 
+import logging
+logger = logging.getLogger("convert")
+
+
 router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
 def get_db():
@@ -195,13 +199,15 @@ def convert_recipe(
     recipe_id: int,
     request: ConvertRequestDTO,
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker("member"))
-):
+    current_user: User = Depends(RoleChecker("staff"))
+    ):
     """
-    각 재료별로 다른 단위를 선택할 수 있음.
-    단, ingredient_units 테이블에 해당 재료-단위 조합이 있어야 변환.
+    단위 변환 (unit_name 기반)
+    프론트: { "units": { "2": "kg", "5": "cup" } }
     """
     unit_map = request.units
+    logger.debug(f"unit_map: {unit_map}")
+    
     recipe = (
         db.query(Recipe)
         .options(
@@ -221,28 +227,30 @@ def convert_recipe(
         qty = ri.quantity
         unit_name = ri.unit_name
 
-        # 사용자가 보낸 target_unit_id
-        target_unit_id = unit_map.get(str(ri.ingredient_id))
-
-        if target_unit_id:
-            # 이 재료에 허용된 단위 목록 가져오기
+        target_unit_name = unit_map.get(str(ri.ingredient_id))
+        logger.debug(
+            f"ingredient_id={ri.ingredient_id}, from={ri.unit_name}, "
+            f"target={target_unit_name}, density={ingredient.density}"
+        )
+        if target_unit_name:
+            # 허용된 단위 목록에서 unit_name 기반으로 체크
             allowed_units = db.query(IngredientUnit).filter(
-                IngredientUnit.ingredient_id == ri.ingredient_id
-            ).all()
+            IngredientUnit.ingredient_id == ri.ingredient_id).all()
 
-            # allowed_unit_ids는 반드시 unit_id 기준!
-            allowed_unit_ids = {u.unit_id for u in allowed_units}
+            allowed_unit_names = {u.unit_name for u in allowed_units}
 
-            # 허용된 단위라면 변환
-            if target_unit_id in allowed_unit_ids:
+            if target_unit_name in allowed_unit_names:
                 qty, unit_name = convert_unit(
                     db=db,
                     ingredient=ingredient,
                     qty=ri.quantity,
                     from_unit_name=ri.unit_name,
-                    to_unit_id=target_unit_id
+                    to_unit_name=target_unit_name
                 )
-            # else: 허용되지 않은 단위라면 변환 없이 그대로 두기
+
+                logger.debug(
+                        f"Converted {ri.ingredient_id}: {ri.quantity}{ri.unit_name} -> {qty}{unit_name}"
+                    )
 
         converted_ingredients.append({
             "ingredient_id": ri.ingredient_id,
@@ -260,8 +268,7 @@ def convert_recipe(
         "steps": recipe.steps,
         "ingredients": converted_ingredients,
     }
-
-
+    
 @router.post("", response_model=RecipeResponseDTO, status_code=status.HTTP_201_CREATED)
 def create_recipe(data: RecipeCreateDTO, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker("임원진"))):
     recipe = Recipe(
