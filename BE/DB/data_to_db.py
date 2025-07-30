@@ -1,8 +1,48 @@
 import pandas as pd
 import sqlite3
 import numpy as np
+import argparse
 
 
+def upload_units(csv_path, db_path):
+
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        df = pd.read_csv(csv_path)
+
+        df = df.where(pd.notnull(df), None)
+
+        cursor.execute("DELETE FROM ingredient_units;")
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='ingredient_units';")
+        print("테이블 초기화 완료.")
+        
+        rows_to_insert = [tuple(x) for x in df.to_numpy()]
+        cursor.executemany("""
+            INSERT INTO ingredient_units (ingredient_id, unit_name, unit_type, is_default)
+            VALUES (?, ?, ?, ?)
+        """, rows_to_insert)
+        
+        conn.commit()
+        print(f"✅ 'ingredient_units' 테이블에 성공적으로 삽입")
+
+    except Exception as e:
+        print(f"❌ 오류가 발생했습니다: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            conn.close()
+            print("DB 연결을 종료합니다.")
+
+
+CSV_FILE_TO_UPLOAD = "ingredient_units_processed.csv"
+DATABASE_FILE = "Data.db"
+
+upload_units(CSV_FILE_TO_UPLOAD, DATABASE_FILE)
+
+'''
 # 1. 전처리된 CSV 불러오기
 df = pd.read_csv("ingredients_cleaned.csv", encoding="utf-8")
 
@@ -32,7 +72,7 @@ conn.commit()
 conn.close()
 
 print("✅ Data.db에 ingredients 테이블 삽입 완료!")
-
+'''
 
 '''
 
