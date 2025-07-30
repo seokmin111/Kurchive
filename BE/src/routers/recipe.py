@@ -64,6 +64,25 @@ class RecipeResponseDTO(BaseModel):
 
     class Config:
         orm_mode = True
+        
+# 재료 및 단위 변환
+class IngredientDetailDTO(BaseModel):
+    ingredient_id: int
+    name: str
+    quantity: float
+    unit_name: str
+
+class RecipeResponseDTO(BaseModel):
+    id: int
+    title: str
+    base_serving: int
+    uploader_id: int
+    created_at: datetime
+    steps: List[RecipeStepDTO]
+    ingredients: List[IngredientDetailDTO]
+
+    class Config:
+        orm_mode = True
 
 @router.get("/search", response_model=List[RecipeResponseDTO])
 def search_recipes(title: str, db: Session = Depends(get_db)):
@@ -73,12 +92,63 @@ def search_recipes(title: str, db: Session = Depends(get_db)):
 def list_recipes(db: Session = Depends(get_db)):
     return db.query(Recipe).all()
 
+# 레시피 id로 조회 && 인분 선택 || 재료 단위 변환
+'''인분 또는 재료 단위만 선택해도 됨.'''
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
-def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
+def get_recipe(recipe_id: int,
+               servings: Optional[int] = None,
+               unit: Optional[str] = None,
+               db: Session = Depends(get_db)):
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-    return recipe
+
+    # 인분 비율
+    factor = 1.0
+    if servings:
+        factor = servings / recipe.base_serving
+
+    # 재료 단위 변환 + scaling
+    converted_ingredients = []
+    for ri in recipe.ingredients:
+        ingredient = ri.ingredient
+        qty = ri.quantity * factor
+        unit_name = ri.unit_name
+
+        # 단위 변환 로직
+    if unit and unit != ri.unit_name:
+        if unit == "g":
+            if ri.unit_name == "ml" and ingredient.density:
+                qty *= ingredient.density
+                unit_name = "g"
+            elif ri.unit_name == "개" and ingredient.average_weight:
+                qty *= ingredient.average_weight
+                unit_name = "g"
+            # density나 average_weight가 None이면 그냥 변환 X
+        elif unit == "ml":
+            if ri.unit_name == "g" and ingredient.density:
+                qty /= ingredient.density
+                unit_name = "ml"
+        # 다른 경우는 변환하지 않고 그대로 둠
+
+        converted_ingredients.append({
+            "ingredient_id": ri.ingredient_id,
+            "name": ingredient.name,
+            "quantity": qty,
+            "unit_name": unit_name
+        })
+
+    # RecipeResponseDTO에 ingredients도 포함하도록 DTO 확장 필요
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": converted_ingredients
+    }
+
 
 @router.post("", response_model=RecipeResponseDTO, status_code=status.HTTP_201_CREATED)
 def create_recipe(data: RecipeCreateDTO, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker("임원진"))):
@@ -153,3 +223,4 @@ def delete_recipe(recipe_id: int, db: Session = Depends(get_db), current_user: U
     db.delete(recipe)
     db.commit()
     return
+

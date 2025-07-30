@@ -37,7 +37,8 @@ class RecipeIngredient(Base):
 
     recipe = relationship("Recipe", back_populates="ingredients")
     ingredient = relationship("Ingredient")
-    
+
+# 재료 
 class Ingredient(Base):
     __tablename__ = "ingredients"
     id = Column(Integer, primary_key=True, index=True)
@@ -46,4 +47,5 @@ class Ingredient(Base):
     average_weight = Column(Float)
     unit_type = Column(String)
     category_id = Column(Integer, nullable=True)
+
 
