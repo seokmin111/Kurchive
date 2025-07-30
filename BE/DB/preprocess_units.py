@@ -18,14 +18,22 @@ def preprocess(input_path, db_path, output_path):
     DEFAULT_UNITS = {'개', 'g', 'ml', 'tbsp', 'tsp', 'cup'}
 
     # 모든 단위 목록
-    ALL_UNITS = {'개', '쪽', '톨', '구', '접','포기', '뿌리', '대', '잎',
-        'g', '꼬집', '주먹', '단', 'ml', 'tbsp', 'tsp', 'cup'}
+    ALL_UNITS = set(UNIT_METRIC_MAP.keys())
     
         # 재료 타입별로 기본단위 다르게 (야채는 ml를 안 쓸테니...)
     BASE_UNITS_BY_TYPE = {
         'vegetable': {'개', 'g'}, 
         'liquid': {'g', 'ml', 'tbsp', 'tsp', 'cup'},
         'powder': {'g', 'ml', 'tbsp', 'tsp', 'cup'} 
+    }
+
+    SPECIAL_CASES = {
+        "생강(톨)": ("생강(톨)", "톨"),
+        "대파(대)": ("대파(대)", "대"),
+        "시금치(단)": ("시금치(단)", "단"),
+        "상추(잎)": ("상추(잎)", "잎"),
+        "부추(단)": ("부추(단)", "단"),
+        "쪽파(단)": ("쪽파(단)", "단")
     }
 
     master_unit_rows = []
@@ -55,6 +63,15 @@ def preprocess(input_path, db_path, output_path):
         ingredient_name = row['name']
         specific_units_str = row['unit']
 
+        special_default_unit = None
+        if ingredient_name in SPECIAL_CASES:
+            clean_name, special_default_unit = SPECIAL_CASES[ingredient_name]
+        else:
+            clean_name = ingredient_name
+
+        if clean_name not in ingredients_map:
+            print(f"'{clean_name}' 재료를 ingredients 테이블에서 찾지 못함. 건너뜁니다.")
+            continue
         if ingredient_name not in ingredients_map:
             print(f"'{ingredient_name}' 재료를 ingredients 테이블에서 찾지 못함. 건너뜁니다.")
             continue
@@ -72,14 +89,19 @@ def preprocess(input_path, db_path, output_path):
         if pd.notna(specific_units_str):
             specific_units = [unit.strip() for unit in specific_units_str.split(',')]
             units_to_add.update(specific_units)
+        
+        if special_default_unit:
+            units_to_add.add(special_default_unit)
 
         for unit_name in units_to_add:
             if not unit_name: continue
 
+            is_default_flag = 1 if (unit_name in DEFAULT_UNITS or unit_name == special_default_unit) else 0
+
             processed_units.append({
                 'ingredient_id': ingredient_id,
                 'unit_name': unit_name,
-                'is_default': 1 if unit_name in DEFAULT_UNITS else 0,
+                'is_default': is_default_flag,
                 'unit_type': UNIT_METRIC_MAP.get(unit_name, 'misc') # 맵에 없으면 misc
             })
     
