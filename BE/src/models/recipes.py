@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -41,23 +41,50 @@ class RecipeIngredient(Base):
 # 재료 
 class Ingredient(Base):
     __tablename__ = "ingredients"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100))
     density = Column(Float)
     average_weight = Column(Float)
-    unit_type = Column(String)
-    category_id = Column(Integer, nullable=True)
+    unit_type = Column(String)   # SQLite에서는 CHECK는 따로 처리
+    category_id = Column(Integer, ForeignKey("ingredient_categories.id"))
+
+    # 관계 추가
+    ingredient_units = relationship("IngredientUnit", back_populates="ingredient")
+
+class Unit(Base):
+    __tablename__ = "units"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    unit_name = Column(String, unique=True, nullable=False)
+    unit_type = Column(String, nullable=False)
+
+    # 관계성 추가
+    ingredient_units = relationship("IngredientUnit", back_populates="unit")
+
+class UnitConversion(Base):
+    __tablename__ = "unit_conversions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    from_unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
+    to_unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
+    coefficient = Column(Float, nullable=False)
+
+    # 양방향 참조 (선택)
+    from_unit = relationship("Unit", foreign_keys=[from_unit_id])
+    to_unit = relationship("Unit", foreign_keys=[to_unit_id])
     
-# 재료별 단위
 class IngredientUnit(Base):
     __tablename__ = "ingredient_units"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
-    unit_name = Column(String(20), nullable=False)
-    unit_type = Column(Text, nullable=True)
+    unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
     is_default = Column(Boolean, default=False)
 
-    ingredient = relationship("Ingredient")  # 단방향
+    ingredient = relationship("Ingredient", back_populates="ingredient_units")
+    unit = relationship("Unit", back_populates="ingredient_units")
 
-
+    __table_args__ = (
+        UniqueConstraint('ingredient_id', 'unit_id', name='uq_ingredient_unit'),
+    )

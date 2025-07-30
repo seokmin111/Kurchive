@@ -8,7 +8,8 @@ from datetime import datetime
 import json
 
 from BE.src.database import SessionLocal
-from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit
+from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit, Unit, UnitConversion
+from BE.src.utils.units import get_conversion_coefficient, convert_unit
 
 router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
@@ -89,52 +90,6 @@ class RecipeResponseDTO(BaseModel):
         orm_mode = True
 
 
-# 함수
-
-def parse_units_param(units_param: Optional[str]) -> dict[int, int]:
-    """
-    units 파라미터(JSON 문자열)를 {ingredient_id: unit_id} dict로 변환
-    예: '{"12":3,"15":5}' -> {12: 3, 15: 5}
-    """
-    if not units_param:
-        return {}
-    try:
-        data = json.loads(units_param)
-        return {int(k): int(v) for k, v in data.items()}
-    except Exception:
-        return {}
-
-def convert_unit(db, ingredient, qty, from_unit_name: str, to_unit_id: int):
-    """
-    현재로서는
-    - 기본 count 단위(개, 단 등)만 average_weight 기반 변환 가능
-    - mass/volume 단위는 density 기반
-    - 나머지 count 단위는 단위명만 바꿔서 보여주기 (수치는 그대로)
-    """
-    to_unit = db.query(IngredientUnit).filter(
-        IngredientUnit.id == to_unit_id
-    ).first()
-    if not to_unit:
-        return qty, from_unit_name
-
-    # 같은 단위면 그대로
-    if to_unit.unit_name == from_unit_name:
-        return qty, from_unit_name
-
-    # mass/volume 변환
-    if to_unit.unit_type == "mass" and from_unit_name == "ml" and ingredient.density:
-        return qty * ingredient.density, to_unit.unit_name
-    if to_unit.unit_type == "volume" and from_unit_name == "g" and ingredient.density:
-        return qty / ingredient.density, to_unit.unit_name
-
-    # count 단위 변환 (기본 단위만)
-    if to_unit.unit_type == "count":
-        # 기본 단위만 average_weight로 계산 가능
-        # 비기본 count 단위는 단순 표기만 변경
-        return qty, to_unit.unit_name
-
-    return qty, from_unit_name
-
 # ------API---------
 @router.get("/search", response_model=List[RecipeResponseDTO])
 def search_recipes(title: str, db: Session = Depends(get_db)):
@@ -145,22 +100,17 @@ def list_recipes(db: Session = Depends(get_db)):
     return db.query(Recipe).all()
 
 # 레시피 id로 조회 && 인분 선택 || 재료 단위 변환
-'''인분 또는 재료 단위만 선택해도 됨.'''
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
 def get_recipe(
     recipe_id: int,
-    servings: Optional[int] = None,
-    units: Optional[str] = None,  # JSON 문자열 {ingredient_id: unit_id}
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker("member"))
 ):
     """
     레시피 상세조회:
-    - servings: 기준 인분 대비 배율 적용
-    - units: 재료별 단위 변환(JSON 문자열)
+    - recipe_id 기준으로 원본 레시피 데이터를 그대로 반환
+    - 인분 배수나 단위 변환 없음
     """
-    unit_map = parse_units_param(units)
-
     recipe = (
         db.query(Recipe)
         .options(
@@ -173,18 +123,117 @@ def get_recipe(
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    factor = servings / recipe.base_serving if servings else 1.0
-    converted_ingredients = []
+    # DB에 있는 값 그대로 ingredients 생성
+    ingredients = [
+        {
+            "ingredient_id": ri.ingredient_id,
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity,
+            "unit_name": ri.unit_name,
+        }
+        for ri in recipe.ingredients
+    ]
 
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": ingredients,
+    }
+
+## 인분 배율 조정
+@router.get("/{recipe_id}/scale", response_model=RecipeResponseDTO)
+def scale_recipe(
+    recipe_id: int,
+    servings: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker("member"))
+):
+    """
+    base_serving 대비 servings 비율로 재료 양만 조정해서 반환
+    """
+    recipe = (
+        db.query(Recipe)
+        .options(
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.steps)
+        )
+        .filter(Recipe.id == recipe_id)
+        .first()
+    )
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+
+    factor = servings / recipe.base_serving
+    ingredients = [
+        {
+            "ingredient_id": ri.ingredient_id,
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity * factor,
+            "unit_name": ri.unit_name,
+        }
+        for ri in recipe.ingredients
+    ]
+
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": ingredients,
+    }
+
+## 단위 변환 API
+@router.get("/{recipe_id}/convert", response_model=RecipeResponseDTO)
+def convert_recipe(
+    recipe_id: int,
+    target_unit_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker("member"))
+):
+    """
+    모든 재료를 지정한 target_unit_id로 변환.
+    단, ingredient_units 테이블에 해당 단위가 등록되어 있어야 변환.
+    """
+    recipe = (
+        db.query(Recipe)
+        .options(
+            joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
+            joinedload(Recipe.steps)
+        )
+        .filter(Recipe.id == recipe_id)
+        .first()
+    )
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+
+    converted_ingredients = []
     for ri in recipe.ingredients:
         ingredient = ri.ingredient
-        qty = ri.quantity * factor
+
+        # 이 재료가 가질 수 있는 unit_id 목록 조회
+        allowed_units = db.query(IngredientUnit).filter(
+            IngredientUnit.ingredient_id == ri.ingredient_id
+        ).all()
+        allowed_unit_ids = {u.unit_id for u in allowed_units}
+
+        qty = ri.quantity
         unit_name = ri.unit_name
 
-        # 재료별 단위 변환
-        if ri.ingredient_id in unit_map:
-            target_unit_id = unit_map[ri.ingredient_id]
-            qty, unit_name = convert_unit(db, ingredient, qty, ri.unit_name, target_unit_id)
+        # target_unit_id가 허용된 단위인 경우에만 변환
+        if target_unit_id in allowed_unit_ids:
+            qty, unit_name = convert_unit(
+                db=db,
+                ingredient=ingredient,
+                qty=ri.quantity,
+                from_unit_name=ri.unit_name,
+                to_unit_id=target_unit_id
+            )
 
         converted_ingredients.append({
             "ingredient_id": ri.ingredient_id,
@@ -200,8 +249,11 @@ def get_recipe(
         "uploader_id": recipe.uploader_id,
         "created_at": recipe.created_at,
         "steps": recipe.steps,
-        "ingredients": converted_ingredients
+        "ingredients": converted_ingredients,
     }
+
+
+
 @router.post("", response_model=RecipeResponseDTO, status_code=status.HTTP_201_CREATED)
 def create_recipe(data: RecipeCreateDTO, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker("임원진"))):
     recipe = Recipe(
