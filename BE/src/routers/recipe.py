@@ -192,13 +192,15 @@ def scale_recipe(
 @router.get("/{recipe_id}/convert", response_model=RecipeResponseDTO)
 def convert_recipe(
     recipe_id: int,
-    target_unit_id: int,
+    units: str,  # JSON 문자열 {"12": 3, "15": 5}
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker("member"))
 ):
+    unit_map = json.loads(units)  # {ingredient_id: target_unit_id}
+
     """
-    모든 재료를 지정한 target_unit_id로 변환.
-    단, ingredient_units 테이블에 해당 단위가 등록되어 있어야 변환.
+    각 재료별로 다르게 선택할 수 있음.
+    단, ingredient_units 테이블에 해당 재료에 해당하는 단위가 존재해야 함.
     """
     recipe = (
         db.query(Recipe)
@@ -215,18 +217,12 @@ def convert_recipe(
     converted_ingredients = []
     for ri in recipe.ingredients:
         ingredient = ri.ingredient
-
-        # 이 재료가 가질 수 있는 unit_id 목록 조회
-        allowed_units = db.query(IngredientUnit).filter(
-            IngredientUnit.ingredient_id == ri.ingredient_id
-        ).all()
-        allowed_unit_ids = {u.unit_id for u in allowed_units}
-
         qty = ri.quantity
         unit_name = ri.unit_name
 
-        # target_unit_id가 허용된 단위인 경우에만 변환
-        if target_unit_id in allowed_unit_ids:
+        target_unit_id = unit_map.get(str(ri.ingredient_id))
+        if target_unit_id:
+            # allowed_unit_ids 체크 후 convert_unit 호출
             qty, unit_name = convert_unit(
                 db=db,
                 ingredient=ingredient,
