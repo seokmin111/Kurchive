@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 
 from BE.src.database import SessionLocal
-from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit, Unit, UnitConversion
+from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit, Unit, UnitConversion, ConvertRequestDTO
 from BE.src.utils.units import get_conversion_coefficient, convert_unit
 
 router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
@@ -190,10 +190,10 @@ def scale_recipe(
 
 
 ## 단위 변환 API
-@router.get("/{recipe_id}/convert", response_model=RecipeResponseDTO)
+@router.post("/{recipe_id}/convert", response_model=RecipeResponseDTO)
 def convert_recipe(
     recipe_id: int,
-    units: str,  # JSON 문자열 {"12": 3, "15": 5}
+    request: ConvertRequestDTO,
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker("member"))
 ):
@@ -201,11 +201,7 @@ def convert_recipe(
     각 재료별로 다른 단위를 선택할 수 있음.
     단, ingredient_units 테이블에 해당 재료-단위 조합이 있어야 변환.
     """
-    try:
-        unit_map = json.loads(units)
-    except Exception:
-        raise HTTPException(400, "Invalid units JSON format")
-
+    unit_map = request.units
     recipe = (
         db.query(Recipe)
         .options(

@@ -2,6 +2,9 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTim
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
+from pydantic import BaseModel
+from typing import Dict
+
 from BE.src.database import Base
 from BE.src.models.users import User # 단방향
 
@@ -61,6 +64,11 @@ class Unit(Base):
 
     # 관계 (ingredient_units와 연결)
     ingredient_units = relationship("IngredientUnit", back_populates="unit")
+
+## 단위 변환
+class ConvertRequestDTO(BaseModel):
+    units: Dict[int, int]
+    # key: ingredient_id, value: target_unit_id
     
 class UnitConversion(Base):
     __tablename__ = "unit_conversions"
