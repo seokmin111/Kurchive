@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -47,5 +47,17 @@ class Ingredient(Base):
     average_weight = Column(Float)
     unit_type = Column(String)
     category_id = Column(Integer, nullable=True)
+    
+# 재료별 단위
+class IngredientUnit(Base):
+    __tablename__ = "ingredient_units"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
+    unit_name = Column(String(20), nullable=False)
+    unit_type = Column(Text, nullable=True)
+    is_default = Column(Boolean, default=False)
+
+    ingredient = relationship("Ingredient")  # 단방향
 
 
