@@ -227,7 +227,7 @@ def convert_recipe(
         qty = ri.quantity
         unit_name = ri.unit_name
 
-        target_unit_name = unit_map.get(str(ri.ingredient_id))
+        target_unit_name = unit_map.get(ri.ingredient_id)
         logger.debug(
             f"ingredient_id={ri.ingredient_id}, from={ri.unit_name}, "
             f"target={target_unit_name}, density={ingredient.density}"
