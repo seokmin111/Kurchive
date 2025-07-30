@@ -62,8 +62,6 @@ class Unit(Base):
     unit_name = Column(String, unique=True, nullable=False)
     unit_type = Column(String, nullable=False)
 
-    # 관계 (ingredient_units와 연결)
-    ingredient_units = relationship("IngredientUnit", back_populates="unit")
 
 ## 단위 변환
 class ConvertRequestDTO(BaseModel):
@@ -90,7 +88,7 @@ class IngredientUnit(Base):
     unit_name = Column(String, nullable=False)
     is_default = Column(Boolean, default=False)
 
-    # unit 관계 제거 (unit_id 외래키 없음)
+
     ingredient = relationship("Ingredient", back_populates="ingredient_units")
 
     __table_args__ = (
