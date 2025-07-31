@@ -57,6 +57,8 @@ def convert_unit(db, ingredient, qty, from_unit_name: str, to_unit_name: str):
         coeff = get_conversion_coefficient(db, from_unit_name, to_unit_name)
         if coeff:
             return qty * coeff, to_unit_name
+    '''현재 tbsp와 tsp 변환 불가.
+    같은 타입인 유닛을 선택 시 coeff끼리 연산 가능한 로직을 추가해야 할 듯'''
 
     # 3. weight <-> volume
     if from_type == "weight" and to_type == "volume" and getattr(ingredient, "density", None):
