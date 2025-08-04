@@ -11,3 +11,6 @@ class User(Base):
     nickname = Column(String, nullable=False)
     role = Column(String, default="member")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # 찜한 목록
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
