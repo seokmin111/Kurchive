@@ -2,6 +2,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from BE.src.models.recipes import Unit, UnitConversion
 
+# 단위 변환 계수 계산
 def get_conversion_coefficient(db, from_unit_name: str, to_unit_name: str) -> Optional[float]:
     if from_unit_name == to_unit_name:
         return 1.0
@@ -11,13 +12,34 @@ def get_conversion_coefficient(db, from_unit_name: str, to_unit_name: str) -> Op
     if not from_unit or not to_unit:
         return None
 
+    # 정방향 변환
     conversion = db.query(UnitConversion).filter(
-        UnitConversion.from_unit_id == from_unit.id,
-        UnitConversion.to_unit_id == to_unit.id
+        UnitConversion.from_unit_id == from_unit.unit_id,
+        UnitConversion.to_unit_id == to_unit.unit_id
     ).first()
+    if conversion:
+        return conversion.coefficient
 
-    return conversion.coefficient if conversion else None
+    # 역방향 변환
+    reverse_conversion = db.query(UnitConversion).filter(
+        UnitConversion.from_unit_id == to_unit.unit_id,
+        UnitConversion.to_unit_id == from_unit.unit_id
+    ).first()
+    if reverse_conversion and reverse_conversion.coefficient:
+        return 1 / reverse_conversion.coefficient
 
+    return None
+
+
+# 간접 단위 변환
+def convert_via_intermediate_unit(db, qty, from_unit_name, to_unit_name, intermediate_unit="ml"):
+    # intermediate_unit이 from이나 to와 같으면 1.0 처리
+    to_intermediate = 1.0 if from_unit_name == intermediate_unit else get_conversion_coefficient(db, from_unit_name, intermediate_unit)
+    from_intermediate = 1.0 if to_unit_name == intermediate_unit else get_conversion_coefficient(db, intermediate_unit, to_unit_name)
+
+    if to_intermediate is not None and from_intermediate is not None:
+        return qty * to_intermediate * from_intermediate, to_unit_name
+    return None
 
 def convert_unit(db, ingredient, qty, from_unit_name: str, to_unit_name: str):
     """
@@ -32,16 +54,13 @@ def convert_unit(db, ingredient, qty, from_unit_name: str, to_unit_name: str):
         return qty, from_unit_name
 
     # 단위 타입 판정
-    def type_of(unit_name: str):
-        if unit_name in ["g", "kg"]:
-            return "weight"
-        elif unit_name in ["ml", "L"]:
-            return "volume"
-        else:
-            return "count"
+    def type_of(db, unit_name: str):
+        unit = db.query(Unit).filter(Unit.unit_name == unit_name).first()
+        return unit.unit_type if unit else None
 
-    from_type = type_of(from_unit_name)
-    to_type = type_of(to_unit_name)
+
+    from_type = type_of(db, from_unit_name)
+    to_type = type_of(db, to_unit_name)
 
     # 1. count -> weight
     if from_type == "count" and to_type == "weight" and getattr(ingredient, "average_weight", None):
@@ -57,8 +76,12 @@ def convert_unit(db, ingredient, qty, from_unit_name: str, to_unit_name: str):
         coeff = get_conversion_coefficient(db, from_unit_name, to_unit_name)
         if coeff:
             return qty * coeff, to_unit_name
-    '''현재 tbsp와 tsp 변환 불가.
-    같은 타입인 유닛을 선택 시 coeff끼리 연산 가능한 로직을 추가해야 할 듯'''
+
+        # 간접 변환 시도 (예: tbsp -> ml -> tsp)
+        via = convert_via_intermediate_unit(db, qty, from_unit_name, to_unit_name)
+        if via:
+            return via
+
 
     # 3. weight <-> volume
     if from_type == "weight" and to_type == "volume" and getattr(ingredient, "density", None):

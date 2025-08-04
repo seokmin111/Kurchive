@@ -58,7 +58,7 @@ class Ingredient(Base):
 class Unit(Base):
     __tablename__ = "units"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    unit_id = Column(Integer, primary_key=True, autoincrement=True)
     unit_name = Column(String, unique=True, nullable=False)
     unit_type = Column(String, nullable=False)
 
@@ -72,8 +72,8 @@ class UnitConversion(Base):
     __tablename__ = "unit_conversions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    from_unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
-    to_unit_id = Column(Integer, ForeignKey("units.id"), nullable=False)
+    from_unit_id = Column(Integer, ForeignKey("units.unit_id"), nullable=False)
+    to_unit_id = Column(Integer, ForeignKey("units.unit_id"), nullable=False)
     coefficient = Column(Float, nullable=False)
 
     # 양방향 참조 (선택)
