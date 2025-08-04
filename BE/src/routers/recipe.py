@@ -103,7 +103,7 @@ def search_recipes(title: str, db: Session = Depends(get_db)):
 def list_recipes(db: Session = Depends(get_db)):
     return db.query(Recipe).all()
 
-# 레시피 id로 조회 && 인분 선택 || 재료 단위 변환
+# 레시피 id로 조회
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
 def get_recipe(
     recipe_id: int,
