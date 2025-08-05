@@ -1,8 +1,9 @@
-from BE.src.database import SessionLocal
-from typing import Generator
+# BE/src/dependencies.py 
 
+from typing import Generator
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 import os
@@ -10,7 +11,7 @@ import os
 from BE.src.database import SessionLocal
 from BE.src.models.users import User
 
-# 요청마다 DB 세션을 열고 닫아주는 dependency
+# 요청마다 DB 세션을 열고 닫아주는 dependency.. 나중에 비동기로 수정?
 def get_db() -> Generator:
     db = SessionLocal()
     try:
@@ -24,14 +25,21 @@ JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+security = HTTPBearer() # 수정 
+
+
+def get_current_user(
+    token: HTTPAuthorizationCredentials = Depends(security), 
+    db: Session = Depends(get_db)
+):
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 import logging
 
 from BE.src.routers import user, map, recipe, mypage, restaurant
-from BE.src import models
+import BE.src.models
 from BE.src.database import Base, engine
 
 
@@ -23,4 +23,4 @@ app.include_router(user.router, prefix="/api", tags=["User"])
 app.include_router(map.router, prefix="/api", tags=["Map"])
 app.include_router(recipe.router)
 app.include_router(mypage.router)
-# app.include_router(restaurant.router)
+app.include_router(restaurant.router)

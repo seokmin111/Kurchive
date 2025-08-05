@@ -53,6 +53,7 @@ class LoginResponse(BaseModel):
     loginSuccess: bool
     message: str
     status: str
+    access_token: str
 
 
 # 1.1 회원가입

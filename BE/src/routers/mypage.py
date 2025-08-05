@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/mypage", tags=["MyPage"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# --- DTO ---
+# DTO
 
 class MessageResponse(BaseModel):
     message: str
@@ -48,7 +48,7 @@ class FavoriteRestaurantDTO(BaseModel):
         orm_mode = True
 
 
-# ------ 마이페이지 API  ------
+# 마이페이지 API
 
 @router.get("", response_model=UserResponseDTO)
 def get_my_page_info(current_user: User = Depends(get_current_user)):
