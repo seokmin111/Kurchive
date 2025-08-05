@@ -22,7 +22,7 @@ def get_db() -> Generator:
 JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-key")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
