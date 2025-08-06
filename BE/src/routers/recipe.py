@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 from datetime import datetime
 
 import json
@@ -11,19 +13,19 @@ from BE.src.database import SessionLocal
 from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit, Unit, UnitConversion, ConvertRequestDTO
 from BE.src.utils.units import get_conversion_coefficient, convert_unit
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from BE.src.database import async_session_maker
+
 import logging
 logger = logging.getLogger("convert")
 
 
 router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker() as session:
+        yield session
+        
 class RoleChecker:
     def __init__(self, min_role: str):
         self.min_role = min_role
@@ -100,8 +102,10 @@ def search_recipes(title: str, db: Session = Depends(get_db)):
     return db.query(Recipe).filter(Recipe.title.contains(title)).all()
 
 @router.get("/list", response_model=List[RecipeResponseDTO])
-def list_recipes(db: Session = Depends(get_db)):
-    return db.query(Recipe).all()
+async def list_recipes(db: AsyncSession = Depends(get_async_db)):
+    result = await db.execute(select(Recipe).options(selectinload(Recipe.ingredients), selectinload(Recipe.steps)))
+    recipes = result.scalars().all()
+    return recipes
 
 # 레시피 id로 조회
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
