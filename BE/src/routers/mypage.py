@@ -29,7 +29,7 @@ class UserResponseDTO(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class NicknameUpdateRequest(BaseModel):
     nickname: str
@@ -45,7 +45,7 @@ class FavoriteRestaurantDTO(BaseModel):
     rating: Optional[float]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # 마이페이지 API

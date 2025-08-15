@@ -9,6 +9,7 @@ from datetime import datetime
 
 import json
 
+from BE.src.dependencies import get_db
 from BE.src.database import SessionLocal
 from BE.src.models.recipes import Recipe, RecipeIngredient, RecipeStep, Ingredient, User, IngredientUnit, Unit, UnitConversion, ConvertRequestDTO
 from BE.src.utils.units import get_conversion_coefficient, convert_unit
@@ -51,7 +52,7 @@ class RecipeStepDTO(BaseModel):
     image_url: Optional[str] = None
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
 
 class RecipeCreateDTO(BaseModel):
     title: str
@@ -74,7 +75,7 @@ class RecipeResponseDTO(BaseModel):
     steps: List[RecipeStepDTO]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         
 # 재료 및 단위 변환
 class IngredientDetailDTO(BaseModel):
@@ -93,7 +94,7 @@ class RecipeResponseDTO(BaseModel):
     ingredients: List[IngredientDetailDTO]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ------API---------

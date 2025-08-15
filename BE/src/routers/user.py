@@ -147,4 +147,4 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "message": "로그인 성공",
         "status": "ok",
         "access_token": token,
-    }
+    } 

@@ -5,8 +5,8 @@ from fastapi import FastAPI
 
 import logging
 
-from BE.src.routers import user, map, recipe, mypage, restaurant
 import BE.src.models
+from BE.src.routers import user, map, recipe, mypage, restaurant
 from BE.src.database import Base, engine
 
 
