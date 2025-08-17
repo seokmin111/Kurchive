@@ -320,7 +320,6 @@ def create_recipe(data: RecipeCreateDTO, db: Session = Depends(get_db), current_
         "steps": recipe.steps,
         "ingredients": ingredients,
     }
-
 @router.put("/{recipe_id}", response_model=RecipeResponseDTO)
 def update_recipe(recipe_id: int, data: RecipeUpdateDTO, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker("임원진"))):
     recipe = db.query(Recipe).filter(Recipe.id == recipe_id).first()
@@ -339,7 +338,12 @@ def update_recipe(recipe_id: int, data: RecipeUpdateDTO, db: Session = Depends(g
     if data.ingredients:
         db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe_id).delete()
         for ing in data.ingredients:
-            db.add(RecipeIngredient(recipe_id=recipe.id, ingredient_id=ing.ingredient_id, quantity=ing.quantity, unit_name=ing.unit_name))
+            db.add(RecipeIngredient(
+                recipe_id=recipe.id,
+                ingredient_id=ing.ingredient_id,
+                quantity=ing.quantity,
+                unit_name=ing.unit_name
+            ))
 
     if data.steps:
         db.query(RecipeStep).filter(RecipeStep.recipe_id == recipe_id).delete()
@@ -353,7 +357,27 @@ def update_recipe(recipe_id: int, data: RecipeUpdateDTO, db: Session = Depends(g
 
     db.commit()
     db.refresh(recipe)
-    return recipe
+
+    # 여기서 ingredient.name 포함하도록 가공
+    ingredients = [
+        {
+            "ingredient_id": ri.ingredient_id,
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity,
+            "unit_name": ri.unit_name,
+        }
+        for ri in recipe.ingredients
+    ]
+
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": ingredients,
+    }
 
 @router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_recipe(recipe_id: int, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker("member"))):

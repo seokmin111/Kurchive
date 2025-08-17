@@ -83,22 +83,33 @@ def convert_unit(db, ingredient, qty, from_unit_name: str, to_unit_name: str):
             return via
 
 
-    # 3. weight <-> volume
+   # 3. weight <-> volume
     if from_type == "weight" and to_type == "volume" and getattr(ingredient, "density", None):
-        ml = qty / ingredient.density
+        # g → ml
+        ml_value = qty / ingredient.density
         if to_unit_name == "ml":
-            return ml, "ml"
+            return ml_value, "ml"
         coeff = get_conversion_coefficient(db, "ml", to_unit_name)
         if coeff:
-            return ml * coeff, to_unit_name
+            return ml_value * coeff, to_unit_name
 
     if from_type == "volume" and to_type == "weight" and getattr(ingredient, "density", None):
-        g = qty * ingredient.density
-        if to_unit_name == "g":
-            return g, "g"
-        coeff = get_conversion_coefficient(db, "g", to_unit_name)
+        # 먼저 from_unit → ml 변환
+        coeff = get_conversion_coefficient(db, from_unit_name, "ml")
         if coeff:
-            return g * coeff, to_unit_name
+            ml_value = qty * coeff
+        else:
+            ml_value = qty  # 이미 ml일 경우 그대로
+
+        # ml → g
+        g_value = ml_value * ingredient.density
+
+        if to_unit_name == "g":
+            return g_value, "g"
+        coeff2 = get_conversion_coefficient(db, "g", to_unit_name)
+        if coeff2:
+            return g_value * coeff2, to_unit_name
+
 
     # 변환 실패
     return qty, from_unit_name
