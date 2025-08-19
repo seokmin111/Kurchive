@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from db import Base  # 보통 db.py에서 Base = declarative_base()
+from BE.src.database import Base
 
 class Restaurant(Base):
     __tablename__ = "restaurants"
@@ -22,6 +22,7 @@ class Restaurant(Base):
 
     # 관계
     tags = relationship("RestaurantTag", back_populates="restaurant")
+    favorites = relationship("Favorite", back_populates="restaurant")
 
 
 class RestaurantTag(Base):

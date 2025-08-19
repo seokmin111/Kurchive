@@ -14,7 +14,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(levelname)s:%(name)s:%(message)s"
 )
-# 앱 시작 시 테이블 생성 (이미 DB에 있으면 건너뜀)
+# 앱 시작 시 테이블 생성 
 Base.metadata.create_all(bind=engine)
 
 
