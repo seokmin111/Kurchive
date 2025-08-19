@@ -210,3 +210,63 @@ def get_restaurant(
     }
 
 
+# 5. 식당 목록 조회 (조건부 필터링)
+'''region_id 없으면 지역 필터링 무시
+
+price_min 없으면 하한 무시, price_max 없으면 상한 무시
+
+tag_ids 없으면 태그 조건 무시, 있으면 AND 조건으로 모두 포함된 레스토랑만 반환'''
+
+@router.get("/restaurants")
+def list_restaurants(
+    region_id: Optional[int] = None,
+    tag_ids: Optional[str] = None,   # "10,101" 이런 식으로 받음
+    price_min: Optional[int] = None,
+    price_max: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # 인증 필요 없으면 제거 가능
+):
+    query = db.query(Restaurant)
+
+    # 지역 조건
+    if region_id is not None:
+        query = query.filter(Restaurant.location_tag_id == region_id)
+
+    # 가격 조건
+    if price_min is not None:
+        query = query.filter(Restaurant.price_min >= price_min)
+    if price_max is not None:
+        query = query.filter(Restaurant.price_max <= price_max)
+
+    restaurants = query.all()
+
+    results = []
+    for r in restaurants:
+        # 태그 join
+        tags = (
+            db.query(Tag.id, Tag.name)
+            .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+            .filter(RestaurantTag.restaurant_id == r.id)
+            .all()
+        )
+        tag_list = [{"id": t.id, "name": t.name} for t in tags]
+
+        # tag_ids 조건 필터링 (AND 조건)
+        if tag_ids:
+            requested = set(map(int, tag_ids.split(",")))
+            current = set([t["id"] for t in tag_list])
+            if not requested.issubset(current):
+                continue  # 조건 불만족이면 skip
+
+        results.append({
+            "id": r.id,
+            "name": r.name,
+            "address": r.address,
+            "rating": r.rating,
+            "summary": r.summary,
+            "price_min": r.price_min,
+            "price_max": r.price_max,
+            "tags": tag_list
+        })
+
+    return results
