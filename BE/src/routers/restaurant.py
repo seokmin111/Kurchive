@@ -115,7 +115,6 @@ def get_regions(
         {"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth}
         for r in regions
     ]
-
 # 3. 식당 아카이빙 (등록)
 @router.post("/restaurants")
 def create_restaurant(
@@ -123,62 +122,72 @@ def create_restaurant(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 주소 + 좌표 추출
     try:
-        address = get_address(str(payload.location_link))
-        lat, lon = (None, None)
-        if address:
-            coords = get_coords_from_address(address)
-            if coords:
-                lat, lon = coords
-    except Exception as e:
-        return JSONResponse(status_code=400, content={"detail": f"주소/좌표 추출 실패: {e}"})
+        # 주소 + 좌표 추출
+        address, lat, lon = None, None, None
+        try:
+            address = get_address(str(payload.location_link))
+            if address:
+                coords = get_coords_from_address(address)
+                if coords:
+                    lat, lon = coords
+        except Exception as e:
+            return {"ok": False, "message": f"주소/좌표 추출 실패: {e}"}
 
-    # insert
-    try:
-        restaurant = Restaurant(
-            name=payload.name,
-            address=address,
-            location_link=str(payload.location_link),
-            latitude=lat,
-            longitude=lon,
-            location_tag_id=payload.location_tag_id,
-            uploaded_by=current_user.id,
-            rating=payload.rating,
-            summary=payload.summary,
-            description=payload.description,
-            price_min=payload.price_min,
-            price_max=payload.price_max,
-            created_at=datetime.utcnow().timestamp()
-        )
-        db.add(restaurant)
-        db.commit()
-        db.refresh(restaurant)
-    except Exception as e:
-        db.rollback()
-        return JSONResponse(status_code=400, content={"detail": f"DB insert error: {e}"})
+        # insert
+        try:
+            restaurant = Restaurant(
+                name=payload.name,
+                address=address,
+                location_link=str(payload.location_link),
+                latitude=lat,
+                longitude=lon,
+                location_tag_id=payload.location_tag_id,
+                uploaded_by=current_user.id,
+                rating=payload.rating,
+                summary=payload.summary,
+                description=payload.description,
+                price_min=payload.price_min,
+                price_max=payload.price_max,
+                created_at=datetime.utcnow().timestamp()
+            )
+            db.add(restaurant)
+            db.commit()
+            db.refresh(restaurant)
+        except Exception as e:
+            db.rollback()
+            return {"ok": False, "message": f"DB insert error: {e}"}
 
-    # 태그 매핑
-    try:
-        for tag_id in payload.tag_ids:
-            rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
-            db.add(rt)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return JSONResponse(status_code=400, content={"detail": f"Tag insert error: {e}"})
+        # 태그 매핑
+        try:
+            for tag_id in payload.tag_ids:
+                rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
+                db.add(rt)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            return {"ok": False, "message": f"Tag insert error: {e}"}
 
-    return {
-        "id": restaurant.id,
-        "name": restaurant.name,
-        "address": restaurant.address,
-        "tags": payload.tag_ids,
-        "region": restaurant.location_tag_id,
-        "uploaded_by": current_user.id,
-        "lat": restaurant.latitude,
-        "lon": restaurant.longitude,
-        "created_at": datetime.utcnow().isoformat()
-    } 
+        return {
+            "ok": True,
+            "message": "식당 등록 완료",
+            "data": {
+                "id": restaurant.id,
+                "name": restaurant.name,
+                "address": restaurant.address,
+                "tags": payload.tag_ids,
+                "region": restaurant.location_tag_id,
+                "uploaded_by": current_user.id,
+                "lat": restaurant.latitude,
+                "lon": restaurant.longitude,
+                "created_at": datetime.utcnow().isoformat()
+            }
+        }
+
+    except Exception as e:
+        # 예상 못 한 모든 에러도 여기서 잡힘
+        return {"ok": False, "message": f"Unexpected error: {e}"}
+
 # 4. 식당 상세 조회
 @router.get("/restaurants/{restaurant_id}")
 def get_restaurant(
