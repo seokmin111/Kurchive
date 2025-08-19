@@ -10,12 +10,18 @@ from BE.src.routers import user, map, recipe, mypage, restaurant
 from BE.src.database import Base, engine
 
 
+import BE.src.models.tags   # 모델 먼저 import
+import BE.src.models.restaurants
+import BE.src.models.users
+import BE.src.models.regions
+
+# 모델 import 끝난 후에 create_all 실행
+Base.metadata.create_all(bind=engine)
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(levelname)s:%(name)s:%(message)s"
 )
-# 앱 시작 시 테이블 생성 
-Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
@@ -23,4 +29,4 @@ app.include_router(user.router, prefix="/api", tags=["User"])
 app.include_router(map.router, prefix="/api", tags=["Map"])
 app.include_router(recipe.router)
 app.include_router(mypage.router)
-app.include_router(restaurant.router)
+app.include_router(restaurant.router, tags=["Restaurants"])

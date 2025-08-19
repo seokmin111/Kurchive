@@ -85,6 +85,8 @@ def get_tags(
 @router.get("/tag-categories")
 def get_tag_categories(db: Session = Depends(get_db)):
     categories = db.query(TagCategory).all()
+    print("RAW categories:", categories)
+
     return [
         {"id": c.id, "name": c.name, "slug": c.slug}
         for c in categories
