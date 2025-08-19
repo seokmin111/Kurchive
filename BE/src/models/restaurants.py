@@ -1,15 +1,34 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from BE.src.database import Base
+from db import Base  # 보통 db.py에서 Base = declarative_base()
 
 class Restaurant(Base):
     __tablename__ = "restaurants"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    address = Column(String)
-    rating = Column(Float)
-    # favorites.py에 필요해서 미리 만들어둠 
-    # 이 뒤는 필요에 따라 추가...
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    location_link = Column(String, nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    location_tag_id = Column(Integer, ForeignKey("regions.id"), nullable=False)
+    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rating = Column(Integer, default=0)
+    summary = Column(Text)
+    description = Column(Text)
+    price_min = Column(Integer, nullable=False)
+    price_max = Column(Integer, nullable=False)
+    created_at = Column(Float)  # timestamp 저장
 
-    favorites = relationship("Favorite", back_populates="restaurant", cascade="all, delete-orphan")
+    # 관계
+    tags = relationship("RestaurantTag", back_populates="restaurant")
+
+
+class RestaurantTag(Base):
+    __tablename__ = "restaurant_tags"
+
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), primary_key=True)
+    tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
+
+    restaurant = relationship("Restaurant", back_populates="tags")
+    tag = relationship("Tag", back_populates="restaurants")
