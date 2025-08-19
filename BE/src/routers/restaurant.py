@@ -270,3 +270,85 @@ def list_restaurants(
         })
 
     return results
+
+# 6. 식당 정보 수정
+@router.put("/restaurants/{restaurant_id}")
+def update_restaurant(
+    restaurant_id: int,
+    payload: RestaurantCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    # 권한 체크 : 업로더 본인만 수정 가능
+    if restaurant.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this restaurant")
+
+    # 값 업데이트
+    restaurant.name = payload.name
+    restaurant.location_link = str(payload.location_link)
+    restaurant.location_tag_id = payload.location_tag_id
+    restaurant.rating = payload.rating
+    restaurant.summary = payload.summary
+    restaurant.description = payload.description
+    restaurant.price_min = payload.price_min
+    restaurant.price_max = payload.price_max
+
+    # 주소 + 위경도 재계산
+    try:
+        address = get_address(str(payload.location_link))
+        if address:
+            restaurant.address = address
+            coords = get_coords_from_address(address)
+            if coords:
+                restaurant.latitude, restaurant.longitude = coords
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"주소/좌표 추출 실패: {e}")
+
+    # 태그 매핑 갱신
+    db.query(RestaurantTag).filter(RestaurantTag.restaurant_id == restaurant.id).delete()
+    for tag_id in payload.tag_ids:
+        db.add(RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id))
+
+    db.commit()
+    db.refresh(restaurant)
+
+    return {"message": "Restaurant updated", "id": restaurant.id}
+
+# 7. 식당 삭제(Delete)
+@router.delete("/restaurants/{restaurant_id}")
+def delete_restaurant(
+    restaurant_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    if restaurant.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this restaurant")
+
+    db.query(RestaurantTag).filter(RestaurantTag.restaurant_id == restaurant.id).delete()
+    db.delete(restaurant)
+    db.commit()
+
+    return {"message": "Restaurant deleted", "id": restaurant_id}
+
+
+# 8. 태그 검색 자동완성
+@router.get("/tags/search")
+def search_tags(q: str, db: Session = Depends(get_db)):
+    tags = (
+        db.query(Tag)
+        .filter(Tag.name.like(f"%{q}%"))
+        .limit(10)
+        .all()
+    )
+    return [{"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id} for t in tags]
+
+
+
