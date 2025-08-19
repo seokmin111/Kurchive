@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
+
 from pydantic import BaseModel, HttpUrl, validator
 from typing import List, Optional
 from datetime import datetime
@@ -45,28 +47,49 @@ class RestaurantCreate(BaseModel):
 '''parent id가 없으면 자동으로 상위만 반환'''
 @router.get("/tags")
 def get_tags(
-    category: Optional[str] = None,
-    parent_id: Optional[int] = None,
+    category_id: Optional[int] = Query(None, alias="category_id"),
+    parent_id: Optional[int] = Query(None, alias="parent_id"),
     db: Session = Depends(get_db)
 ):
     query = db.query(Tag)
 
-    if category:
-        query = query.join(TagCategory).filter(TagCategory.slug == category)
+    # category_id 필터 확실히 적용
+    if category_id is not None:
+        query = query.filter(Tag.category_id == category_id)
 
     if parent_id is None:
-        # parent_id가 없으면 최상위 항목만
         query = query.filter(Tag.parent_id == None)
     else:
-        # parent_id가 있으면 해당 하위 항목만
         query = query.filter(Tag.parent_id == parent_id)
+
+    # 디버깅용 SQL 찍기
+    print(str(query.statement.compile(compile_kwargs={"literal_binds": True})))
 
     tags = query.all()
 
     return [
-        {"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id}
+        {
+            "id": t.id,
+            "name": t.name,
+            "slug": t.slug,
+            "parent_id": t.parent_id,
+            "category_id": t.category_id,
+            "is_selectable": t.is_selectable,
+            "featured_rank": t.featured_rank,
+        }
         for t in tags
     ]
+
+    
+## 카테고리 id 와 이름 보기 
+@router.get("/tag-categories")
+def get_tag_categories(db: Session = Depends(get_db)):
+    categories = db.query(TagCategory).all()
+    return [
+        {"id": c.id, "name": c.name, "slug": c.slug}
+        for c in categories
+    ]
+
 
 # 2. 지역 조회
 '''parent id가 없으면 자동으로 상위만 반환'''
@@ -107,7 +130,7 @@ def create_restaurant(
             if coords:
                 lat, lon = coords
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"주소/좌표 추출 실패: {e}")
+        return JSONResponse(status_code=400, content={"detail": f"주소/좌표 추출 실패: {e}"})
 
     # insert
     try:
@@ -131,7 +154,7 @@ def create_restaurant(
         db.refresh(restaurant)
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"DB insert error: {e}")
+        return JSONResponse(status_code=400, content={"detail": f"DB insert error: {e}"})
 
     # 태그 매핑
     try:
@@ -141,7 +164,7 @@ def create_restaurant(
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Tag insert error: {e}")
+        return JSONResponse(status_code=400, content={"detail": f"Tag insert error: {e}"})
 
     return {
         "id": restaurant.id,
@@ -153,9 +176,7 @@ def create_restaurant(
         "lat": restaurant.latitude,
         "lon": restaurant.longitude,
         "created_at": datetime.utcnow().isoformat()
-    }
-    
-    
+    } 
 # 4. 식당 상세 조회
 @router.get("/restaurants/{restaurant_id}")
 def get_restaurant(
