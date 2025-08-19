@@ -14,6 +14,7 @@ from BE.AddressLatLong import get_coords_from_address
 
 
 from BE.src.dependencies import get_db, get_current_user
+from BE.src.models.tags import Tag
 from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant, RestaurantTag  # ORM 모델 불러온다고 가정
 
@@ -46,6 +47,36 @@ class RestaurantCreate(BaseModel):
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
+## 태그 조회
+@router.get("/tags")
+def get_tags(category: Optional[str] = None, parent_id: Optional[int] = None, db: Session = Depends(get_db)):
+    query = db.query(Tag)
+    if category:
+        query = query.filter(Tag.category.has(slug=category))  # category 관계 매핑했다고 가정
+    if parent_id is not None:
+        query = query.filter(Tag.parent_id == parent_id)
+    tags = query.all()
+
+    return [
+        {"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id}
+        for t in tags
+    ]
+    
+## 지역 조회
+@router.get("/regions")
+def get_regions(parent_id: Optional[int] = None, db: Session = Depends(get_db)):
+    query = db.query(Region)
+    if parent_id is not None:
+        query = query.filter(Region.parent_id == parent_id)
+    regions = query.all()
+
+    return [
+        {"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth}
+        for r in regions
+    ]
+
+
+# 식당 아카이빙
 @router.post("/restaurants")
 def create_restaurant(
     payload: RestaurantCreate,
