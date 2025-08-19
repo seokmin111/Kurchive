@@ -1,35 +1,27 @@
-
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl, validator
 from typing import List, Optional
 from datetime import datetime
 import re
-import logging
 
 from sqlalchemy.orm import Session
+from BE.src.dependencies import get_db, get_current_user
+from BE.src.models.users import User
+from BE.src.models.restaurants import Restaurant, RestaurantTag
+from BE.src.models.tags import Tag, TagCategory
+from BE.src.models.regions import Region
 
 from BE.AddressExtraction import get_address
 from BE.AddressLatLong import get_coords_from_address
 
-
-from BE.src.dependencies import get_db, get_current_user
-from BE.src.models.tags import Tag
-from BE.src.models.users import User
-from BE.src.models.restaurants import Restaurant, RestaurantTag  # ORM 모델 불러온다고 가정
-
 router = APIRouter()
-logger = logging.getLogger("convert")
 
 # ---------------------------
 # 요청 모델
 # ---------------------------
 class RestaurantCreate(BaseModel):
     name: str
-    address: str
     location_link: HttpUrl
-    latitude: float
-    longitude: float
     location_tag_id: int
     rating: Optional[int] = 0
     summary: str
@@ -44,30 +36,54 @@ class RestaurantCreate(BaseModel):
             raise ValueError("location_link must be a Naver Map or Kakao Map link")
         return v
 
+
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
-## 태그 조회
+
+# 1. 태그 조회
+'''parent id가 없으면 자동으로 상위만 반환'''
 @router.get("/tags")
-def get_tags(category: Optional[str] = None, parent_id: Optional[int] = None, db: Session = Depends(get_db)):
+def get_tags(
+    category: Optional[str] = None,
+    parent_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
     query = db.query(Tag)
+
     if category:
-        query = query.filter(Tag.category.has(slug=category))  # category 관계 매핑했다고 가정
-    if parent_id is not None:
+        query = query.join(TagCategory).filter(TagCategory.slug == category)
+
+    if parent_id is None:
+        # parent_id가 없으면 최상위 항목만
+        query = query.filter(Tag.parent_id == None)
+    else:
+        # parent_id가 있으면 해당 하위 항목만
         query = query.filter(Tag.parent_id == parent_id)
+
     tags = query.all()
 
     return [
         {"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id}
         for t in tags
     ]
-    
-## 지역 조회
+
+# 2. 지역 조회
+'''parent id가 없으면 자동으로 상위만 반환'''
 @router.get("/regions")
-def get_regions(parent_id: Optional[int] = None, db: Session = Depends(get_db)):
+def get_regions(
+    parent_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
     query = db.query(Region)
-    if parent_id is not None:
+
+    if parent_id is None:
+        # parent_id 없으면 최상위 지역만 (예: 서울특별시, 부산광역시)
+        query = query.filter(Region.parent_id == None)
+    else:
+        # parent_id 있으면 해당 하위 지역만
         query = query.filter(Region.parent_id == parent_id)
+
     regions = query.all()
 
     return [
@@ -75,15 +91,14 @@ def get_regions(parent_id: Optional[int] = None, db: Session = Depends(get_db)):
         for r in regions
     ]
 
-
-# 식당 아카이빙
+# 3. 식당 아카이빙 (등록)
 @router.post("/restaurants")
 def create_restaurant(
     payload: RestaurantCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 0. 링크 기반 주소/위경도 추출
+    # 주소 + 좌표 추출
     try:
         address = get_address(str(payload.location_link))
         lat, lon = (None, None)
@@ -94,7 +109,7 @@ def create_restaurant(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"주소/좌표 추출 실패: {e}")
 
-    # 1. restaurants insert
+    # insert
     try:
         restaurant = Restaurant(
             name=payload.name,
@@ -118,7 +133,7 @@ def create_restaurant(
         db.rollback()
         raise HTTPException(status_code=400, detail=f"DB insert error: {e}")
 
-    # 2. restaurant_tags insert
+    # 태그 매핑
     try:
         for tag_id in payload.tag_ids:
             rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
@@ -139,3 +154,59 @@ def create_restaurant(
         "lon": restaurant.longitude,
         "created_at": datetime.utcnow().isoformat()
     }
+    
+    
+# 4. 식당 상세 조회
+@router.get("/restaurants/{restaurant_id}")
+def get_restaurant(
+    restaurant_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # 로그인 필요 없다면 제거 가능
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    # 태그 join
+    tag_q = (
+        db.query(Tag.id, Tag.name)
+        .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+        .filter(RestaurantTag.restaurant_id == restaurant.id)
+        .all()
+    )
+    tags = [{"id": t.id, "name": t.name} for t in tag_q]
+
+    # 지역 join
+    region = (
+        db.query(Region.id, Region.name, Region.parent_id, Region.depth)
+        .filter(Region.id == restaurant.location_tag_id)
+        .first()
+    )
+    region_dict = None
+    if region:
+        region_dict = {
+            "id": region.id,
+            "name": region.name,
+            "parent_id": region.parent_id,
+            "depth": region.depth,
+        }
+
+    return {
+        "id": restaurant.id,
+        "name": restaurant.name,
+        "address": restaurant.address,
+        "location_link": restaurant.location_link,
+        "latitude": restaurant.latitude,
+        "longitude": restaurant.longitude,
+        "region": region_dict,
+        "tags": tags,
+        "rating": restaurant.rating,
+        "summary": restaurant.summary,
+        "description": restaurant.description,
+        "price_min": restaurant.price_min,
+        "price_max": restaurant.price_max,
+        "uploaded_by": restaurant.uploaded_by,
+        "created_at": restaurant.created_at,
+    }
+
+
