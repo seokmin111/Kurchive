@@ -32,10 +32,18 @@ class RestaurantCreate(BaseModel):
     tag_ids: List[int]
     # 사전 검증
     @validator("location_link")
-    def check_map_link(cls, v):
-        import re
-        if not (re.match(r"^https:\/\/map\.naver\.com", v) or re.match(r"^https:\/\/map\.kakao\.com", v)):
+    def validate_location_link(cls, v: str):
+        if not isinstance(v, str) or not v.strip():
+            raise ValueError("location_link must be a non-empty string")
+
+        # URL 기본 형식 검증 (http:// or https://)
+        if not re.match(r"^https?://", v):
+            raise ValueError("location_link must be a valid URL (http/https)")
+
+        # 네이버/카카오 지도 링크 검증
+        if not (v.startswith("https://map.naver.com") or v.startswith("https://map.kakao.com")):
             raise ValueError("location_link must be a Naver Map or Kakao Map link")
+
         return v
 
     @validator("name", "summary", "description")
