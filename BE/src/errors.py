@@ -6,8 +6,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 def err(status: int, msg: str, details=None):
-    return JSONResponse(status_code=status, content={"ok": False, "error": msg, "details": details})
+    # 예외 객체가 들어오면 안전하게 문자열로 변환
+    if isinstance(details, BaseException):
+        details = {"type": details.__class__.__name__, "message": str(details)}
 
+    return JSONResponse(
+        status_code=status,
+        content={"ok": False, "error": msg, "details": details},
+    )
 def register_exception_handlers(app: FastAPI):
     @app.exception_handler(RequestValidationError)
     async def _(request: Request, exc: RequestValidationError):
