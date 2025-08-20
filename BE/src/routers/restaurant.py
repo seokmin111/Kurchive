@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
-from pydantic import BaseModel, HttpUrl, validator
+from pydantic import BaseModel, HttpUrl, validator, conint
 from typing import List, Optional
 from datetime import datetime
 import re
@@ -20,24 +20,48 @@ router = APIRouter()
 
 # ---------------------------
 # 요청 모델
-# ---------------------------
 class RestaurantCreate(BaseModel):
     name: str
     location_link: HttpUrl
     location_tag_id: int
-    rating: Optional[int] = 0
+    rating: Optional[conint(ge=0, le=5)] = 0   # 0~5
     summary: str
     description: str
     price_min: int
     price_max: int
     tag_ids: List[int]
-
+    # 사전 검증
     @validator("location_link")
     def check_map_link(cls, v):
+        import re
         if not (re.match(r"^https:\/\/map\.naver\.com", v) or re.match(r"^https:\/\/map\.kakao\.com", v)):
             raise ValueError("location_link must be a Naver Map or Kakao Map link")
         return v
 
+    @validator("name", "summary", "description")
+    def not_empty(cls, v):
+        if not str(v).strip():
+            raise ValueError("must not be empty")
+        return v
+
+    @validator("price_min", "price_max")
+    def non_negative(cls, v):
+        if v < 0:
+            raise ValueError("price must be >= 0")
+        return v
+
+    @validator("tag_ids")
+    def at_least_one_tag(cls, v):
+        if not v:
+            raise ValueError("at least one tag is required")
+        return v
+
+    @validator("price_max")
+    def check_price_range(cls, v, values):
+        pm = values.get("price_min")
+        if pm is not None and v < pm:
+            raise ValueError("price_max must be >= price_min")
+        return v
 
 # ---------------------------
 # API 엔드포인트

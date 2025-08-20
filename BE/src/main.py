@@ -14,6 +14,8 @@ import BE.src.models.restaurants
 import BE.src.models.users
 import BE.src.models.regions
 
+from BE.src.errors import register_exception_handlers
+
 # 모델 import 끝난 후에 create_all 실행
 Base.metadata.create_all(bind=engine)
 
@@ -24,6 +26,10 @@ logging.basicConfig(
 
 
 app = FastAPI()
+
+register_exception_handlers(app)
+
+
 app.include_router(user.router, prefix="/api", tags=["User"])
 app.include_router(map.router, prefix="/api", tags=["Map"])
 app.include_router(recipe.router)
