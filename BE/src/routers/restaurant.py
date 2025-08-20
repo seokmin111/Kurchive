@@ -22,7 +22,7 @@ router = APIRouter()
 # 요청 모델
 class RestaurantCreate(BaseModel):
     name: str
-    location_link: HttpUrl
+    location_link: str
     location_tag_id: int
     rating: Optional[conint(ge=0, le=5)] = 0   # 0~5
     summary: str
@@ -40,11 +40,17 @@ class RestaurantCreate(BaseModel):
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (http/https)")
 
-        # 네이버/카카오 지도 링크 검증
-        if not (v.startswith("https://map.naver.com") or v.startswith("https://map.kakao.com")):
+        # 네이버/카카오 지도 링크 허용
+        if not (
+            v.startswith("https://map.naver.com")
+            or v.startswith("https://naver.me")
+            or v.startswith("https://place.map.kakao.com")
+            or v.startswith("https://map.kakao.com")
+        ):
             raise ValueError("location_link must be a Naver Map or Kakao Map link")
 
         return v
+
 
     @validator("name", "summary", "description")
     def not_empty(cls, v):

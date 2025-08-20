@@ -12,6 +12,8 @@ import requests
 import re
 
 KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
+NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID")
+NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET")
 
 # 단축 URL 풀기
 def expand_short_url(short_url: str) -> str:
@@ -109,7 +111,7 @@ def get_address(url):
     
     if "naver.com" in full_url:
         print("네이버")
-        return get_naver_address(url)
+        return get_naver_address_from_name(url)
     
     elif "kakao.com" in full_url or "place.map.kakao.com" in full_url:
         print("카카오")
