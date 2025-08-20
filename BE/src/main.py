@@ -8,7 +8,6 @@ import logging
 import BE.src.models
 from BE.src.routers import user, map, recipe, mypage, restaurant
 from BE.src.database import Base, engine
-from BE.src.errors import BusinessError
 
 import BE.src.models.tags   # 모델 먼저 import
 import BE.src.models.restaurants
@@ -25,11 +24,6 @@ logging.basicConfig(
 
 
 app = FastAPI()
-@app.exception_handler(BusinessError)
-async def business_error_handler(request: Request, exc: BusinessError):
-    # 의도된(유효성/도메인) 오류는 항상 200으로, 메시지만 반환
-    return JSONResponse(status_code=200, content={"ok": False, "message": exc.message})
-
 app.include_router(user.router, prefix="/api", tags=["User"])
 app.include_router(map.router, prefix="/api", tags=["Map"])
 app.include_router(recipe.router)
