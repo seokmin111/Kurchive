@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 from BE.src.database import Base
 
@@ -10,8 +10,14 @@ class User(Base):
     password = Column(String, nullable=False)
     name = Column(String)
     nickname = Column(String, nullable=False, unique=True)
-    role = Column(String, default="member")
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    # 찜한 목록
 
+    # 임원진(레시피 접근 가능) 여부
+    role = Column(String, default="member", nullable=False)
+
+    # 관리자 여부 
+    is_admin = Column(Boolean, default=False, nullable=False)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # 찜한 목록
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
