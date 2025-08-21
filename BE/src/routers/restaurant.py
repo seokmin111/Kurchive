@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from pydantic import BaseModel, HttpUrl, validator, conint
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import re
 
@@ -13,8 +13,27 @@ from BE.src.models.restaurants import Restaurant, RestaurantTag
 from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
 
-from BE.AddressExtraction import get_address
-from BE.AddressLatLong import get_coords_from_address
+from BE.AddressLatLong import (
+    extract_location_from_link,
+    get_address,
+    get_coords_from_address
+)
+
+# ---------------------------
+# 공통 응답 헬퍼
+# ---------------------------
+def ok(data: Any = None, message: str = "OK", meta: Optional[Dict[str, Any]] = None, status_code: int = 200):
+    payload = {"ok": True, "message": message, "data": data}
+    if meta is not None:
+        payload["meta"] = meta
+    return JSONResponse(content=payload, status_code=status_code)
+
+def fail(message: str, status_code: int = 400, meta: Optional[Dict[str, Any]] = None):
+    payload = {"ok": False, "message": message, "data": None}
+    if meta is not None:
+        payload["meta"] = meta
+    return JSONResponse(content=payload, status_code=status_code)
+
 
 router = APIRouter()
 
@@ -31,25 +50,28 @@ class RestaurantCreate(BaseModel):
     price_max: int
     tag_ids: List[int]
     # 사전 검증
+    # 기존 validator("location_link") 교체
     @validator("location_link")
     def validate_location_link(cls, v: str):
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
 
-        # URL 기본 형식 검증 (http:// or https://)
+        # URL 기본 형식 검증
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (http/https)")
 
-        # 네이버/카카오 지도 링크 허용
-        if not (
+        # 네이버/카카오 지도 링크 허용 (kko.kakao.com 추가)
+        allowed = (
             v.startswith("https://map.naver.com")
             or v.startswith("https://naver.me")
-            or v.startswith("https://place.map.kakao.com")
             or v.startswith("https://map.kakao.com")
-        ):
+            or v.startswith("https://kko.kakao.com")
+        )
+        if not allowed:
             raise ValueError("location_link must be a Naver Map or Kakao Map link")
 
         return v
+
 
 
     @validator("name", "summary", "description")
@@ -76,7 +98,63 @@ class RestaurantCreate(BaseModel):
         if pm is not None and v < pm:
             raise ValueError("price_max must be >= price_min")
         return v
+    
+class RestaurantCreatedData(BaseModel):
+    id: int
+    name: str
+    address: Optional[str] = None
+    tags: List[int]
+    region: int
+    uploaded_by: int
+    lat: Optional[float] = None     
+    lon: Optional[float] = None     
+    created_at: str
 
+class CreateRestaurantResponse(BaseModel):
+    ok: bool
+    message: str
+    data: RestaurantCreatedData
+
+
+# --- [GET /restaurants/{id}] 상세 조회 응답 모델 ---
+class RestaurantTagOut(BaseModel):
+    id: int
+    name: str
+
+class RegionOut(BaseModel):
+    id: int
+    name: str
+    parent_id: Optional[int] = None
+    depth: Optional[int] = None
+
+class RestaurantDetailOut(BaseModel):
+    id: int
+    name: str
+    address: Optional[str] = None
+    location_link: str
+    latitude: Optional[float] = None   # ✅ 모델에 포함
+    longitude: Optional[float] = None  # ✅ 모델에 포함
+    region: Optional[RegionOut] = None
+    tags: List[RestaurantTagOut]
+    rating: int
+    summary: str
+    description: str
+    price_min: int
+    price_max: int
+    uploaded_by: int
+    created_at: float
+
+
+# --- [GET /restaurants] 목록 조회 응답 모델 ---
+class RestaurantListItem(BaseModel):
+    id: int
+    name: str
+    address: Optional[str] = None
+    rating: int
+    summary: str
+    price_min: int
+    price_max: int
+    tags: List[RestaurantTagOut]
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
@@ -153,85 +231,89 @@ def get_regions(
         {"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth}
         for r in regions
     ]
-# 3. 식당 아카이빙 (등록)
-@router.post("/restaurants")
+# 3. 식당 아카이빙
+@router.post("/restaurants", response_model=CreateRestaurantResponse)
 def create_restaurant(
     payload: RestaurantCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # 1) 주소 + 좌표 추출 (실패해도 흐름 계속)
+    address, lat, lon = None, None, None
     try:
-        # 주소 + 좌표 추출
-        address, lat, lon = None, None, None
-        try:
+        loc = extract_location_from_link(str(payload.location_link))
+        if loc:
+            address = loc.get("road_address") or loc.get("address")
+            lat, lon = loc.get("lat"), loc.get("lng")
+
+        if not address:
             address = get_address(str(payload.location_link))
-            if address:
-                coords = get_coords_from_address(address)
-                if coords:
-                    lat, lon = coords
-        except Exception as e:
-            return {"ok": False, "message": f"주소/좌표 추출 실패: {e}"}
 
-        # insert
-        try:
-            restaurant = Restaurant(
-                name=payload.name,
-                address=address,
-                location_link=str(payload.location_link),
-                latitude=lat,
-                longitude=lon,
-                location_tag_id=payload.location_tag_id,
-                uploaded_by=current_user.id,
-                rating=payload.rating,
-                summary=payload.summary,
-                description=payload.description,
-                price_min=payload.price_min,
-                price_max=payload.price_max,
-                created_at=datetime.utcnow().timestamp()
-            )
-            db.add(restaurant)
-            db.commit()
-            db.refresh(restaurant)
-        except Exception as e:
-            db.rollback()
-            return {"ok": False, "message": f"DB insert error: {e}"}
-
-        # 태그 매핑
-        try:
-            for tag_id in payload.tag_ids:
-                rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
-                db.add(rt)
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            return {"ok": False, "message": f"Tag insert error: {e}"}
-
-        return {
-            "ok": True,
-            "message": "식당 등록 완료",
-            "data": {
-                "id": restaurant.id,
-                "name": restaurant.name,
-                "address": restaurant.address,
-                "tags": payload.tag_ids,
-                "region": restaurant.location_tag_id,
-                "uploaded_by": current_user.id,
-                "lat": restaurant.latitude,
-                "lon": restaurant.longitude,
-                "created_at": datetime.utcnow().isoformat()
-            }
-        }
-
+        if (lat is None or lon is None) and address:
+            coords = get_coords_from_address(address)
+            if coords:
+                lat, lon = coords
     except Exception as e:
-        # 예상 못 한 모든 에러도 여기서 잡힘
-        return {"ok": False, "message": f"Unexpected error: {e}"}
+        # 💡 절대 return/raise 하지 않음 — 아래 insert는 항상 시도
+        print(f"[주소 추출 실패] {e}")
+
+    # 2) insert (항상 여기로 옴)
+    try:
+        restaurant = Restaurant(
+            name=payload.name,
+            address=address,
+            location_link=str(payload.location_link),
+            latitude=lat,
+            longitude=lon,
+            location_tag_id=payload.location_tag_id,
+            uploaded_by=current_user.id,
+            rating=payload.rating,
+            summary=payload.summary,
+            description=payload.description,
+            price_min=payload.price_min,
+            price_max=payload.price_max,
+            created_at=datetime.utcnow().timestamp()
+        )
+        db.add(restaurant)
+        db.commit()
+        db.refresh(restaurant)
+    except Exception as e:
+        db.rollback()
+        return {"ok": False, "message": f"DB insert error: {e}"}
+
+    # 3) 태그 매핑
+    try:
+        for tag_id in payload.tag_ids:
+            rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
+            db.add(rt)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return {"ok": False, "message": f"Tag insert error: {e}"}
+
+    # 4) 최종 응답 — 반드시 dict 리턴
+    return {
+        "ok": True,
+        "message": "식당 등록 완료",
+        "data": {
+            "id": restaurant.id,
+            "name": restaurant.name,
+            "address": restaurant.address,
+            "tags": payload.tag_ids,
+            "region": restaurant.location_tag_id,
+            "uploaded_by": current_user.id,
+            "lat": restaurant.latitude,
+            "lon": restaurant.longitude,
+            "created_at": datetime.utcnow().isoformat()
+        }
+    }
 
 # 4. 식당 상세 조회
 @router.get("/restaurants/{restaurant_id}")
 def get_restaurant(
     restaurant_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # 로그인 필요 없다면 제거 가능
+    current_user: User = Depends(get_current_user)  
 ):
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
     if not restaurant:
@@ -341,8 +423,9 @@ def list_restaurants(
 
     return results
 
+# 6. 식당 정보 수정@router.put("/restaurants/{restaurant_id}")
 # 6. 식당 정보 수정
-@router.put("/restaurants/{restaurant_id}")
+@router.put("/restaurants/{restaurant_id}", response_model = RestaurantDetailOut)
 def update_restaurant(
     restaurant_id: int,
     payload: RestaurantCreate,
@@ -353,7 +436,6 @@ def update_restaurant(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    # 권한 체크 : 업로더 본인만 수정 가능
     if restaurant.uploaded_by != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to update this restaurant")
 
@@ -367,16 +449,28 @@ def update_restaurant(
     restaurant.price_min = payload.price_min
     restaurant.price_max = payload.price_max
 
-    # 주소 + 위경도 재계산
+    # 주소 + 위경도 재계산 (실패해도 흐름 계속)
+    address, lat, lon = None, None, None
     try:
-        address = get_address(str(payload.location_link))
-        if address:
-            restaurant.address = address
+        loc = extract_location_from_link(str(payload.location_link))
+        if loc:
+            address = loc.get("road_address") or loc.get("address")
+            lat, lon = loc.get("lat"), loc.get("lng")
+
+        if not address:
+            address = get_address(str(payload.location_link))
+
+        if (lat is None or lon is None) and address:
             coords = get_coords_from_address(address)
             if coords:
-                restaurant.latitude, restaurant.longitude = coords
+                lat, lon = coords
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"주소/좌표 추출 실패: {e}")
+        print(f"[주소/좌표 추출 실패] {e}")
+
+    # 반영
+    restaurant.address = address
+    restaurant.latitude = lat
+    restaurant.longitude = lon
 
     # 태그 매핑 갱신
     db.query(RestaurantTag).filter(RestaurantTag.restaurant_id == restaurant.id).delete()
@@ -387,6 +481,7 @@ def update_restaurant(
     db.refresh(restaurant)
 
     return {"message": "Restaurant updated", "id": restaurant.id}
+
 
 # 7. 식당 삭제(Delete)
 @router.delete("/restaurants/{restaurant_id}")
