@@ -25,6 +25,19 @@ def expand_short_url(short_url: str) -> str:
         return None
 
 # 장소 id 추출
+## 1. 네이버
+def extract_naver_place_id(full_url: str) -> str | None:
+    match = re.search(r'/place/(\d+)', full_url)
+    if match:
+        return match.group(1)
+    return None
+
+## 2. 카카오
+def extract_kakao_place_id(full_url: str) -> str | None:
+    parsed = urlparse(full_url)
+    query_params = parse_qs(parsed.query)
+    item_id = query_params.get('itemId')
+    return item_id[0] if item_id else None
 
 # 주소 추출
 ## 1. 카카오
@@ -56,32 +69,44 @@ def extract_kakao_place_id_from_url(full_url: str) -> str | None:
     m = re.search(r'place\.map\.kakao\.com/(?:m/)?(\d+)', full_url)
     return m.group(1) if m else None
 
-def extract_kakao_place_name(place_id: str) -> str | None:
-    url = f"https://place.map.kakao.com/m/{place_id}"
+def extract_kakao_place_name(full_url: str) -> str | None:
     try:
-        res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=7)
+        res = requests.get(full_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=7)
         soup = BeautifulSoup(res.text, "html.parser")
-        # <title>상호명 - 카카오맵</title> or og:title
-        title = soup.find("meta", {"property": "og:title"})
-        if title and title.get("content"):
-            return title["content"].replace(" - 카카오맵", "").strip()
+        # og:title에 상호명 있음
+        og_title = soup.find("meta", {"property": "og:title"})
+        if og_title and og_title.get("content"):
+            return og_title["content"].replace(" - 카카오맵", "").strip()
         t = soup.find("title")
         if t and t.text:
             return t.text.replace(" - 카카오맵", "").split(" | ")[0].strip()
         return None
     except Exception as e:
-        print("extract_kakao_place_name 실패:", e)
+        print("카카오 장소명 파싱 실패:", e)
         return None
+
 
 def get_kakao_address(url: str) -> str | None:
     full = expand_short_url(url) or url
-    pid = extract_kakao_place_id_from_url(full)
-    if not pid:
-        return None
-    name = extract_kakao_place_name(pid)
+    name = extract_kakao_place_name(full)
     if not name:
         return None
-    return kakao_keyword_to_address(name)   # ← 주소 문자열 반환
+
+    api = "https://dapi.kakao.com/v2/local/search/keyword.json"
+    headers = {"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"}
+    params = {"query": name, "size": 1}
+
+    try:
+        r = requests.get(api, headers=headers, params=params, timeout=7)
+        r.raise_for_status()
+        docs = r.json().get("documents", [])
+        if not docs:
+            return None
+        top = docs[0]
+        return top.get("road_address_name") or top.get("address_name")
+    except Exception as e:
+        print("kakao_keyword_to_address 실패:", e)
+        return None
 
 
 ## 2. 네이버
@@ -126,12 +151,19 @@ def get_naver_address_from_name(place_name: str) -> str | None:
 
 def get_naver_address(url: str) -> str | None:
     full = expand_short_url(url) or url
-    # place 이름 추출 → Local API 검색
-    name = extract_naver_place_name(full)
-    if not name:
-        # 이름 못 뽑으면 Kakao 키워드 검색으로 우회
-        return kakao_keyword_to_address(os.path.basename(full))  # 안전망
-    return get_naver_address_from_name(name)
+    place_id = extract_naver_place_id(full)
+    if not place_id:
+        return None
+    try:
+        api_url = f"https://map.naver.com/v5/api/sites/summary/{place_id}"
+        res = requests.get(api_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=7)
+        res.raise_for_status()
+        data = res.json()
+        return data.get("address", {}).get("roadAddress") or data.get("address", {}).get("jibunAddress")
+    except Exception as e:
+        print("네이버 placeId API 실패:", e)
+        return None
+
 
 #------------------------------------------------------------------------
 
@@ -149,21 +181,37 @@ def get_address(url: str) -> str | None:
 
     return None  # 불명 링크
 
+## ---------------------------------------------------------------
+# 위도경도 추출
+KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 
-# # 네이버 예시
-# url = "https://naver.me/GubwElwt"
-# 심포니오브차이나
-# road_address = get_address(url)
-# print("도로명 : ",road_address)
+def get_coords_from_address(address: str) -> tuple[str, str] | None:
+    url = "https://dapi.kakao.com/v2/local/search/address.json"
+    headers = {
+        "Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"
+    }
+    params = {
+        "query": address
+    }
 
-# ## 카카오
-# url = "https://kko.kakao.com/9oC2Kr7EFq"
+    try:
+        res = requests.get(url, headers=headers, params=params)
+        res.raise_for_status()
+        result = res.json()
 
-# a = get_kakao_address(url)
-# print(a)
-# # 서울 송파구 위례성대로12길 8가 나옴
+        if result["documents"]:
+            doc = result["documents"][0]
+            lat = doc["y"]
+            lon = doc["x"]
+            return lat, lon
+        else:
+            print("좌표 검색 결과 없음:", address)
+            return None
+    except Exception as e:
+        print("카카오 좌표 변환 실패:", e)
+        return None
 
-from BE.AddressLatLong import get_coords_from_address
+# 테스트
 def main():
     # 환경변수 확인 (없으면 좌표 변환/검색 실패)
     print("KAKAO_REST_API_KEY:", bool(os.environ.get("KAKAO_REST_API_KEY")))
