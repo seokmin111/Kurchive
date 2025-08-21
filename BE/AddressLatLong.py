@@ -383,9 +383,34 @@ def get_address(url: str) -> str:
 
     return "지원하지 않는 링크 형식입니다."
 
+
+def get_coords_from_address(address: str) -> Optional[Tuple[float, float]]:
+    """
+    도로명/지번 주소 문자열 → (lat, lng)
+    Kakao REST /v2/local/search/address.json 사용
+    """
+    if not KAKAO_REST_API_KEY:
+        return None
+    try:
+        url = "https://dapi.kakao.com/v2/local/search/address.json"
+        params = {"query": address, "size": 1}
+        r = requests.get(url, headers=KAKAO_HEADERS, params=params, timeout=7)
+        r.raise_for_status()
+        docs = r.json().get("documents", [])
+        if not docs:
+            return None
+        top = docs[0]
+        lat, lng = safe_float(top.get("y")), safe_float(top.get("x"))
+        if lat is None or lng is None:
+            return None
+        return (lat, lng)
+    except Exception:
+        return None
+
 # =================================================
 # 테스트
 # =================================================
+'''
 if __name__ == "__main__":
     test_urls = [
         # 네이버 단축
@@ -402,3 +427,4 @@ if __name__ == "__main__":
         loc = extract_location_from_link(u)
         print(json.dumps(loc, ensure_ascii=False, indent=2))
         print("주소 전용(get_address):", get_address(u))
+'''
