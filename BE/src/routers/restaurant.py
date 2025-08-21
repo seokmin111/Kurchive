@@ -423,9 +423,9 @@ def list_restaurants(
 
     return results
 
-# 6. 식당 정보 수정@router.put("/restaurants/{restaurant_id}")
 # 6. 식당 정보 수정
-@router.put("/restaurants/{restaurant_id}", response_model = RestaurantDetailOut)
+# 6. 식당 정보 수정
+@router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
 def update_restaurant(
     restaurant_id: int,
     payload: RestaurantCreate,
@@ -436,6 +436,7 @@ def update_restaurant(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
+    # 권한 체크
     if restaurant.uploaded_by != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to update this restaurant")
 
@@ -449,7 +450,7 @@ def update_restaurant(
     restaurant.price_min = payload.price_min
     restaurant.price_max = payload.price_max
 
-    # 주소 + 위경도 재계산 (실패해도 흐름 계속)
+    # 주소/좌표 재계산 (실패해도 흐름 유지)
     address, lat, lon = None, None, None
     try:
         loc = extract_location_from_link(str(payload.location_link))
@@ -480,8 +481,46 @@ def update_restaurant(
     db.commit()
     db.refresh(restaurant)
 
-    return {"message": "Restaurant updated", "id": restaurant.id}
+    # 응답용 조인 (RestaurantDetailOut 스키마 맞춤)
+    tag_q = (
+        db.query(Tag.id, Tag.name)
+        .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+        .filter(RestaurantTag.restaurant_id == restaurant.id)
+        .all()
+    )
+    tags = [{"id": t.id, "name": t.name} for t in tag_q]
 
+    region = (
+        db.query(Region.id, Region.name, Region.parent_id, Region.depth)
+        .filter(Region.id == restaurant.location_tag_id)
+        .first()
+    )
+    region_dict = None
+    if region:
+        region_dict = {
+            "id": region.id,
+            "name": region.name,
+            "parent_id": region.parent_id,
+            "depth": region.depth,
+        }
+
+    return {
+        "id": restaurant.id,
+        "name": restaurant.name,
+        "address": restaurant.address,
+        "location_link": restaurant.location_link,
+        "latitude": restaurant.latitude,
+        "longitude": restaurant.longitude,
+        "region": region_dict,
+        "tags": tags,
+        "rating": restaurant.rating,
+        "summary": restaurant.summary,
+        "description": restaurant.description,
+        "price_min": restaurant.price_min,
+        "price_max": restaurant.price_max,
+        "uploaded_by": restaurant.uploaded_by,
+        "created_at": restaurant.created_at,
+    }
 
 # 7. 식당 삭제(Delete)
 @router.delete("/restaurants/{restaurant_id}")
