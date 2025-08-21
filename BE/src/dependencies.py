@@ -1,6 +1,9 @@
 # BE/src/dependencies.py 
 
 from typing import Generator
+from datetime import datetime, timedelta, timezone
+
+
 from fastapi import Depends, HTTPException, status
 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
@@ -50,3 +53,12 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+def create_access_token(sub: str, expires_in_seconds: int = 3600) -> str:
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": sub,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(seconds=expires_in_seconds)).timestamp()),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)

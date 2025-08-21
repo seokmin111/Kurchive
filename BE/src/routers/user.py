@@ -14,6 +14,9 @@ from BE.src.database import async_session_maker
 from BE.src.models.users import User
 from BE.src.models.signup_code import SignupCode
 
+
+from BE.src.dependencies import create_access_token
+
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -155,9 +158,7 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_async_db)):
     if not user or not pwd_context.verify(data.PW, user.password):
         raise HTTPException(status_code=400, detail="아이디 또는 비밀번호가 잘못되었습니다.")
 
-    expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRE_MINUTES)
-    payload = {"sub": str(user.id), "exp": expire}
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    access_token = create_access_token(sub=str(user.id))
 
     return {
         "user_id": str(user.id),
@@ -166,5 +167,7 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_async_db)):
         "loginSuccess": True,
         "message": "로그인 성공",
         "status": "ok",
-        "access_token": token,
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": JWT_EXPIRE_MINUTES * 60,
     }
