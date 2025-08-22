@@ -1,3 +1,36 @@
+import sqlite3
+import pandas as pd
+
+csv_path = "restaurants_ready.csv"
+sqlite_path = "BE/DB/Data.db"
+
+df = pd.read_csv(csv_path, encoding = "utf-8")
+df["location_tag_id"] = 1
+
+cols = [
+    "name","address","location_link","latitude","longitude",
+    "location_tag_id","uploaded_by","rating","summary","description",
+    "price_min","price_max","created_at"
+]
+df = df[cols].where(pd.notnull(df), None)
+
+records = list(df.itertuples(index=False, name=None))
+
+sql = """
+INSERT INTO restaurants
+(name, address, location_link, latitude, longitude,
+ location_tag_id, uploaded_by, rating, summary, description,
+ price_min, price_max, created_at)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+"""
+
+conn = sqlite3.connect(sqlite_path)
+with conn:
+    conn.executemany(sql, records)
+print("✅", len(records), "rows inserted.")
+
+
+'''
 import pandas as pd
 import sqlite3
 import numpy as np
@@ -33,7 +66,7 @@ conn.close()
 
 print("✅ Data.db에 ingredients 테이블 삽입 완료!")
 
-
+'''
 '''
 
 # 1. CSV 파일 불러오기
