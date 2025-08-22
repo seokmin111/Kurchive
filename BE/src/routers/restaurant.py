@@ -8,6 +8,7 @@ from datetime import datetime
 import shutil, os, time
 
 import re
+import secrets
 
 from sqlalchemy.orm import Session
 from BE.src.dependencies import get_db, get_current_user
@@ -156,6 +157,16 @@ class RestaurantListItem(BaseModel):
     price_min: int
     price_max: int
     tags: List[RestaurantTagOut]
+    
+# 이미지
+
+ALLOWED_IMAGE_CT = {"image/jpeg", "image/png", "image/webp"}
+UPLOAD_DIR = "static/uploads"
+
+class ImageOut(BaseModel):
+    id: int
+    image_url: str
+    created_at: float
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
@@ -238,7 +249,6 @@ def get_regions(
 @router.post("/restaurants", response_model=CreateRestaurantResponse)
 def create_restaurant(
     payload: RestaurantCreate,
-    files: List[UploadFile] = File,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -277,23 +287,8 @@ def create_restaurant(
     except Exception as e:
         db.rollback()
         return {"ok": False, "message": f"DB insert error: {e}"}
-    
-    # 3) image
-    if files:
-        os.makedirs("static/uploads", exist_ok=True)
-        for file in files:
-            save_path = os.path.join("static/uploads", file.filename)
-            with open(save_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            db.add(RestaurantImage(
-                restaurant_id=restaurant.id,
-                image_url=f"/{save_path}",
-                created_at=time.time()
-            ))
-        db.commit()
-    
 
-    # 4) 태그 매핑
+    # 3) 태그 매핑
     try:
         for tag_id in payload.tag_ids:
             rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
@@ -303,7 +298,7 @@ def create_restaurant(
         db.rollback()
         return {"ok": False, "message": f"Tag insert error: {e}"}
 
-    # 5) 최종 응답 — 반드시 dict 리턴
+    # 4) 최종 응답 — 반드시 dict 리턴
     return {
         "ok": True,
         "message": "식당 등록 완료",
@@ -355,10 +350,6 @@ def get_restaurant(
             "depth": region.depth,
         }
         
-    # image
-    images = db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant.id).all()
-    image_urls = [img.image_url for img in images]
-
     return {
         "id": restaurant.id,
         "name": restaurant.name,
@@ -446,7 +437,6 @@ def list_restaurants(
 def update_restaurant(
     restaurant_id: int,
     payload: RestaurantCreate,
-    files: List[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -484,21 +474,6 @@ def update_restaurant(
     restaurant.latitude = lat
     restaurant.longitude = lon
     
-    # 이미지 갱신/덮어쓰기
-    if files:
-        db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant.id).delete()
-        os.makedirs("static/uploads", exist_ok=True)
-        for file in files:
-            save_path = os.path.join("static/uploads", file.filename)
-            with open(save_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            db.add(RestaurantImage(
-                restaurant_id=restaurant.id,
-                image_url=f"/{save_path}",
-                created_at=time.time()
-            ))
-        db.commit()
-
 
     # 태그 매핑 갱신
     db.query(RestaurantTag).filter(RestaurantTag.restaurant_id == restaurant.id).delete()
@@ -580,6 +555,91 @@ def search_tags(q: str, db: Session = Depends(get_db)):
         .all()
     )
     return [{"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id} for t in tags]
+
+
+# 9. 이미지 업로드(단건)
+@router.post("/restaurants/{restaurant_id}/images", response_model=ImageOut, status_code=201)
+async def upload_restaurant_image(
+    restaurant_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+    if restaurant.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to modify images")
+
+    if file.content_type not in ALLOWED_IMAGE_CT:
+        raise HTTPException(status_code=415, detail="Only JPG/PNG/WEBP allowed")
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
+    safe = f"{int(time.time()*1000)}_{secrets.token_hex(4)}{ext}"
+    save_path = os.path.join(UPLOAD_DIR, safe)
+
+    with open(save_path, "wb") as buf:
+        shutil.copyfileobj(file.file, buf)
+
+    img = RestaurantImage(
+        restaurant_id=restaurant.id,
+        image_url=f"/{save_path}",
+        created_at=time.time()
+    )
+    db.add(img); db.commit(); db.refresh(img)
+
+    return {"id": img.id, "image_url": img.image_url, "created_at": img.created_at}
+
+# 10. 이미지 다건 업로드
+from typing import List as TList
+
+@router.post("/restaurants/{restaurant_id}/images:batch", response_model=TList[ImageOut], status_code=201)
+async def upload_images_batch(
+    restaurant_id: int,
+    files: TList[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+    if restaurant.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to modify images")
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    out: TList[ImageOut] = []
+    for file in files:
+        if file.content_type not in ALLOWED_IMAGE_CT:
+            raise HTTPException(status_code=415, detail=f"Unsupported type: {file.content_type}")
+        ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
+        safe = f"{int(time.time()*1000)}_{secrets.token_hex(4)}{ext}"
+        save_path = os.path.join(UPLOAD_DIR, safe)
+        with open(save_path, "wb") as buf:
+            shutil.copyfileobj(file.file, buf)
+        img = RestaurantImage(
+            restaurant_id=restaurant_id,
+            image_url=f"/{save_path}",
+            created_at=time.time()
+        )
+        db.add(img); db.flush()
+        out.append(ImageOut(id=img.id, image_url=img.image_url, created_at=img.created_at))
+    db.commit()
+    return out
+
+# 11. 이미지 목록 조회
+
+@router.get("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut])
+def list_restaurant_images(
+    restaurant_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    r = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not r:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+    imgs = db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant_id).all()
+    return [{"id": i.id, "image_url": i.image_url, "created_at": i.created_at} for i in imgs]
 
 
 

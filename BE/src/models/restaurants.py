@@ -23,6 +23,7 @@ class Restaurant(Base):
     # 관계
     tags = relationship("RestaurantTag", back_populates="restaurant")
     favorites = relationship("Favorite", back_populates="restaurant")
+    images = relationship("RestaurantImage", back_populates="restaurant", cascade="all, delete-orphan")
 
 # 식당별 태그
 class RestaurantTag(Base):
