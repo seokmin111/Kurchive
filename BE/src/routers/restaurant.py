@@ -56,21 +56,21 @@ class RestaurantCreate(BaseModel):
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
 
-        # URL 기본 형식 검증
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (http/https)")
 
-        # 네이버/카카오 지도 링크 허용 (kko.kakao.com 추가)
+        # 네이버/카카오/구글 지도 링크 허용
         allowed = (
-            v.startswith("https://map.naver.com")
-            or v.startswith("https://naver.me")
-            or v.startswith("https://map.kakao.com")
+            v.startswith("https://map.kakao.com")
             or v.startswith("https://kko.kakao.com")
+            or v.startswith("https://maps.app.goo.gl")
+            or v.startswith("https://www.google.com/maps")
         )
         if not allowed:
-            raise ValueError("location_link must be a Naver Map or Kakao Map link")
+            raise ValueError("location_link must be a Kakao or Google Maps link")
 
         return v
+
 
 
 
