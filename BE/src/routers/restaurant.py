@@ -555,79 +555,114 @@ def search_tags(q: str, db: Session = Depends(get_db)):
         .all()
     )
     return [{"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id} for t in tags]
+# ====================================================================================
+# ========================================================================================
+# 이미지
 
-
-# 9. 이미지 업로드(단건)
-@router.post("/restaurants/{restaurant_id}/images", response_model=ImageOut, status_code=201)
-async def upload_restaurant_image(
-    restaurant_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
-    if restaurant.uploaded_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to modify images")
-
-    if file.content_type not in ALLOWED_IMAGE_CT:
-        raise HTTPException(status_code=415, detail="Only JPG/PNG/WEBP allowed")
-
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
-    safe = f"{int(time.time()*1000)}_{secrets.token_hex(4)}{ext}"
-    save_path = os.path.join(UPLOAD_DIR, safe)
-
-    with open(save_path, "wb") as buf:
-        shutil.copyfileobj(file.file, buf)
-
-    img = RestaurantImage(
-        restaurant_id=restaurant.id,
-        image_url=f"/{save_path}",
-        created_at=time.time()
-    )
-    db.add(img); db.commit(); db.refresh(img)
-
-    return {"id": img.id, "image_url": img.image_url, "created_at": img.created_at}
-
-# 10. 이미지 다건 업로드
+# 1. 이미지 업로드
 from typing import List as TList
-
-@router.post("/restaurants/{restaurant_id}/images:batch", response_model=TList[ImageOut], status_code=201)
-async def upload_images_batch(
+@router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
+async def upload_restaurant_images(
     restaurant_id: int,
-    files: TList[UploadFile] = File(...),
+    # 단건 또는 다건 둘 다 허용
+    files: Optional[TList[UploadFile]] = File(None, description="다건 업로드 시 사용"),
+    file: Optional[UploadFile] = File(None, description="단건 업로드 시 사용"),
+    replace: bool = Query(False, description="true면 기존 이미지 모두 교체"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # 식당/권한 체크
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     if restaurant.uploaded_by != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to modify images")
 
+    # 업로드 대상 정규화
+    uploads: TList[UploadFile] = []
+    if file is not None:
+        uploads.append(file)
+    if files:
+        uploads.extend(files)
+    if not uploads:
+        raise HTTPException(status_code=422, detail="file or files is required")
+
+    # 타입 검증
+    for u in uploads:
+        if u.content_type not in ALLOWED_IMAGE_CT:
+            raise HTTPException(status_code=415, detail=f"Unsupported type: {u.content_type}")
+
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    # 교체 모드라면 기존 레코드/파일 제거
+    if replace:
+        old_imgs = db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant.id).all()
+        for img in old_imgs:
+            try:
+                fp = img.image_url.lstrip("/")
+                if os.path.exists(fp):
+                    os.remove(fp)
+            except Exception as e:
+                print(f"[이미지 파일 삭제 실패] {e}")
+            db.delete(img)
+        db.flush()  # 같은 트랜잭션 내 정리
+
+    # 저장
     out: TList[ImageOut] = []
-    for file in files:
-        if file.content_type not in ALLOWED_IMAGE_CT:
-            raise HTTPException(status_code=415, detail=f"Unsupported type: {file.content_type}")
-        ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
+    for u in uploads:
+        ext = os.path.splitext(u.filename)[1].lower() or ".jpg"
         safe = f"{int(time.time()*1000)}_{secrets.token_hex(4)}{ext}"
         save_path = os.path.join(UPLOAD_DIR, safe)
         with open(save_path, "wb") as buf:
-            shutil.copyfileobj(file.file, buf)
+            shutil.copyfileobj(u.file, buf)
+
         img = RestaurantImage(
-            restaurant_id=restaurant_id,
+            restaurant_id=restaurant.id,
             image_url=f"/{save_path}",
             created_at=time.time()
         )
-        db.add(img); db.flush()
+        db.add(img)
+        db.flush()  # id 확보
         out.append(ImageOut(id=img.id, image_url=img.image_url, created_at=img.created_at))
+
     db.commit()
     return out
 
-# 11. 이미지 목록 조회
+# 2. 이미지 삭제
+@router.delete("/restaurants/{restaurant_id}/images/{image_id}", status_code=204)
+def delete_restaurant_image(
+    restaurant_id: int,
+    image_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # 식당 및 권한 확인
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+    if restaurant.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete images")
+
+    img = db.query(RestaurantImage).filter(
+        RestaurantImage.id == image_id,
+        RestaurantImage.restaurant_id == restaurant.id
+    ).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    # 실제 파일도 지우기 (실패해도 DB 삭제는 진행)
+    try:
+        file_path = img.image_url.lstrip("/")   # "/static/uploads/..." → 상대경로
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    except Exception as e:
+        print(f"[이미지 파일 삭제 실패] {e}")
+
+    db.delete(img)
+    db.commit()
+    return
+
+# 3. 이미지 목록 조회
 
 @router.get("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut])
 def list_restaurant_images(
@@ -640,6 +675,56 @@ def list_restaurant_images(
         raise HTTPException(status_code=404, detail="Restaurant not found")
     imgs = db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant_id).all()
     return [{"id": i.id, "image_url": i.image_url, "created_at": i.created_at} for i in imgs]
+
+
+# 4. 이미지 수정
+from pydantic import BaseModel
+from typing import Optional
+
+class ImagePatch(BaseModel):
+    is_cover: Optional[bool] = None
+    caption: Optional[str] = None
+    sort_order: Optional[int] = None
+
+@router.patch("/restaurants/{restaurant_id}/images/{image_id}", response_model=ImageOut)
+def patch_restaurant_image(
+    restaurant_id: int,
+    image_id: int,
+    body: ImagePatch,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+    if restaurant.uploaded_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    img = db.query(RestaurantImage).filter(
+        RestaurantImage.id == image_id,
+        RestaurantImage.restaurant_id == restaurant.id
+    ).first()
+    if not img:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    # 업데이트할 필드 적용
+    if body.is_cover is not None:
+        if body.is_cover:  
+            # 하나만 표지 허용 → 나머지는 false
+            db.query(RestaurantImage).filter(
+                RestaurantImage.restaurant_id == restaurant.id
+            ).update({RestaurantImage.is_cover: False})
+        img.is_cover = body.is_cover
+
+    if body.caption is not None:
+        img.caption = body.caption
+
+    if body.sort_order is not None:
+        img.sort_order = body.sort_order
+
+    db.commit()
+    db.refresh(img)
+    return {"id": img.id, "image_url": img.image_url, "created_at": img.created_at}
 
 
 
