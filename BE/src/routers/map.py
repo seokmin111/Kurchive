@@ -1,15 +1,44 @@
-from fastapi import APIRouter
-from fastapi.concurrency import run_in_threadpool
-import requests
+
+# BE/src/api/map.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from BE.src.models.restaurants import Restaurant
+from BE.src.dependencies import get_db
+
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-router = APIRouter()
 KAKAO_REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
+NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID")
+NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET")
 
+
+router = APIRouter()
+
+@router.get("/map/restaurants")
+def get_all_restaurants(db: Session = Depends(get_db)):
+    """
+    모든 식당의 좌표 + 이름 + 주소 반환
+    """
+    restaurants = db.query(Restaurant).all()
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "address": r.address,
+            "latitude": r.latitude,
+            "longitude": r.longitude,
+            "rating": r.rating,
+        }
+        for r in restaurants
+    ]
+
+
+'''
 # --- 카카오: 장소명으로 주소/위도/경도 검색 ---
 def get_kakao_address_from_name(place_name: str) -> dict | None:
     """
@@ -49,3 +78,4 @@ async def api_get_address(place_name: str):
     """
     addr = await run_in_threadpool(get_kakao_address_from_name, place_name)
     return addr or {"error": "주소 검색 실패"}
+'''
