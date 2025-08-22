@@ -40,28 +40,6 @@ async def get_current_executive_user(current_user: User = Depends(get_current_us
 router = APIRouter(prefix="/api/recipe", tags=["Recipe"], dependencies=[Depends(get_current_executive_user)])
 
 
-"""
-# -------- DB 세션 --------
-async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
-        yield session
-"""
-
-"""
-# -------- Role Checker --------
-class RoleChecker:
-    def __init__(self, min_role: str):
-        self.min_role = min_role
-        self.role_order = {"member": 1, "임원진": 2, "관리자": 3}
-
-    def __call__(self, current_user: User = Depends(lambda: fake_current_user())):
-        if self.role_order.get(current_user.role, 0) < self.role_order.get(self.min_role, 0):
-            raise HTTPException(status_code=403, detail="Permission denied")
-        return current_user
-
-def fake_current_user():
-    return User(id=1, userid="demo", nickname="demo", role="임원진")
-"""
 
 # -------- DTO --------
 class IngredientDTO(BaseModel):

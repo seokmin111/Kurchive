@@ -350,6 +350,11 @@ def get_restaurant(
             "depth": region.depth,
         }
         
+    # 이미지 조회
+    imgs = db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant.id).all()
+    image_list = [{"id": i.id, "image_url": i.image_url, "created_at": i.created_at} for i in imgs]
+
+        
     return {
         "id": restaurant.id,
         "name": restaurant.name,
@@ -366,7 +371,7 @@ def get_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
-        "images": image_urls
+        "images": image_list
     }
 
 

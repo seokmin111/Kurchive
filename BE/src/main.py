@@ -3,7 +3,10 @@ load_dotenv()  # .env 파일의 환경변수를 로드
 
 from fastapi import FastAPI
 
+import os
+
 import logging
+from fastapi.staticfiles import StaticFiles
 
 import BE.src.models
 from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth
@@ -27,7 +30,11 @@ logging.basicConfig(
 )
 
 
+
 app = FastAPI()
+
+os.makedirs("uploads", exist_ok=True)       # ⬅️ 선택(폴더 자동 생성)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")  # ⬅️ 추가
 
 register_exception_handlers(app)
 
