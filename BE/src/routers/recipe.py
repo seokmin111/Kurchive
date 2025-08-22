@@ -1,3 +1,4 @@
+# BE/src/routers/recipe.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -8,23 +9,37 @@ from typing import List, Optional, AsyncGenerator
 from datetime import datetime
 import logging
 
-from BE.src.database import async_session_maker
+from BE.src.database import get_async_db
+from BE.src.dependencies import get_current_user_from_token 
 from BE.src.models.recipes import (
     Recipe, RecipeIngredient, RecipeStep,
-    Ingredient, User, IngredientUnit,
-    ConvertRequestDTO
+    Ingredient, IngredientUnit, ConvertRequestDTO
 )
+from BE.src.models.users import User
 from BE.src.utils.units import convert_unit
 
 logger = logging.getLogger("convert")
 
 router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
+async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
+    # 권한 확인 
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not is_privileged:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Executive or admin access required",
+        )
+    return current_user
+
+"""
 # -------- DB 세션 --------
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+"""
 
+"""
 # -------- Role Checker --------
 class RoleChecker:
     def __init__(self, min_role: str):
@@ -38,6 +53,7 @@ class RoleChecker:
 
 def fake_current_user():
     return User(id=1, userid="demo", nickname="demo", role="임원진")
+"""
 
 # -------- DTO --------
 class IngredientDTO(BaseModel):
@@ -112,7 +128,7 @@ async def list_recipes(db: AsyncSession = Depends(get_async_db)):
 async def get_recipe(
     recipe_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(RoleChecker("member"))
+    current_user: User = Depends(get_current_user_from_token) 
 ):
     """
     레시피 상세조회:
@@ -122,86 +138,67 @@ async def get_recipe(
     result = await db.execute(
         select(Recipe)
         .options(
-            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
-            selectinload(Recipe.steps)
-        )
-        .filter(Recipe.id == recipe_id)
-    )
+            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient), selectinload(Recipe.steps)).filter(Recipe.id == recipe_id))
     recipe = result.scalar_one_or_none()
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-
+    
     ingredients = [
         {
-            "ingredient_id": ri.ingredient_id,
-            "name": ri.ingredient.name,
-            "quantity": ri.quantity,
-            "unit_name": ri.unit_name,
-        }
-        for ri in recipe.ingredients
-    ]
-
+        "ingredient_id": ri.ingredient_id, 
+        "name": ri.ingredient.name, 
+        "quantity": ri.quantity, 
+        "unit_name": ri.unit_name
+        } for ri in recipe.ingredients]
     return {
-        "id": recipe.id,
-        "title": recipe.title,
-        "base_serving": recipe.base_serving,
-        "uploader_id": recipe.uploader_id,
-        "created_at": recipe.created_at,
-        "steps": recipe.steps,
-        "ingredients": ingredients,
-    }
+        "id": recipe.id, 
+        "title": recipe.title, 
+        "base_serving": recipe.base_serving, 
+        "uploader_id": recipe.uploader_id, 
+        "created_at": recipe.created_at, 
+        "steps": recipe.steps, 
+        "ingredients": ingredients
+        }
 
 
 @router.get("/{recipe_id}/scale", response_model=RecipeResponseDTO)
 async def scale_recipe(
-    recipe_id: int,
-    servings: int,
+    recipe_id: int, servings: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(RoleChecker("member"))
+    current_user: User = Depends(get_current_user_from_token) 
 ):
     """
     base_serving 대비 servings 비율로 재료 양만 조정해서 반환
     """
     result = await db.execute(
         select(Recipe)
-        .options(
-            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
-            selectinload(Recipe.steps)
-        )
-        .filter(Recipe.id == recipe_id)
-    )
+        .options(selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient), selectinload(Recipe.steps)).filter(Recipe.id == recipe_id))
     recipe = result.scalar_one_or_none()
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-
+    
     factor = servings / recipe.base_serving
-    ingredients = [
-        {
-            "ingredient_id": ri.ingredient_id,
-            "name": ri.ingredient.name,
-            "quantity": ri.quantity * factor,
-            "unit_name": ri.unit_name,
-        }
-        for ri in recipe.ingredients
-    ]
-
+    ingredients = [{
+        "ingredient_id": ri.ingredient_id, 
+        "name": ri.ingredient.name, 
+        "quantity": ri.quantity * factor, 
+        "unit_name": ri.unit_name} for ri in recipe.ingredients]
     return {
-        "id": recipe.id,
-        "title": recipe.title,
-        "base_serving": recipe.base_serving,
-        "uploader_id": recipe.uploader_id,
-        "created_at": recipe.created_at,
-        "steps": recipe.steps,
-        "ingredients": ingredients,
-    }
+        "id": recipe.id, 
+        "title": recipe.title, 
+        "base_serving": recipe.base_serving, 
+        "uploader_id": recipe.uploader_id, 
+        "created_at": recipe.created_at, 
+        "steps": recipe.steps, 
+        "ingredients": ingredients
+        }
 
 
 @router.post("/{recipe_id}/convert", response_model=RecipeResponseDTO)
 async def convert_recipe(
-    recipe_id: int,
-    request: ConvertRequestDTO,
+    recipe_id: int, request: ConvertRequestDTO,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(RoleChecker("staff"))
+    current_user: User = Depends(get_current_executive_user)
 ):
     """
     단위 변환 (unit_name 기반)
@@ -211,16 +208,12 @@ async def convert_recipe(
 
     result = await db.execute(
         select(Recipe)
-        .options(
-            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
-            selectinload(Recipe.steps)
-        )
-        .filter(Recipe.id == recipe_id)
-    )
+        .options(selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient), selectinload(Recipe.steps)).filter(Recipe.id == recipe_id))
+    
     recipe = result.scalar_one_or_none()
+
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-
     converted_ingredients = []
 
     for ri in recipe.ingredients:
@@ -267,7 +260,7 @@ async def convert_recipe(
 async def create_recipe(
     data: RecipeCreateDTO,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(RoleChecker("임원진"))
+    current_user: User = Depends(get_current_executive_user)
 ):
     """
     레시피 생성
@@ -324,21 +317,20 @@ async def create_recipe(
 
 @router.put("/{recipe_id}", response_model=RecipeResponseDTO)
 async def update_recipe(
-    recipe_id: int,
-    data: RecipeUpdateDTO,
+    recipe_id: int, data: RecipeUpdateDTO,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(RoleChecker("임원진"))
+    current_user: User = Depends(get_current_user_from_token)
 ):
-    """
-    레시피 수정
-    """
     result = await db.execute(select(Recipe).filter(Recipe.id == recipe_id))
     recipe = result.scalar_one_or_none()
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-
-    if recipe.uploader_id != current_user.id and current_user.role not in ("admin", "staff"):
-        raise HTTPException(403, "Permission denied")
+    
+    # 권한확인
+    is_uploader = recipe.uploader_id == current_user.id
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not (is_uploader or is_privileged):
+        raise HTTPException(status_code=403, detail="You do not have permission to edit this recipe")
 
     if data.title:
         recipe.title = data.title
@@ -398,7 +390,7 @@ async def update_recipe(
 async def delete_recipe(
     recipe_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(RoleChecker("member"))
+    current_user: User = Depends(get_current_user_from_token)
 ):
     """
     레시피 삭제
@@ -408,8 +400,11 @@ async def delete_recipe(
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    if recipe.uploader_id != current_user.id and current_user.role != "admin":
-        raise HTTPException(403, "Permission denied")
+    is_uploader = recipe.uploader_id == current_user.id
+
+    is_admin = current_user.is_admin
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
 
     await db.delete(recipe)
     await db.commit()

@@ -1,0 +1,130 @@
+# 관리자 API 
+# BE/src/routers/admin.py
+
+from fastapi import APIRouter, Depends, HTTPException, Body
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
+
+from pydantic import BaseModel
+from typing import List
+
+from BE.src.database import get_async_db
+from BE.src.dependencies import get_current_admin_user
+from BE.src.models.users import User
+
+from BE.src.models.admin_config import AdminConfig, AuthCodeChangeRequest, PwdChangeStatus
+
+router = APIRouter(
+    prefix="/api/admin",
+    tags=["Admin Management"], 
+    dependencies=[Depends(get_current_admin_user)] 
+)
+
+
+class MemberStatus(BaseModel):
+    userid: str
+    role: str
+
+class MemberStatusUpdateRequest(BaseModel):
+    members: List[MemberStatus]
+
+class MemberInfoResponse(BaseModel):
+    id: int
+    userid: str
+    nickname: str
+    role: str
+    is_admin: bool
+
+    class Config:
+        from_attributes = True
+
+# 회원 관리 (회원조회, 임원진 승급/하락)
+@router.get("/members", response_model=List[MemberInfoResponse], summary="전체 회원 목록 조회")
+async def get_all_members(db: AsyncSession = Depends(get_async_db)):
+    result = await db.execute(select(User).order_by(User.id))
+    return result.scalars().all()
+
+@router.patch("/members/status", status_code=204, summary="다수 회원의 임원진 상태(role) 일괄 변경")
+async def update_members_status(payload: MemberStatusUpdateRequest, db: AsyncSession = Depends(get_async_db)):
+    for member_update in payload.members:
+        if member_update.role not in ['staff', 'member']:
+            continue
+        
+        result = await db.execute(select(User).filter(User.userid == member_update.userid))
+        user = result.scalar_one_or_none()
+        if user:
+            user.role = member_update.role
+    await db.commit()
+
+# 관리자 위임 
+@router.put("/delegate/{userid}", response_model=MemberInfoResponse, summary="다른 회원에게 관리자 권한 위임")
+async def delegate_admin_role(userid: str, db: AsyncSession = Depends(get_async_db), current_admin: User = Depends(get_current_admin_user)):
+    if current_admin.userid == userid:
+        raise HTTPException(status_code=400, detail="자기 자신에게 관리자 권한을 위임할 수 없습니다.")
+
+    user_to_promote = (await db.execute(select(User).filter(User.userid == userid))).scalar_one_or_none()
+    
+    if not user_to_promote:
+        raise HTTPException(status_code=404, detail="위임할 회원을 찾을 수 없습니다.")
+    if user_to_promote.is_admin:
+        raise HTTPException(status_code=400, detail="이미 관리자인 회원입니다.")
+        
+    user_to_promote.is_admin = True
+    user_to_promote.role = 'staff'
+    current_admin.is_admin = False
+    current_admin.role = 'staff'
+    
+    await db.commit()
+    await db.refresh(user_to_promote)
+    return user_to_promote
+
+# 인증 코드 관리 
+@router.post("/auth-code/request", status_code=201, summary="[1단계] 공유 인증 코드 변경 요청")
+async def request_auth_code_change(
+    new_code: str = Body(..., embed=True),
+    db: AsyncSession = Depends(get_async_db),
+    requester: User = Depends(get_current_admin_user)
+):
+    await db.execute(
+        AuthCodeChangeRequest.__table__.update()
+        .where(AuthCodeChangeRequest.status == PwdChangeStatus.PENDING)
+        .values(status=PwdChangeStatus.REJECTED)
+    )
+    new_request = AuthCodeChangeRequest(
+        new_auth_code=new_code, 
+        requester_id=requester.id
+    )
+    db.add(new_request)
+    await db.commit()
+    return {"message": "인증 코드 변경 요청이 생성되었습니다. 다른 관리자의 승인이 필요합니다."}
+
+@router.post("/auth-code/approve", summary="[2단계] 공유 인증 코드 변경 승인")
+async def approve_auth_code_change(
+    db: AsyncSession = Depends(get_async_db),
+    approver: User = Depends(get_current_admin_user)
+):
+    result = await db.execute(
+        select(AuthCodeChangeRequest)
+        .where(AuthCodeChangeRequest.status == PwdChangeStatus.PENDING)
+        .order_by(AuthCodeChangeRequest.created_at.desc())
+    )
+    request = result.scalar_one_or_none()
+    if not request:
+        raise HTTPException(status_code=404, detail="대기 중인 인증 코드 변경 요청이 없습니다.")
+        
+    if request.requester_id == approver.id:
+        raise HTTPException(status_code=403, detail="자신이 요청한 변경을 승인할 수 없습니다.")
+
+    config_result = await db.execute(select(AdminConfig).limit(1))
+    config = config_result.scalar_one_or_none()
+    if not config: 
+        config = AdminConfig(id=1, auth_code=request.new_auth_code)
+        db.add(config)
+    else:
+        config.auth_code = request.new_auth_code
+        
+    request.status = PwdChangeStatus.APPROVED
+    request.approver_id = approver.id
+    
+    await db.commit()
+    return {"message": "공유 인증 코드가 성공적으로 변경되었습니다."}
