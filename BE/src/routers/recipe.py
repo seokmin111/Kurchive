@@ -26,7 +26,6 @@ from BE.src.utils.units import convert_unit
 
 logger = logging.getLogger("convert")
 
-router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
 async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
     # 권한 확인 
@@ -37,6 +36,9 @@ async def get_current_executive_user(current_user: User = Depends(get_current_us
             detail="Executive or admin access required",
         )
     return current_user
+
+router = APIRouter(prefix="/api/recipe", tags=["Recipe"], dependencies=[Depends(get_current_executive_user)])
+
 
 """
 # -------- DB 세션 --------
