@@ -11,6 +11,7 @@ class User(Base):
     name = Column(String)
     nickname = Column(String, nullable=False, unique=True)
 
+    is_admin = Column(Boolean, default=False, nullable=False)
     # 임원진(레시피 접근 가능) 여부
     role = Column(String, default="member", nullable=False)
 
