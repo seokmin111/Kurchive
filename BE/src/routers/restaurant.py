@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
+from fastapi import File, UploadFile
 
 from pydantic import BaseModel, HttpUrl, validator, conint
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import shutil, os, time
+
 import re
 
 from sqlalchemy.orm import Session
 from BE.src.dependencies import get_db, get_current_user
 from BE.src.models.users import User
-from BE.src.models.restaurants import Restaurant, RestaurantTag
+from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
 
@@ -229,10 +232,13 @@ def get_regions(
         {"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth}
         for r in regions
     ]
+    
+
 # 3. 식당 아카이빙
 @router.post("/restaurants", response_model=CreateRestaurantResponse)
 def create_restaurant(
     payload: RestaurantCreate,
+    files: List[UploadFile] = File,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -244,13 +250,6 @@ def create_restaurant(
             address = loc.get("road_address") or loc.get("address")
             lat, lon = loc.get("lat"), loc.get("lng")
 
-        if not address:
-            address = get_address(str(payload.location_link))
-
-        if (lat is None or lon is None) and address:
-            coords = get_coords_from_address(address)
-            if coords:
-                lat, lon = coords
     except Exception as e:
         # 💡 절대 return/raise 하지 않음 — 아래 insert는 항상 시도
         print(f"[주소 추출 실패] {e}")
@@ -278,8 +277,23 @@ def create_restaurant(
     except Exception as e:
         db.rollback()
         return {"ok": False, "message": f"DB insert error: {e}"}
+    
+    # 3) image
+    if files:
+        os.makedirs("static/uploads", exist_ok=True)
+        for file in files:
+            save_path = os.path.join("static/uploads", file.filename)
+            with open(save_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(RestaurantImage(
+                restaurant_id=restaurant.id,
+                image_url=f"/{save_path}",
+                created_at=time.time()
+            ))
+        db.commit()
+    
 
-    # 3) 태그 매핑
+    # 4) 태그 매핑
     try:
         for tag_id in payload.tag_ids:
             rt = RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id)
@@ -289,7 +303,7 @@ def create_restaurant(
         db.rollback()
         return {"ok": False, "message": f"Tag insert error: {e}"}
 
-    # 4) 최종 응답 — 반드시 dict 리턴
+    # 5) 최종 응답 — 반드시 dict 리턴
     return {
         "ok": True,
         "message": "식당 등록 완료",
@@ -340,6 +354,10 @@ def get_restaurant(
             "parent_id": region.parent_id,
             "depth": region.depth,
         }
+        
+    # image
+    images = db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant.id).all()
+    image_urls = [img.image_url for img in images]
 
     return {
         "id": restaurant.id,
@@ -357,6 +375,7 @@ def get_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
+        "images": image_urls
     }
 
 
@@ -421,12 +440,13 @@ def list_restaurants(
 
     return results
 
-# 6. 식당 정보 수정
+
 # 6. 식당 정보 수정
 @router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
 def update_restaurant(
     restaurant_id: int,
     payload: RestaurantCreate,
+    files: List[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -456,13 +476,6 @@ def update_restaurant(
             address = loc.get("road_address") or loc.get("address")
             lat, lon = loc.get("lat"), loc.get("lng")
 
-        if not address:
-            address = get_address(str(payload.location_link))
-
-        if (lat is None or lon is None) and address:
-            coords = get_coords_from_address(address)
-            if coords:
-                lat, lon = coords
     except Exception as e:
         print(f"[주소/좌표 추출 실패] {e}")
 
@@ -470,6 +483,22 @@ def update_restaurant(
     restaurant.address = address
     restaurant.latitude = lat
     restaurant.longitude = lon
+    
+    # 이미지 갱신/덮어쓰기
+    if files:
+        db.query(RestaurantImage).filter(RestaurantImage.restaurant_id == restaurant.id).delete()
+        os.makedirs("static/uploads", exist_ok=True)
+        for file in files:
+            save_path = os.path.join("static/uploads", file.filename)
+            with open(save_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(RestaurantImage(
+                restaurant_id=restaurant.id,
+                image_url=f"/{save_path}",
+                created_at=time.time()
+            ))
+        db.commit()
+
 
     # 태그 매핑 갱신
     db.query(RestaurantTag).filter(RestaurantTag.restaurant_id == restaurant.id).delete()

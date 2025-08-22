@@ -24,7 +24,7 @@ class Restaurant(Base):
     tags = relationship("RestaurantTag", back_populates="restaurant")
     favorites = relationship("Favorite", back_populates="restaurant")
 
-
+# 식당별 태그
 class RestaurantTag(Base):
     __tablename__ = "restaurant_tags"
 
@@ -33,3 +33,15 @@ class RestaurantTag(Base):
 
     restaurant = relationship("Restaurant", back_populates="tags")
     tag = relationship("Tag", back_populates="restaurants")
+    
+
+# 식당 이미지
+class RestaurantImage(Base):  
+    __tablename__ = "restaurant_images"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
+    image_url = Column(String, nullable=False)
+    created_at = Column(Float, default=lambda: time.time())
+
+    restaurant = relationship("Restaurant", back_populates="images")
