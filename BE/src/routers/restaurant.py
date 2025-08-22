@@ -14,9 +14,7 @@ from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
 
 from BE.AddressLatLong import (
-    extract_location_from_link,
-    get_address,
-    get_coords_from_address
+    extract_location_from_link
 )
 
 # ---------------------------
