@@ -1,5 +1,7 @@
 # BE/src/routers/recipe.py
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import File, UploadFile
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -8,6 +10,9 @@ from pydantic import BaseModel
 from typing import List, Optional, AsyncGenerator
 from datetime import datetime
 import logging
+import os
+
+from BE.src.utils.image_upload import save_image
 
 from BE.src.database import get_async_db
 from BE.src.dependencies import get_current_user_from_token 
@@ -17,6 +22,7 @@ from BE.src.models.recipes import (
 )
 from BE.src.models.users import User
 from BE.src.utils.units import convert_unit
+
 
 logger = logging.getLogger("convert")
 
@@ -101,6 +107,16 @@ class RecipeResponseDTO(BaseModel):
 
 
 # -------- API --------
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads/recipes")
+
+# 권한 확인
+async def assert_can_edit_recipe(recipe: Recipe, current_user: User):
+    is_uploader = recipe.uploader_id == current_user.id
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not (is_uploader or is_privileged):
+        raise HTTPException(status_code=403, detail="You do not have permission to modify this recipe")
+
+
 @router.get("/search", response_model=List[RecipeResponseDTO])
 async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
     """
@@ -409,3 +425,94 @@ async def delete_recipe(
     await db.delete(recipe)
     await db.commit()
     return
+
+# 썸네일 업로드
+@router.post("/{recipe_id}/thumbnail", response_model=RecipeResponseDTO)
+async def upload_thumbnail(
+    recipe_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_executive_user)  # 임원 전용 접근
+):
+    result = await db.execute(
+        select(Recipe)
+        .options(
+            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
+            selectinload(Recipe.steps)
+        ).filter(Recipe.id == recipe_id)
+    )
+    recipe = result.scalar_one_or_none()
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+
+    await assert_can_edit_recipe(recipe, current_user)
+
+    _, url_path = await save_image(file, os.path.join(UPLOAD_DIR, str(recipe_id), "thumbnail"))
+    recipe.thumbnail_url = url_path
+    await db.commit()
+    await db.refresh(recipe)
+
+    ingredients = [{
+        "ingredient_id": ri.ingredient_id,
+        "name": ri.ingredient.name,
+        "quantity": ri.quantity,
+        "unit_name": ri.unit_name
+    } for ri in recipe.ingredients]
+
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": ingredients
+    }
+
+# 단계별 이미지
+@router.post("/{recipe_id}/steps/{step_order}/image", response_model=RecipeResponseDTO)
+async def upload_step_image(
+    recipe_id: int,
+    step_order: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_executive_user)  # 임원 전용 접근
+):
+    result = await db.execute(
+        select(Recipe)
+        .options(
+            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
+            selectinload(Recipe.steps)
+        ).filter(Recipe.id == recipe_id)
+    )
+    recipe = result.scalar_one_or_none()
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+
+    await assert_can_edit_recipe(recipe, current_user)
+
+    step = next((s for s in recipe.steps if s.step_order == step_order), None)
+    if not step:
+        raise HTTPException(404, f"Step {step_order} not found")
+
+    _, url_path = await save_image(file, os.path.join(UPLOAD_DIR, str(recipe_id), f"steps/{step_order}"))
+    step.image_url = url_path
+    await db.commit()
+    await db.refresh(recipe)
+
+    ingredients = [{
+        "ingredient_id": ri.ingredient_id,
+        "name": ri.ingredient.name,
+        "quantity": ri.quantity,
+        "unit_name": ri.unit_name
+    } for ri in recipe.ingredients]
+
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "steps": recipe.steps,
+        "ingredients": ingredients
+    }
