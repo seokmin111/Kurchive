@@ -36,6 +36,19 @@ def fail(message: str, status_code: int = 400, meta: Optional[Dict[str, Any]] = 
         payload["meta"] = meta
     return JSONResponse(content=payload, status_code=status_code)
 
+# 현위치 근접
+from math import radians, sin, cos, asin, sqrt
+
+def _haversine_km(lat1, lon1, lat2, lon2) -> float:
+    """두 좌표(위도/경도) 사이 거리(km)"""
+    if None in (lat1, lon1, lat2, lon2):
+        return 10**9  # 좌표 없으면 아주 큰 값으로
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+    return 2 * R * asin(sqrt(a))
+
 
 router = APIRouter()
 
@@ -436,6 +449,79 @@ def list_restaurants(
 
     return results
 
+# 5-2. 현위치/임의좌표 근접 검색 (지도용)
+"""
+프론트 사용 예시:
+GET /restaurants/nearby?lat=37.5665&lon=126.9780&radius_km=2.5&tag_ids=10,101
+
+- lat, lon: 기준 좌표(현위치 또는 사용자가 입력한 주소의 좌표)
+- radius_km: 반경(km), 기본 2.0
+- tag_ids: "1,2,3" 형태(AND 조건)
+- 가격 필터(price_min/price_max)도 선택 지원
+응답: 지도 마커에 필요한 최소 필드 + distance_km
+"""
+@router.get("/restaurants/nearby")
+def list_restaurants_nearby(
+    lat: float,
+    lon: float,
+    radius_km: float = 2.0,
+    tag_ids: Optional[str] = None,   # "10,101"
+    price_min: Optional[int] = None,
+    price_max: Optional[int] = None,
+    limit: int = 200,                # 지도 1페이지 안전상 한도
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # 1) 좌표가 있는 식당만 1차 조회(+선택 가격 필터)
+    query = db.query(Restaurant).filter(
+        Restaurant.latitude.isnot(None),
+        Restaurant.longitude.isnot(None),
+    )
+    if price_min is not None:
+        query = query.filter(Restaurant.price_min >= price_min)
+    if price_max is not None:
+        query = query.filter(Restaurant.price_max <= price_max)
+
+    candidates = query.limit(5000).all()  # 가벼운 서비스라 일단 넉넉히
+
+    # 2) 거리 계산 → 반경 내만 남김
+    results = []
+    for r in candidates:
+        d = _haversine_km(lat, lon, r.latitude, r.longitude)
+        if d <= radius_km:
+            # 태그 조인
+            trows = (
+                db.query(Tag.id, Tag.name)
+                .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+                .filter(RestaurantTag.restaurant_id == r.id)
+                .all()
+            )
+            tag_list = [{"id": t.id, "name": t.name} for t in trows]
+
+            # tag_ids AND 필터
+            if tag_ids:
+                requested = set(map(int, tag_ids.split(",")))
+                current = {t["id"] for t in tag_list}
+                if not requested.issubset(current):
+                    continue
+
+            results.append({
+                "id": r.id,
+                "name": r.name,
+                "address": r.address,
+                "latitude": r.latitude,
+                "longitude": r.longitude,
+                "rating": r.rating,
+                "price_min": r.price_min,
+                "price_max": r.price_max,
+                "tags": tag_list,
+                "distance_km": round(d, 3),
+            })
+
+    # 3) 거리순 정렬 + 상한 제한
+    results.sort(key=lambda x: x["distance_km"])
+    return results[:max(1, min(limit, 500))]
+
 
 # 6. 식당 정보 수정
 @router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
@@ -560,6 +646,8 @@ def search_tags(q: str, db: Session = Depends(get_db)):
         .all()
     )
     return [{"id": t.id, "name": t.name, "parent_id": t.parent_id, "category_id": t.category_id} for t in tags]
+
+
 # ====================================================================================
 # ========================================================================================
 # 이미지
