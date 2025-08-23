@@ -522,6 +522,101 @@ def list_restaurants_nearby(
     results.sort(key=lambda x: x["distance_km"])
     return results[:max(1, min(limit, 500))]
 
+# 5-3. 뷰포트(화면에 보이는 지도 영역) 내 식당 검색
+"""
+프론트 사용 예:
+  const b = map.getBounds();
+  GET /restaurants/viewport
+      ?min_lat=${b.getSouthWest().lat}
+      &min_lon=${b.getSouthWest().lng}
+      &max_lat=${b.getNorthEast().lat}
+      &max_lon=${b.getNorthEast().lng}
+      &tag_ids=10,101
+      &price_min=5000&price_max=20000
+      &limit=200
+
+- tag_ids: "1,2,3" 형태(AND 조건)
+- price_min/price_max: 선택
+- limit: 응답 상한(기본 200)
+"""
+@router.get("/restaurants/viewport")
+def list_restaurants_in_viewport(
+    min_lat: float,
+    min_lon: float,
+    max_lat: float,
+    max_lon: float,
+    tag_ids: Optional[str] = None,
+    price_min: Optional[int] = None,
+    price_max: Optional[int] = None,
+    limit: int = 200,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # 잘못 들어온 경우 보정(남서-북동 보장)
+    if min_lat > max_lat:
+        min_lat, max_lat = max_lat, min_lat
+    if min_lon > max_lon:
+        min_lon, max_lon = max_lon, min_lon
+
+    # 1) 위경도 존재 + 뷰포트 박스 안인 레스토랑만 1차 필터
+    query = db.query(Restaurant).filter(
+        Restaurant.latitude.isnot(None),
+        Restaurant.longitude.isnot(None),
+        Restaurant.latitude >= min_lat,
+        Restaurant.latitude <= max_lat,
+        Restaurant.longitude >= min_lon,
+        Restaurant.longitude <= max_lon,
+    )
+
+    # 2) 가격 조건(선택)
+    if price_min is not None:
+        query = query.filter(Restaurant.price_min >= price_min)
+    if price_max is not None:
+        query = query.filter(Restaurant.price_max <= price_max)
+
+    # 3) 1차 후보 조회(안전상 상한)
+    candidates = query.limit(5000).all()
+
+    results = []
+    # 4) 태그 AND 필터 + 응답 구성
+    requested: Optional[set[int]] = None
+    if tag_ids:
+        try:
+            requested = set(map(int, tag_ids.split(",")))
+        except ValueError:
+            requested = None  # 무시(잘못된 입력은 태그 필터 건너뜀)
+
+    for r in candidates:
+        # 레스토랑의 태그 조인
+        trows = (
+            db.query(Tag.id, Tag.name)
+            .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+            .filter(RestaurantTag.restaurant_id == r.id)
+            .all()
+        )
+        tag_list = [{"id": t.id, "name": t.name} for t in trows]
+
+        if requested:
+            current = {t["id"] for t in tag_list}
+            if not requested.issubset(current):
+                continue  # AND 조건 불만족
+
+        results.append({
+            "id": r.id,
+            "name": r.name,
+            "address": r.address,
+            "latitude": r.latitude,
+            "longitude": r.longitude,
+            "rating": r.rating,
+            "price_min": r.price_min,
+            "price_max": r.price_max,
+            "tags": tag_list,
+        })
+
+    # 5) 정렬(간단: 평점 내림차순 → id 오름차순) + 상한
+    results.sort(key=lambda x: (-x["rating"], x["id"]))
+    return results[:max(1, min(limit, 500))]
+
 
 # 6. 식당 정보 수정
 @router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
