@@ -61,7 +61,7 @@ class RestaurantCreate(BaseModel):
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (http/https)")
 
-        # 네이버/카카오/구글 지도 링크 허용
+        # 카카오/구글 지도 링크 허용
         allowed = (
             v.startswith("https://map.kakao.com")
             or v.startswith("https://kko.kakao.com")
