@@ -17,7 +17,7 @@ from BE.src.utils.image_upload import save_image
 from BE.src.database import get_async_db
 from BE.src.dependencies import get_current_user_from_token 
 from BE.src.models.recipes import (
-    Recipe, RecipeIngredient, RecipeStep,
+    Recipe, RecipeIngredient, RecipeStep, RecipeStepImage,
     Ingredient, IngredientUnit, ConvertRequestDTO
 )
 from BE.src.models.users import User
@@ -50,7 +50,7 @@ class IngredientDTO(BaseModel):
 class RecipeStepDTO(BaseModel):
     step_order: int
     description: str
-    image_url: Optional[str] = None
+    image_urls: List[str] = []
 
     class Config:
         populate_by_name = True
@@ -97,7 +97,6 @@ async def assert_can_edit_recipe(recipe: Recipe, current_user: User):
     if not (is_uploader or is_privileged):
         raise HTTPException(status_code=403, detail="You do not have permission to modify this recipe")
 
-
 @router.get("/search", response_model=List[RecipeResponseDTO])
 async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
     """
@@ -121,13 +120,21 @@ async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
                 "unit_name": ri.unit_name,
             } for ri in r.ingredients
         ]
+        steps = [
+            {
+                "step_order": s.step_order,
+                "description": s.description,
+                "image_url": s.image_url,
+            } for s in r.steps
+        ]
         response.append({
             "id": r.id,
             "title": r.title,
             "base_serving": r.base_serving,
             "uploader_id": r.uploader_id,
             "created_at": r.created_at,
-            "steps": r.steps,
+            "thumbnail_url": r.thumbnail_url,     # 썸네일 추가
+            "steps": steps,                        
             "ingredients": ingredients,
         })
     return response
@@ -155,18 +162,26 @@ async def list_recipes(db: AsyncSession = Depends(get_async_db)):
                 "unit_name": ri.unit_name,
             } for ri in r.ingredients
         ]
+        steps = [
+            {
+                "step_order": s.step_order,
+                "description": s.description,
+                "image_url": s.image_url,
+            } for s in r.steps
+        ]
         response.append({
             "id": r.id,
             "title": r.title,
             "base_serving": r.base_serving,
             "uploader_id": r.uploader_id,
             "created_at": r.created_at,
-            "steps": r.steps,
+            "thumbnail_url": r.thumbnail_url,     
+            "steps": steps,                        
             "ingredients": ingredients,
         })
     return response
 
-@router.get("/{recipe_id}", response_model=RecipeResponseDTO)
+# 상세 페이지@router.get("/{recipe_id}", response_model=RecipeResponseDTO)
 async def get_recipe(
     recipe_id: int,
     db: AsyncSession = Depends(get_async_db),
@@ -180,28 +195,40 @@ async def get_recipe(
     result = await db.execute(
         select(Recipe)
         .options(
-            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient), selectinload(Recipe.steps)).filter(Recipe.id == recipe_id))
+            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
+            selectinload(Recipe.steps)
+        )
+        .filter(Recipe.id == recipe_id)
+    )
     recipe = result.scalar_one_or_none()
     if not recipe:
         raise HTTPException(404, "Recipe not found")
     
     ingredients = [
         {
-        "ingredient_id": ri.ingredient_id, 
-        "name": ri.ingredient.name, 
-        "quantity": ri.quantity, 
-        "unit_name": ri.unit_name
-        } for ri in recipe.ingredients]
+            "ingredient_id": ri.ingredient_id, 
+            "name": ri.ingredient.name, 
+            "quantity": ri.quantity, 
+            "unit_name": ri.unit_name
+        } for ri in recipe.ingredients
+    ]
+    steps = [
+        {
+            "step_order": s.step_order,
+            "description": s.description,
+            "image_url": s.image_url,            
+        } for s in recipe.steps
+    ]
     return {
         "id": recipe.id, 
         "title": recipe.title, 
         "base_serving": recipe.base_serving, 
         "uploader_id": recipe.uploader_id, 
-        "created_at": recipe.created_at, 
-        "thumbnail_url": recipe.thumbnail_url,
-        "steps": recipe.steps, 
-        "ingredients": ingredients
-        }
+        "created_at": recipe.created_at,
+        "thumbnail_url": recipe.thumbnail_url,   
+        "steps": steps,
+        "ingredients": ingredients,
+    }
 
 
 @router.get("/{recipe_id}/scale", response_model=RecipeResponseDTO)
@@ -453,6 +480,8 @@ async def delete_recipe(
     await db.commit()
     return
 
+# ===============================================================================
+# 이미지
 # 썸네일 업로드
 @router.post("/{recipe_id}/thumbnail", response_model=RecipeResponseDTO)
 async def upload_thumbnail(
@@ -492,6 +521,7 @@ async def upload_thumbnail(
         "base_serving": recipe.base_serving,
         "uploader_id": recipe.uploader_id,
         "created_at": recipe.created_at,
+        "thumbnail_url": recipe.thumbnail_url,
         "steps": recipe.steps,
         "ingredients": ingredients
     }
@@ -546,6 +576,7 @@ async def replace_thumbnail(
         "base_serving": recipe.base_serving,
         "uploader_id": recipe.uploader_id,
         "created_at": recipe.created_at,
+        "thumbnail_url": recipe.thumbnail_url,
         "steps": recipe.steps,
         "ingredients": ingredients
     }
@@ -577,140 +608,173 @@ async def delete_thumbnail(
     return
 
 #============단계 이미지==================
-# 단계별 이미지
-@router.post("/{recipe_id}/steps/{step_order}/image", response_model=RecipeResponseDTO)
-async def upload_step_image(
-    recipe_id: int,
-    step_order: int,
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_executive_user)  # 임원 전용 접근
-):
+def _build_recipe_response(recipe: Recipe):
+    ingredients = [
+        {
+            "ingredient_id": ri.ingredient_id,
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity,
+            "unit_name": ri.unit_name,
+        } for ri in recipe.ingredients
+    ]
+    steps = [
+        {
+            "step_order": s.step_order,
+            "description": s.description,
+            # 단건 필드는 더 이상 사용 안 하지만 남겨두고 싶으면 아래 라인 유지/삭제 선택
+            "image_url": getattr(s, "image_url", None),
+            "image_urls": [img.image_url for img in getattr(s, "images", [])],
+        } for s in recipe.steps
+    ]
+    return {
+        "id": recipe.id,
+        "title": recipe.title,
+        "base_serving": recipe.base_serving,
+        "uploader_id": recipe.uploader_id,
+        "created_at": recipe.created_at,
+        "thumbnail_url": recipe.thumbnail_url,   # ✅ 항상 포함
+        "steps": steps,
+        "ingredients": ingredients,
+    }
+
+# 공통 로더
+async def _load_recipe_with_images(db: AsyncSession, recipe_id: int) -> Recipe:
     result = await db.execute(
-        select(Recipe)
-        .options(
+        select(Recipe).options(
             selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
-            selectinload(Recipe.steps)
+            selectinload(Recipe.steps).selectinload(RecipeStep.images),  # ✅ 반드시 미리 로드
         ).filter(Recipe.id == recipe_id)
     )
-    recipe = result.scalar_one_or_none()
-    if not recipe:
-        raise HTTPException(404, "Recipe not found")
+    return result.scalar_one_or_none()
 
-    await assert_can_edit_recipe(recipe, current_user)
-
-    step = next((s for s in recipe.steps if s.step_order == step_order), None)
-    if not step:
-        raise HTTPException(404, f"Step {step_order} not found")
-
-    _, url_path = await save_image(file, os.path.join(UPLOAD_DIR, str(recipe_id), f"steps/{step_order}"))
-    step.image_url = url_path
-    await db.commit()
-    await db.refresh(recipe)
-
-    ingredients = [{
-        "ingredient_id": ri.ingredient_id,
-        "name": ri.ingredient.name,
-        "quantity": ri.quantity,
-        "unit_name": ri.unit_name
-    } for ri in recipe.ingredients]
-
+def _build_recipe_response(recipe: Recipe):
+    ingredients = [
+        {
+            "ingredient_id": ri.ingredient_id,
+            "name": ri.ingredient.name,
+            "quantity": ri.quantity,
+            "unit_name": ri.unit_name,
+        } for ri in recipe.ingredients
+    ]
+    steps = [
+        {
+            "step_order": s.step_order,
+            "description": s.description,
+            "image_urls": [img.image_url for img in s.images],  # ✅ lazy load 발생 안 함
+        } for s in recipe.steps
+    ]
     return {
         "id": recipe.id,
         "title": recipe.title,
         "base_serving": recipe.base_serving,
         "uploader_id": recipe.uploader_id,
         "created_at": recipe.created_at,
-        "steps": recipe.steps,
-        "ingredients": ingredients
+        "thumbnail_url": recipe.thumbnail_url,
+        "steps": steps,
+        "ingredients": ingredients,
     }
-
-# 교체
-@router.patch("/{recipe_id}/steps/{step_order}/image", response_model=RecipeResponseDTO)
-async def replace_step_image(
+# -----------------------------
+# A) 단계 이미지 "추가" (append)
+# -----------------------------
+@router.post("/{recipe_id}/steps/{step_order}/images", response_model=RecipeResponseDTO)
+async def upload_step_images(
     recipe_id: int,
     step_order: int,
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_executive_user),
 ):
-    result = await db.execute(
-        select(Recipe)
-        .options(
-            selectinload(Recipe.steps),
-            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient)
-        ).filter(Recipe.id == recipe_id)
-    )
-    recipe = result.scalar_one_or_none()
+    recipe = await _load_recipe_with_images(db, recipe_id)   # ✅ 함수명 수정
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-
     await assert_can_edit_recipe(recipe, current_user)
 
     step = next((s for s in recipe.steps if s.step_order == step_order), None)
     if not step:
         raise HTTPException(404, f"Step {step_order} not found")
 
-    # 기존 파일 삭제
-    if step.image_url:
-        try:
-            fp = step.image_url.lstrip("/")
-            if fp.startswith("uploads/") and os.path.exists(fp):
-                os.remove(fp)
-        except Exception:
-            pass
+    for f in files:
+        _, url_path = await save_image(f, os.path.join(UPLOAD_DIR, str(recipe_id), f"steps/{step_order}"))
+        db.add(RecipeStepImage(step_id=step.id, image_url=url_path))
 
-    # 새 파일 저장
-    _, url_path = await save_image(file, os.path.join(UPLOAD_DIR, str(recipe_id), f"steps/{step_order}"))
-    step.image_url = url_path
     await db.commit()
-    await db.refresh(recipe)
 
-    ingredients = [{
-        "ingredient_id": ri.ingredient_id,
-        "name": ri.ingredient.name,
-        "quantity": ri.quantity,
-        "unit_name": ri.unit_name
-    } for ri in recipe.ingredients]
+    # ✅ 커밋 후 재조회
+    recipe = await _load_recipe_with_images(db, recipe_id)
+    return _build_recipe_response(recipe)
 
-    return {
-        "id": recipe.id,
-        "title": recipe.title,
-        "base_serving": recipe.base_serving,
-        "uploader_id": recipe.uploader_id,
-        "created_at": recipe.created_at,
-        "steps": recipe.steps,
-        "ingredients": ingredients
-    }
-
-# 삭제
-@router.delete("/{recipe_id}/steps/{step_order}/image", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_step_image(
+# -----------------------------------
+# B) 단계 이미지 "교체" (replace all)
+# -----------------------------------
+@router.put("/{recipe_id}/steps/{step_order}/images", response_model=RecipeResponseDTO)
+async def replace_step_images(
     recipe_id: int,
     step_order: int,
+    files: List[UploadFile] = File(...),
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_executive_user),
 ):
-    result = await db.execute(
-        select(Recipe).options(selectinload(Recipe.steps)).filter(Recipe.id == recipe_id)
-    )
-    recipe = result.scalar_one_or_none()
+    recipe = await _load_recipe_with_images(db, recipe_id)   # ✅ 함수명 수정
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-
     await assert_can_edit_recipe(recipe, current_user)
 
     step = next((s for s in recipe.steps if s.step_order == step_order), None)
     if not step:
         raise HTTPException(404, f"Step {step_order} not found")
 
-    if step.image_url:
+    # 기존 파일/레코드 삭제
+    for img in list(step.images):
         try:
-            fp = step.image_url.lstrip("/")
+            fp = img.image_url.lstrip("/")
             if fp.startswith("uploads/") and os.path.exists(fp):
                 os.remove(fp)
         except Exception:
             pass
-        step.image_url = None
-        await db.commit()
+        await db.delete(img)
+
+    # 새 이미지 등록
+    for f in files:
+        _, url_path = await save_image(f, os.path.join(UPLOAD_DIR, str(recipe_id), f"steps/{step_order}"))
+        db.add(RecipeStepImage(step_id=step.id, image_url=url_path))
+
+    await db.commit()
+
+    # ✅ 커밋 후 재조회
+    recipe = await _load_recipe_with_images(db, recipe_id)
+    return _build_recipe_response(recipe)
+
+# --------------------------------
+# C) 단계 이미지 "개별 삭제"
+# --------------------------------
+@router.delete("/{recipe_id}/steps/{step_order}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_one_step_image(
+    recipe_id: int,
+    step_order: int,
+    image_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_executive_user),
+):
+    recipe = await _load_recipe_with_images(db, recipe_id)   # ✅ 함수명 수정
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+    await assert_can_edit_recipe(recipe, current_user)
+
+    step = next((s for s in recipe.steps if s.step_order == step_order), None)
+    if not step:
+        raise HTTPException(404, f"Step {step_order} not found")
+
+    target = next((img for img in step.images if img.id == image_id), None)
+    if not target:
+        raise HTTPException(404, "Image not found")
+
+    try:
+        fp = target.image_url.lstrip("/")
+        if fp.startswith("uploads/") and os.path.exists(fp):
+            os.remove(fp)
+    except Exception:
+        pass
+
+    await db.delete(target)
+    await db.commit()
     return

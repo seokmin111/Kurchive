@@ -17,6 +17,7 @@ class Recipe(Base):
     uploader_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    thumbnail_url = Column(String, nullable = True)
     steps = relationship("RecipeStep", cascade="all, delete")
     ingredients = relationship("RecipeIngredient", cascade="all, delete")
 
@@ -27,8 +28,17 @@ class RecipeStep(Base):
     recipe_id = Column(Integer, ForeignKey("recipes.id"))
     step_order = Column(Integer, nullable=False)  # 컬럼명 맞춤
     description = Column(Text, nullable=False)
-    image_url = Column(String, nullable=True)
+    
+    images = relationship("RecipeStepImage", cascade="all, delete", back_populates="step")
 
+class RecipeStepImage(Base):
+    __tablename__ = "recipe_step_images"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    step_id = Column(Integer, ForeignKey("recipe_steps.id"), nullable=False)
+    image_url = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    step = relationship("RecipeStep", back_populates="images")
 
 class RecipeIngredient(Base):
     __tablename__ = "recipe_ingredients"

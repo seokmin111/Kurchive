@@ -21,6 +21,8 @@ import BE.src.models.admin_config
 
 from BE.src.errors import register_exception_handlers
 
+
+
 # 모델 import 끝난 후에 create_all 실행
 Base.metadata.create_all(bind=engine)
 
