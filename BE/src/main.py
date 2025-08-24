@@ -33,8 +33,8 @@ logging.basicConfig(
 
 app = FastAPI()
 
-os.makedirs("uploads", exist_ok=True)       # ⬅️ 선택(폴더 자동 생성)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")  # ⬅️ 추가
+os.makedirs("uploads", exist_ok=True)       # 선택(폴더 자동 생성)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")  # 
 
 register_exception_handlers(app)
 

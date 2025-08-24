@@ -79,6 +79,7 @@ class RecipeResponseDTO(BaseModel):
     base_serving: int
     uploader_id: int
     created_at: datetime
+    thumbnail_url: Optional[str] = None
     steps: List[RecipeStepDTO]
     ingredients: List[IngredientDetailDTO]
 
@@ -152,6 +153,7 @@ async def get_recipe(
         "base_serving": recipe.base_serving, 
         "uploader_id": recipe.uploader_id, 
         "created_at": recipe.created_at, 
+        "thumbnail_url": recipe.thumbnail_url,
         "steps": recipe.steps, 
         "ingredients": ingredients
         }

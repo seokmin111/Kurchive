@@ -13,7 +13,7 @@ import aiofiles
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from BE.src.dependencies import get_db, get_current_user
+from BE.src.dependencies import get_async_db, get_current_user
 from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
@@ -163,7 +163,7 @@ class ImageOut(BaseModel):
 async def get_tags(
     category_id: Optional[int] = Query(None, alias="category_id"),
     parent_id: Optional[int] = Query(None, alias="parent_id"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Tag)
     if category_id is not None:
@@ -190,7 +190,7 @@ async def get_tags(
 
 # 1-2. 카테고리 조회
 @router.get("/tag-categories")
-async def get_tag_categories(db: AsyncSession = Depends(get_db)):
+async def get_tag_categories(db: AsyncSession = Depends(get_async_db)):
     result = await db.execute(select(TagCategory))
     categories = result.scalars().all()
     return [{"id": c.id, "name": c.name, "slug": c.slug} for c in categories]
@@ -200,7 +200,7 @@ async def get_tag_categories(db: AsyncSession = Depends(get_db)):
 @router.get("/regions")
 async def get_regions(
     parent_id: Optional[int] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Region)
     if parent_id is None:
@@ -215,7 +215,7 @@ async def get_regions(
 @router.post("/restaurants", response_model=CreateRestaurantResponse)
 async def create_restaurant(
     payload: RestaurantCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     # 1) 주소 + 좌표 추출 (실패해도 흐름 계속)
@@ -282,7 +282,7 @@ async def create_restaurant(
 @router.get("/restaurants/{restaurant_id}")
 async def get_restaurant(
     restaurant_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
@@ -348,7 +348,7 @@ async def list_restaurants(
     tag_ids: Optional[str] = None,   # "10,101"
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     stmt = select(Restaurant)
@@ -416,7 +416,7 @@ async def list_restaurants_nearby(
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     limit: int = 200,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     stmt = select(Restaurant).where(
@@ -496,7 +496,7 @@ async def list_restaurants_in_viewport(
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     limit: int = 200,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     if min_lat > max_lat:
@@ -560,7 +560,7 @@ async def list_restaurants_in_viewport(
 async def update_restaurant(
     restaurant_id: int,
     payload: RestaurantCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
@@ -641,7 +641,7 @@ async def update_restaurant(
 @router.delete("/restaurants/{restaurant_id}")
 async def delete_restaurant(
     restaurant_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
@@ -659,7 +659,7 @@ async def delete_restaurant(
 
 # 8. 태그 검색 자동완성
 @router.get("/tags/search")
-async def search_tags(q: str, db: AsyncSession = Depends(get_db)):
+async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
     result = await db.execute(
         select(Tag).where(Tag.name.like(f"%{q}%")).limit(10)
     )
@@ -674,10 +674,9 @@ from typing import List as TList
 @router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
 async def upload_restaurant_images(
     restaurant_id: int,
-    files: Optional[TList[UploadFile]] = File(None, description="다건 업로드 시 사용"),
-    file: Optional[UploadFile] = File(None, description="단건 업로드 시 사용"),
+    files: TList[UploadFile] = File(..., description="하나 이상 업로드"),
     replace: bool = Query(False, description="true면 기존 이미지 모두 교체"),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     # 식당/권한 체크
@@ -688,15 +687,10 @@ async def upload_restaurant_images(
     if restaurant.uploaded_by != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to modify images")
 
-    uploads: TList[UploadFile] = []
-    if file is not None:
-        uploads.append(file)
-    if files:
-        uploads.extend(files)
-    if not uploads:
-        raise HTTPException(status_code=422, detail="file or files is required")
+    if not files:
+        raise HTTPException(status_code=422, detail="file(s) is required")
 
-    for u in uploads:
+    for u in files:
         if u.content_type not in ALLOWED_IMAGE_CT:
             raise HTTPException(status_code=415, detail=f"Unsupported type: {u.content_type}")
 
@@ -718,7 +712,7 @@ async def upload_restaurant_images(
         await db.flush()
 
     out: TList[ImageOut] = []
-    for u in uploads:
+    for u in files:
         ext = os.path.splitext(u.filename or "")[1].lower() or ".jpg"
         safe = f"{int(time.time()*1000)}_{secrets.token_hex(4)}{ext}"
         save_path = os.path.join(UPLOAD_DIR, safe)
@@ -743,11 +737,12 @@ async def upload_restaurant_images(
     await db.commit()
     return out
 
+
 @router.delete("/restaurants/{restaurant_id}/images/{image_id}", status_code=204)
 async def delete_restaurant_image(
     restaurant_id: int,
     image_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
@@ -776,10 +771,11 @@ async def delete_restaurant_image(
     await db.commit()
     return
 
+
 @router.get("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut])
 async def list_restaurant_images(
     restaurant_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
@@ -789,6 +785,7 @@ async def list_restaurant_images(
         select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant_id)
     )).scalars().all()
     return [{"id": i.id, "image_url": i.image_url, "created_at": i.created_at} for i in imgs]
+
 
 # 이미지 메타 수정
 from typing import Optional as _Optional
@@ -802,7 +799,7 @@ async def patch_restaurant_image(
     restaurant_id: int,
     image_id: int,
     body: ImagePatch,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()

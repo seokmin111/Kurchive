@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from BE.src.models.restaurants import Restaurant
-from BE.src.dependencies import get_db
+from BE.src.dependencies import get_async_db
 
 import os
 import logging
@@ -20,7 +20,7 @@ NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET")
 router = APIRouter()
 
 @router.get("/map/restaurants")
-def get_all_restaurants(db: Session = Depends(get_db)):
+def get_all_restaurants(db: Session = Depends(get_async_db)):
     """
     모든 식당의 좌표 + 이름 + 주소 반환
     """
