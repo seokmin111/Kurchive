@@ -833,3 +833,35 @@ async def patch_restaurant_image(
     await db.commit()
     await db.refresh(img)
     return {"id": img.id, "image_url": img.image_url, "created_at": img.created_at}
+
+"""프론트 호출
+async function updateImageMeta(restaurantId: number, imageId: number, data: {
+  is_cover?: boolean;
+  caption?: string;
+  sort_order?: number;
+}) {
+  const res = await fetch(`/api/restaurants/${restaurantId}/images/${imageId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // 로그인 토큰 필요
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error(`이미지 메타 수정 실패: ${res.status}`);
+  }
+
+  return res.json(); // {id, image_url, created_at}
+}
+
+// 대표 이미지로 지정
+await updateImageMeta(3, 42, { is_cover: true });
+
+// 캡션 수정
+await updateImageMeta(3, 42, { caption: "메뉴 사진" });
+
+// 정렬 순서 수정
+await updateImageMeta(3, 42, { sort_order: 2 });
+"""

@@ -104,11 +104,33 @@ async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
     제목으로 레시피 검색
     """
     result = await db.execute(
-        select(Recipe).options(selectinload(Recipe.ingredients), selectinload(Recipe.steps))
-        .filter(Recipe.title.contains(title))
+        select(Recipe).options(
+            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
+            selectinload(Recipe.steps)
+        ).filter(Recipe.title.contains(title))
     )
-    return result.scalars().all()
+    recipes = result.scalars().all()
 
+    response = []
+    for r in recipes:
+        ingredients = [
+            {
+                "ingredient_id": ri.ingredient_id,
+                "name": ri.ingredient.name,
+                "quantity": ri.quantity,
+                "unit_name": ri.unit_name,
+            } for ri in r.ingredients
+        ]
+        response.append({
+            "id": r.id,
+            "title": r.title,
+            "base_serving": r.base_serving,
+            "uploader_id": r.uploader_id,
+            "created_at": r.created_at,
+            "steps": r.steps,
+            "ingredients": ingredients,
+        })
+    return response
 
 @router.get("/list", response_model=List[RecipeResponseDTO])
 async def list_recipes(db: AsyncSession = Depends(get_async_db)):
@@ -116,10 +138,33 @@ async def list_recipes(db: AsyncSession = Depends(get_async_db)):
     전체 레시피 목록 조회
     """
     result = await db.execute(
-        select(Recipe).options(selectinload(Recipe.ingredients), selectinload(Recipe.steps))
+        select(Recipe).options(
+            selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
+            selectinload(Recipe.steps)
+        )
     )
-    return result.scalars().all()
+    recipes = result.scalars().all()
 
+    response = []
+    for r in recipes:
+        ingredients = [
+            {
+                "ingredient_id": ri.ingredient_id,
+                "name": ri.ingredient.name,
+                "quantity": ri.quantity,
+                "unit_name": ri.unit_name,
+            } for ri in r.ingredients
+        ]
+        response.append({
+            "id": r.id,
+            "title": r.title,
+            "base_serving": r.base_serving,
+            "uploader_id": r.uploader_id,
+            "created_at": r.created_at,
+            "steps": r.steps,
+            "ingredients": ingredients,
+        })
+    return response
 
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
 async def get_recipe(
