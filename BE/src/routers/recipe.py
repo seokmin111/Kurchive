@@ -24,6 +24,7 @@ from BE.src.utils.units import convert_unit
 
 logger = logging.getLogger("convert")
 
+# 현재 유저가 staff/admin 권한인지 확인 (아니면 403 반환)
 
 async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
     # 권한 확인 
@@ -39,7 +40,9 @@ router = APIRouter(prefix="/api/recipe", tags=["Recipe"], dependencies=[Depends(
 
 
 
-# -------- DTO --------
+# -------- DTO 정의 --------
+# 요청/응답 스키마 (Pydantic)
+
 class IngredientDTO(BaseModel):
     ingredient_id: int
     quantity: float
@@ -103,6 +106,8 @@ async def _load_recipe_with_images(db: AsyncSession, recipe_id: int) -> Recipe:
     )
     return result.scalar_one_or_none()
 
+# 레시피 ORM 객체 → dict 응답 변환
+# - 재료/단계 + 단계별 image_urls 포함
 def _build_recipe_response(recipe: Recipe):
     ingredients = [
         {
@@ -132,6 +137,11 @@ def _build_recipe_response(recipe: Recipe):
 
 
 # -------- API --------
+# ============================================================
+# 조회 API
+# - /search, /list, /{id}, /{id}/scale, /{id}/convert
+# ============================================================
+
 @router.get("/search", response_model=List[RecipeResponseDTO])
 async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
     """
@@ -229,6 +239,9 @@ async def convert_recipe(
 
     return _build_recipe_response(recipe)
 
+# ============================================================
+# 생성/수정/삭제 API
+# ============================================================
 
 @router.post("", response_model=RecipeResponseDTO, status_code=status.HTTP_201_CREATED)
 async def create_recipe(
