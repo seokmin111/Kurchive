@@ -13,7 +13,7 @@ import aiofiles
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from BE.src.dependencies import get_async_db, get_current_user
+from BE.src.dependencies import get_async_db, get_current_user_from_token
 from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
@@ -44,6 +44,21 @@ def _haversine_km(lat1, lon1, lat2, lon2) -> float:
     dlon = radians(lon2 - lon1)
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
     return 2 * R * asin(sqrt(a))
+
+
+async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
+    """
+    현재 로그인한 유저가 임원(staff) 또는 관리자(admin)인지 확인
+    권한이 없으면 403 Forbidden 에러
+    """
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not is_privileged:
+        raise HTTPException(
+            status_code=403,
+            detail="Executive or admin access required",
+        )
+    return current_user
+
 
 router = APIRouter()
 
@@ -216,7 +231,7 @@ async def get_regions(
 async def create_restaurant(
     payload: RestaurantCreate,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_executive_user)
 ):
     # 1) 주소 + 좌표 추출 (실패해도 흐름 계속)
     address, lat, lon = None, None, None
@@ -283,7 +298,7 @@ async def create_restaurant(
 async def get_restaurant(
     restaurant_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
@@ -349,7 +364,7 @@ async def list_restaurants(
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     stmt = select(Restaurant)
     if region_id is not None:
@@ -417,7 +432,7 @@ async def list_restaurants_nearby(
     price_max: Optional[int] = None,
     limit: int = 200,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     stmt = select(Restaurant).where(
         Restaurant.latitude.is_not(None),
@@ -497,7 +512,7 @@ async def list_restaurants_in_viewport(
     price_max: Optional[int] = None,
     limit: int = 200,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     if min_lat > max_lat:
         min_lat, max_lat = max_lat, min_lat
@@ -561,14 +576,17 @@ async def update_restaurant(
     restaurant_id: int,
     payload: RestaurantCreate,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    if restaurant.uploaded_by != current_user.id:
+    # 권한확인 
+    is_uploader = restaurant.uploaded_by == current_user.id
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not (is_uploader or is_privileged):
         raise HTTPException(status_code=403, detail="Not authorized to update this restaurant")
 
     # 주소/좌표 재계산
@@ -642,14 +660,17 @@ async def update_restaurant(
 async def delete_restaurant(
     restaurant_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    if restaurant.uploaded_by != current_user.id:
+    # 권한확인 
+    is_uploader = restaurant.uploaded_by == current_user.id
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not (is_uploader or is_privileged):
         raise HTTPException(status_code=403, detail="Not authorized to delete this restaurant")
 
     await db.execute(delete(RestaurantTag).where(RestaurantTag.restaurant_id == restaurant.id))
@@ -677,15 +698,17 @@ async def upload_restaurant_images(
     files: TList[UploadFile] = File(..., description="하나 이상 업로드"),
     replace: bool = Query(False, description="true면 기존 이미지 모두 교체"),
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     # 식당/권한 체크
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    if restaurant.uploaded_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to modify images")
+    is_uploader = restaurant.uploaded_by == current_user.id
+    is_privileged = current_user.role == 'staff' or current_user.is_admin
+    if not (is_uploader or is_privileged):
+        raise HTTPException(status_code=403, detail="Not authorized to modify images for this restaurant")
 
     if not files:
         raise HTTPException(status_code=422, detail="file(s) is required")
@@ -743,7 +766,7 @@ async def delete_restaurant_image(
     restaurant_id: int,
     image_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not r:
@@ -776,7 +799,7 @@ async def delete_restaurant_image(
 async def list_restaurant_images(
     restaurant_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not r:
@@ -800,7 +823,7 @@ async def patch_restaurant_image(
     image_id: int,
     body: ImagePatch,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not r:

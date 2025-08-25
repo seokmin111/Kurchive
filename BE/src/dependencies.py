@@ -7,11 +7,11 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+# from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 import os
 
-from BE.src.database import SessionLocal
+# from BE.src.database import SessionLocal
 from BE.src.models.users import User
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,13 +19,14 @@ from sqlalchemy.future import select
 from BE.src.database import get_async_db
 
 # 요청마다 DB 세션을 열고 닫아주는 dependency.. 나중에 비동기로 수정?
+'''
 def get_db() -> Generator:
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
+'''
 
 JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-key")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
@@ -34,7 +35,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 security = HTTPBearer() # 수정 
 
-
+'''
 def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(security), 
     db: Session = Depends(get_db)
@@ -57,6 +58,7 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+'''
 
 def create_access_token(sub: str, expires_in_seconds: int = 3600, scope: str = "user") -> str:
     now = datetime.now(timezone.utc)
