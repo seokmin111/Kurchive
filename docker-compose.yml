@@ -10,8 +10,32 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
-      - mysql_data:/var/lib/mysql   # 호스트 폴더 대신 도커 볼륨
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: .
+      dockerfile: BE/Dockerfile
+    container_name: kurchive-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "mysql+aiomysql://devuser:kurchive202508%21@mysql:3306/kurchive"
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
+    command: >
+      python -m uvicorn BE.src.main:app --host 0.0.0.0 --port 8000
 
 volumes:
   mysql_data:
