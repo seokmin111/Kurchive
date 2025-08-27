@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: kurchive-mysql
+    container_name: kurchive-mysql-dev
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -10,32 +10,28 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data_dev:/var/lib/mysql
 
   backend:
     build:
       context: .
       dockerfile: BE/Dockerfile
-    container_name: kurchive-backend
+    container_name: kurchive-backend-dev
     restart: always
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     env_file:
-      - .env
+      - .env.dev
     environment:
       DATABASE_URL: "mysql+aiomysql://devuser:kurchive202508%21@mysql:3306/kurchive"
-      PYTHONUNBUFFERED: "1"
     ports:
       - "8000:8000"
+    volumes:
+      - ./static/uploads:/app/static/uploads
+      - ./BE:/app/BE   # 코드 수정하면 바로 반영 (핫리로드)
     command: >
-      python -m uvicorn BE.src.main:app --host 0.0.0.0 --port 8000
+      python -m uvicorn BE.src.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
-  mysql_data:
+  mysql_data_dev:
