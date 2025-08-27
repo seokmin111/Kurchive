@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<link rel="stylesheet" href = "./login.css">
+    <meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content = "IE-edge">
+		<meta name ="viewport" content = "width=device-width, initial-scale = 1.0">
+		<title>커카이브</title>
+    </head>
+
+	<body>
+		<div id="header">
+			<a href = "#"> <!-- 로고 클릭 시 링크 이동 -->
+				<img src ="./images/curson_logo.png" alt = "커손연 로고" class = "logo">
+			</a>
+			<h1>커카이브</h1>
+			<h2> 로그인 페이지 </h2>
+		</div>
+		<div>
+			<form action = "#" method = "post"> <!-- 데이터 보낼 백엔드 주소 -->
+				<label for = "username"> ID </label>
+				<input type="text" name = "username" id = "username" maxlength="10" class = "input-box" placeholder="아이디를 입력하세요"><br>
+				<label for = "userpw"> Password</label>
+				<input type="password" name = "userpw" id = "userpw" maxlength="16" class = "input-box" placeholder="비밀번호를 입력하세요">
+				<br><br>
+				<a href="#" class = "mrg">아이디 찾기</a> <!-- 아이디 찾기 링크 이동 -->
+				<a href="#" class = "mrg">비밀번호 찾기</a> <!-- 비밀번호 찾기 링크 이동 -->
+				<br>
+				<button type="submit">로그인</button>
+				<br>
+			</form>
+			<a href="#" class="btn">회원가입</a>
+		</div>
+	</body>
+</html>
+
