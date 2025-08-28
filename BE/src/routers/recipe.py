@@ -340,7 +340,13 @@ async def delete_recipe(
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    await assert_can_edit_recipe(recipe, current_user)
+
+    is_uploader = recipe.uploader_id == current_user.id
+    is_admin = current_user.is_admin  
+
+
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
 
     await db.delete(recipe)
     await db.commit()
@@ -478,27 +484,3 @@ async def replace_step_images(
     return _build_recipe_response(recipe)
 
 
-@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_recipe(
-    recipe_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
-):
-    """
-    레시피 삭제
-    """
-    recipe = await _load_recipe_with_images(db, recipe_id)
-    if not recipe:
-        raise HTTPException(404, "Recipe not found")
-
-
-    is_uploader = recipe.uploader_id == current_user.id
-    is_admin = current_user.is_admin  
-
-
-    if not (is_uploader or is_admin):
-        raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
-
-    await db.delete(recipe)
-    await db.commit()
-    return
