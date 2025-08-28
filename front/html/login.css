@@ -4,7 +4,7 @@ h1 {
     font-size: 48px !important;
     font-weight: 500 !important;
     line-height: 0.7;
-    margin: 0px 0px 10px;
+    margin: 0px 0px 30px;
 }
 
 @font-face {
@@ -52,6 +52,7 @@ button {
     box-sizing: content-box;
     width: 60px;
     height: 20px;
+    line-height: 20px;
     margin: 10px;
     padding: 10px 100px;
     border-radius: 5px;
@@ -76,22 +77,23 @@ button {
 }
 
 .mrg {
-    margin: 50px;
+    margin: 30px;
 }
 
 label {
+    text-align: right;
     display: inline-block;
     color: #8B0029;
     box-sizing: border-box;
     width: 100px;
     border: none;
-    padding:10px;
+    padding:5px;
     margin:5px;
 }
 
 .input-box {
     display: inline-block;
-    width: 300px;
+    width: 150px;
     height: 30px;
     font-size: 16px;
     padding: 8px;   
