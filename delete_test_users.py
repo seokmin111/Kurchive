@@ -13,7 +13,7 @@ async def delete_users():
     print("Connecting to DB to delete test users...")
     async with async_session_maker() as session:
         async with session.begin():
-            user_ids_to_delete = ["test01", "test02"]
+            user_ids_to_delete = ["test03"]
             
             # 삭제할 사용자 찾기
             result = await session.execute(
@@ -22,7 +22,7 @@ async def delete_users():
             users_to_delete = result.scalars().all()
 
             if not users_to_delete:
-                print("Test users 'test01', 'test02' not found. Nothing to delete.")
+                print("Test users not found. Nothing to delete.")
             else:
                 # 사용자 삭제 실행
                 for user in users_to_delete:

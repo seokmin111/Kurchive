@@ -18,8 +18,8 @@ class Recipe(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     thumbnail_url = Column(String, nullable = True)
-    steps = relationship("RecipeStep", cascade="all, delete")
-    ingredients = relationship("RecipeIngredient", cascade="all, delete")
+    steps = relationship("RecipeStep", cascade="all, delete", back_populates="recipe")
+    ingredients = relationship("RecipeIngredient", cascade="all, delete", back_populates="recipe")
 
 # 레시피 순서(지시사항)
 class RecipeStep(Base):
@@ -30,6 +30,8 @@ class RecipeStep(Base):
     description = Column(Text, nullable=False)
     
     images = relationship("RecipeStepImage", cascade="all, delete", back_populates="step")
+
+    recipe = relationship("Recipe", back_populates="steps")
 
 class RecipeStepImage(Base):
     __tablename__ = "recipe_step_images"
