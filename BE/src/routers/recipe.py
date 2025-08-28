@@ -484,43 +484,21 @@ async def delete_recipe(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-
+    """
+    레시피 삭제
+    """
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
-        return
+        raise HTTPException(404, "Recipe not found")
 
-    await assert_can_edit_recipe(recipe, current_user)
 
-    # RecipeStepImage 삭제
-    for step in recipe.steps:
-        for image in step.images:
-            try:
-                fp = image.image_url.lstrip("/")
-                if fp.startswith("uploads/") and os.path.exists(fp):
-                    os.remove(fp)
-            except Exception as e:
-                print(f"[파일 삭제 오류] {e}") 
-            
-            await db.delete(image)
-            
-    # 썸네일 삭제 
-    if recipe.thumbnail_url:
-        try:
-            fp = recipe.thumbnail_url.lstrip("/")
-            if fp.startswith("uploads/") and os.path.exists(fp):
-                os.remove(fp)
-        except Exception as e:
-            print(f"[썸네일 삭제 오류] {e}")
+    is_uploader = recipe.uploader_id == current_user.id
+    is_admin = current_user.is_admin  
 
-    # RecipeStep, RecipeIngredient 삭제
-    for step in recipe.steps:
-        await db.delete(step)
-    
-    for ingredient in recipe.ingredients:
-        await db.delete(ingredient)
 
-    # Recipe삭제
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
+
     await db.delete(recipe)
-
     await db.commit()
     return

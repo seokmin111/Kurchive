@@ -18,8 +18,8 @@ class Recipe(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     thumbnail_url = Column(String, nullable = True)
-    steps = relationship("RecipeStep", cascade="all, delete", back_populates="recipe")
-    ingredients = relationship("RecipeIngredient", cascade="all, delete", back_populates="recipe")
+    steps = relationship("RecipeStep", cascade="all, delete, delete-orphan", back_populates="recipe")
+    ingredients = relationship("RecipeIngredient", cascade="all, delete, delete-orphan", back_populates="recipe")
 
 # 레시피 순서(지시사항)
 class RecipeStep(Base):
@@ -29,8 +29,7 @@ class RecipeStep(Base):
     step_order = Column(Integer, nullable=False)  # 컬럼명 맞춤
     description = Column(Text, nullable=False)
     
-    images = relationship("RecipeStepImage", cascade="all, delete", back_populates="step")
-
+    images = relationship("RecipeStepImage", cascade="all, delete, delete-orphan", back_populates="step")
     recipe = relationship("Recipe", back_populates="steps")
 
 class RecipeStepImage(Base):
@@ -53,6 +52,12 @@ class RecipeIngredient(Base):
     recipe = relationship("Recipe", back_populates="ingredients")
     ingredient = relationship("Ingredient")
 
+class IngredientCategory(Base):
+    __tablename__ = "ingredient_categories"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), unique=True, nullable=False)
+
 # 재료 
 class Ingredient(Base):
     __tablename__ = "ingredients"
@@ -61,10 +66,9 @@ class Ingredient(Base):
     name = Column(String(100))
     density = Column(Float)
     average_weight = Column(Float)
-    unit_type = Column(String)   # SQLite에서는 CHECK는 따로 처리
+    unit_type = Column(String)
     category_id = Column(Integer, ForeignKey("ingredient_categories.id"))
 
-    # 관계 추가
     ingredient_units = relationship("IngredientUnit", back_populates="ingredient")
 
 class Unit(Base):
