@@ -51,6 +51,7 @@ async def get_current_executive_user(current_user: User = Depends(get_current_us
     현재 로그인한 유저가 임원(staff) 또는 관리자(admin)인지 확인
     권한이 없으면 403 Forbidden 에러
     """
+    # is_privileged = current_user.role == 'staff' or current_user.is_admin
     is_privileged = current_user.role == 'staff' or current_user.is_admin
     if not is_privileged:
         raise HTTPException(

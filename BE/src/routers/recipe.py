@@ -478,33 +478,49 @@ async def replace_step_images(
     return _build_recipe_response(recipe)
 
 
-@router.delete("/{recipe_id}/steps/{step_order}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_one_step_image(
+@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recipe(
     recipe_id: int,
-    step_order: int,
-    image_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token),
+    current_user: User = Depends(get_current_user_from_token)
 ):
+
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
-        raise HTTPException(404, "Recipe not found")
+        return
+
     await assert_can_edit_recipe(recipe, current_user)
 
-    step = next((s for s in recipe.steps if s.step_order == step_order), None)
-    if not step:
-        raise HTTPException(404, f"Step {step_order} not found")
+    # RecipeStepImage 삭제
+    for step in recipe.steps:
+        for image in step.images:
+            try:
+                fp = image.image_url.lstrip("/")
+                if fp.startswith("uploads/") and os.path.exists(fp):
+                    os.remove(fp)
+            except Exception as e:
+                print(f"[파일 삭제 오류] {e}") 
+            
+            await db.delete(image)
+            
+    # 썸네일 삭제 
+    if recipe.thumbnail_url:
+        try:
+            fp = recipe.thumbnail_url.lstrip("/")
+            if fp.startswith("uploads/") and os.path.exists(fp):
+                os.remove(fp)
+        except Exception as e:
+            print(f"[썸네일 삭제 오류] {e}")
 
-    target = next((img for img in step.images if img.id == image_id), None)
-    if not target:
-        raise HTTPException(404, "Image not found")
+    # RecipeStep, RecipeIngredient 삭제
+    for step in recipe.steps:
+        await db.delete(step)
+    
+    for ingredient in recipe.ingredients:
+        await db.delete(ingredient)
 
-    try:
-        fp = target.image_url.lstrip("/")
-        if fp.startswith("uploads/") and os.path.exists(fp):
-            os.remove(fp)
-    except: pass
+    # Recipe삭제
+    await db.delete(recipe)
 
-    await db.delete(target)
     await db.commit()
     return
