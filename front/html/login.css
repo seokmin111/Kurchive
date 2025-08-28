@@ -1,0 +1,112 @@
+h1 {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    font-size: 48px !important;
+    font-weight: 500 !important;
+    line-height: 0.7;
+    margin: 0px 0px 30px;
+}
+
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+    font-weight: 400;
+    font-display: swap;
+}
+
+body {
+    font-family: 'Pretendard', sans-serif;
+}
+
+h2 {
+    font-size: 24px !important;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:link, a:visited {
+    color : #888
+}
+
+a:hover {
+    color : #8B0029
+}
+
+input:focus {
+    border-radius: 8px;
+    border : 2px solid #8B0029;
+    outline : none;
+}
+
+button {
+    display: inline-block;
+    box-sizing: content-box;
+    width: 60px;
+    height: 20px;
+    line-height: 20px;
+    margin: 10px;
+    padding: 10px 100px;
+    border-radius: 5px;
+    border: 0px;
+    font-size: 16px;
+    background-color: #8B0029;
+    color: white;
+    cursor: pointer;
+}
+
+.btn {
+    display: inline-block;
+    box-sizing: content-box;
+    width: 60px;
+    height: 20px;
+    margin: 10px;
+    padding: 10px 100px;
+    background-color: #F2ECE5;
+    color: gray;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.mrg {
+    margin: 30px;
+}
+
+label {
+    text-align: right;
+    display: inline-block;
+    color: #8B0029;
+    box-sizing: border-box;
+    width: 100px;
+    border: none;
+    padding:5px;
+    margin:5px;
+}
+
+.input-box {
+    display: inline-block;
+    width: 150px;
+    height: 30px;
+    font-size: 16px;
+    padding: 8px;   
+    border-radius: 8px; 
+    border: 1px solid #ccc;
+    margin: 10px;
+}
+
+.logo {
+    margin: 20px 0px 0px 0px;
+    width: 120px;
+}
+
+div {
+    text-align: center;
+}
