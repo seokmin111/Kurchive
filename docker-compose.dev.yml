@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: kurchive-mysql-dev
+    container_name: kurchive-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}

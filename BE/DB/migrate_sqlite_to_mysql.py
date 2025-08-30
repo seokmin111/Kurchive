@@ -77,24 +77,28 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
     offset = 0
     while True:
-        rows = s_conn.execute(
+        rows = src_conn.execute(
             select(table_obj).offset(offset).limit(BATCH)
         ).mappings().all()
 
         if not rows:
             break
 
-        # id=0 → None으로 치환
-        rows = [
-            {**row, "id": None} if "id" in row and row["id"] == 0 else dict(row)
-            for row in rows
-        ]
+        cleaned = []
+        for row in rows:
+            d = dict(row)
 
-        dst_conn.execute(dst_table.insert(), rows)
+            # ✅ id 컬럼 있으면 무시 (MySQL이 AUTO_INCREMENT로 새 채번)
+            if "id" in d:
+                d.pop("id", None)
+
+            cleaned.append(d)
+
+        dst_conn.execute(dst_table.insert(), cleaned)
         offset += len(rows)
 
-
     return total
+
 
 # ---------- 실행 ----------
 with sqlite_engine.connect() as s_conn, mysql_engine.begin() as m_conn:
