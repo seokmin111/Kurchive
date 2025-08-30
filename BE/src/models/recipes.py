@@ -63,7 +63,7 @@ class Ingredient(Base):
     __tablename__ = "ingredients"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(500)(100))
+    name = Column(String(100))
     density = Column(Float)
     average_weight = Column(Float)
     unit_type = Column(String(500))
