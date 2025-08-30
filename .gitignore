@@ -18,3 +18,10 @@ venv/
 
 # Secret keys
 BE/keys.py
+
+# 인증키, 비밀정보
+*.pem
+*.key
+*.crt
+*.cert
+.env
