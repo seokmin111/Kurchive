@@ -14,6 +14,8 @@ import BE.src.models.regions
 import BE.src.models.restaurants
 import BE.src.models.admin_config
 
+import BE.src.models
+
 from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth
 from BE.src.errors import register_exception_handlers
 

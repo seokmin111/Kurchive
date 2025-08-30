@@ -45,12 +45,13 @@ def _haversine_km(lat1, lon1, lat2, lon2) -> float:
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
     return 2 * R * asin(sqrt(a))
 
-
+'''
 async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
     """
     현재 로그인한 유저가 임원(staff) 또는 관리자(admin)인지 확인
     권한이 없으면 403 Forbidden 에러
     """
+    # is_privileged = current_user.role == 'staff' or current_user.is_admin
     is_privileged = current_user.role == 'staff' or current_user.is_admin
     if not is_privileged:
         raise HTTPException(
@@ -58,7 +59,7 @@ async def get_current_executive_user(current_user: User = Depends(get_current_us
             detail="Executive or admin access required",
         )
     return current_user
-
+'''
 
 router = APIRouter()
 
@@ -231,7 +232,7 @@ async def get_regions(
 async def create_restaurant(
     payload: RestaurantCreate,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_executive_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     # 1) 주소 + 좌표 추출 (실패해도 흐름 계속)
     address, lat, lon = None, None, None
@@ -585,10 +586,10 @@ async def update_restaurant(
 
     # 권한확인 
     is_uploader = restaurant.uploaded_by == current_user.id
-    is_privileged = current_user.role == 'staff' or current_user.is_admin
-    if not (is_uploader or is_privileged):
-        raise HTTPException(status_code=403, detail="Not authorized to update this restaurant")
-
+    is_admin = current_user.is_admin
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
+    
     # 주소/좌표 재계산
     address, lat, lon = None, None, None
     try:
@@ -669,9 +670,9 @@ async def delete_restaurant(
 
     # 권한확인 
     is_uploader = restaurant.uploaded_by == current_user.id
-    is_privileged = current_user.role == 'staff' or current_user.is_admin
-    if not (is_uploader or is_privileged):
-        raise HTTPException(status_code=403, detail="Not authorized to delete this restaurant")
+    is_admin = current_user.is_admin
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
 
     await db.execute(delete(RestaurantTag).where(RestaurantTag.restaurant_id == restaurant.id))
     await db.delete(restaurant)
@@ -706,9 +707,9 @@ async def upload_restaurant_images(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     is_uploader = restaurant.uploaded_by == current_user.id
-    is_privileged = current_user.role == 'staff' or current_user.is_admin
-    if not (is_uploader or is_privileged):
-        raise HTTPException(status_code=403, detail="Not authorized to modify images for this restaurant")
+    is_admin = current_user.is_admin
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
 
     if not files:
         raise HTTPException(status_code=422, detail="file(s) is required")

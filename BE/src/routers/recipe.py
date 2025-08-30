@@ -340,7 +340,13 @@ async def delete_recipe(
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    await assert_can_edit_recipe(recipe, current_user)
+
+    is_uploader = recipe.uploader_id == current_user.id
+    is_admin = current_user.is_admin  
+
+
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
 
     await db.delete(recipe)
     await db.commit()
@@ -478,33 +484,3 @@ async def replace_step_images(
     return _build_recipe_response(recipe)
 
 
-@router.delete("/{recipe_id}/steps/{step_order}/images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_one_step_image(
-    recipe_id: int,
-    step_order: int,
-    image_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token),
-):
-    recipe = await _load_recipe_with_images(db, recipe_id)
-    if not recipe:
-        raise HTTPException(404, "Recipe not found")
-    await assert_can_edit_recipe(recipe, current_user)
-
-    step = next((s for s in recipe.steps if s.step_order == step_order), None)
-    if not step:
-        raise HTTPException(404, f"Step {step_order} not found")
-
-    target = next((img for img in step.images if img.id == image_id), None)
-    if not target:
-        raise HTTPException(404, "Image not found")
-
-    try:
-        fp = target.image_url.lstrip("/")
-        if fp.startswith("uploads/") and os.path.exists(fp):
-            os.remove(fp)
-    except: pass
-
-    await db.delete(target)
-    await db.commit()
-    return
