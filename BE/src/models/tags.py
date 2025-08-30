@@ -7,8 +7,8 @@ class TagCategory(Base):
     __tablename__ = "restaurant_tag_categories"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    slug = Column(String, unique=True, nullable=False)
+    name = Column(String(500), nullable=False)
+    slug = Column(String(500), unique=True, nullable=False)
 
     tags = relationship("Tag", back_populates="category")
 
@@ -19,8 +19,8 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     category_id = Column(Integer, ForeignKey("restaurant_tag_categories.id"), nullable=False)
     parent_id = Column(Integer, ForeignKey("tags.id"), nullable=True)
-    name = Column(String, nullable=False)
-    slug = Column(String, unique=True)
+    name = Column(String(500), nullable=False)
+    slug = Column(String(500), unique=True)
     is_selectable = Column(Boolean, default=True)
     featured_rank = Column(Integer, nullable=True)
 

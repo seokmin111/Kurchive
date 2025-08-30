@@ -12,12 +12,12 @@ from BE.src.models.users import User # 단방향
 class Recipe(Base):
     __tablename__ = "recipes"
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
+    title = Column(String(500), nullable=False)
     base_serving = Column(Integer, nullable=False)
     uploader_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    thumbnail_url = Column(String, nullable = True)
+    thumbnail_url = Column(String(500), nullable = True)
     steps = relationship("RecipeStep", cascade="all, delete, delete-orphan", back_populates="recipe")
     ingredients = relationship("RecipeIngredient", cascade="all, delete, delete-orphan", back_populates="recipe")
 
@@ -36,7 +36,7 @@ class RecipeStepImage(Base):
     __tablename__ = "recipe_step_images"
     id = Column(Integer, primary_key=True, autoincrement=True)
     step_id = Column(Integer, ForeignKey("recipe_steps.id"), nullable=False)
-    image_url = Column(String, nullable=False)
+    image_url = Column(String(500), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     step = relationship("RecipeStep", back_populates="images")
@@ -47,7 +47,7 @@ class RecipeIngredient(Base):
     recipe_id = Column(Integer, ForeignKey("recipes.id"))
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"))
     quantity = Column(Float, nullable=False)
-    unit_name = Column(String, nullable=False)
+    unit_name = Column(String(500), nullable=False)
 
     recipe = relationship("Recipe", back_populates="ingredients")
     ingredient = relationship("Ingredient")
@@ -56,17 +56,17 @@ class IngredientCategory(Base):
     __tablename__ = "ingredient_categories"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100), unique=True, nullable=False)
+    name = Column(String(500)(100), unique=True, nullable=False)
 
 # 재료 
 class Ingredient(Base):
     __tablename__ = "ingredients"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(100))
+    name = Column(String(500)(100))
     density = Column(Float)
     average_weight = Column(Float)
-    unit_type = Column(String)
+    unit_type = Column(String(500))
     category_id = Column(Integer, ForeignKey("ingredient_categories.id"))
 
     ingredient_units = relationship("IngredientUnit", back_populates="ingredient")
@@ -75,8 +75,8 @@ class Unit(Base):
     __tablename__ = "units"
 
     unit_id = Column(Integer, primary_key=True, autoincrement=True)
-    unit_name = Column(String, unique=True, nullable=False)
-    unit_type = Column(String, nullable=False)
+    unit_name = Column(String(500), unique=True, nullable=False)
+    unit_type = Column(String(500), nullable=False)
 
 
 ## 단위 변환
@@ -101,7 +101,7 @@ class IngredientUnit(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
-    unit_name = Column(String, nullable=False)
+    unit_name = Column(String(500), nullable=False)
     is_default = Column(Boolean, default=False)
 
 

@@ -7,9 +7,9 @@ class Restaurant(Base):
     __tablename__ = "restaurants"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    address = Column(String, nullable=False)
-    location_link = Column(String, nullable=False)
+    name = Column(String(500), nullable=False)
+    address = Column(String(500), nullable=False)
+    location_link = Column(String(500), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     location_tag_id = Column(Integer, ForeignKey("regions.id"), nullable=False)
@@ -43,7 +43,7 @@ class RestaurantImage(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
-    image_url = Column(String, nullable=False)
+    image_url = Column(String(500), nullable=False)
     created_at = Column(Float, default=lambda: time.time())
 
     restaurant = relationship("Restaurant", back_populates="images")

@@ -8,7 +8,7 @@ class AdminConfig(Base):
     __tablename__ = "admin_config"
     
     id = Column(Integer, primary_key=True)
-    auth_code = Column(String, nullable=True) # 관리자 인증 코드(관리자 비밀번호)
+    auth_code = Column(String(500), nullable=True) # 관리자 인증 코드(관리자 비밀번호)
 
 
 class PwdChangeStatus(enum.Enum):
@@ -21,7 +21,7 @@ class AuthCodeChangeRequest(Base):
     __tablename__ = "auth_code_change_requests"
     
     id = Column(Integer, primary_key=True)
-    new_auth_code = Column(String, nullable=False)
+    new_auth_code = Column(String(500), nullable=False)
     status = Column(SQLAlchemyEnum(PwdChangeStatus), default=PwdChangeStatus.PENDING, nullable=False)
 
     # 요청자 정보 
