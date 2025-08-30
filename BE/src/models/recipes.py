@@ -56,7 +56,7 @@ class IngredientCategory(Base):
     __tablename__ = "ingredient_categories"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(500)(100), unique=True, nullable=False)
+    name = Column(String(100), unique=True, nullable=False)
 
 # 재료 
 class Ingredient(Base):
