@@ -66,14 +66,21 @@ dst_tables: Dict[str, Table] = {t.name: t for t in dst_md.tables.values()}
 # ---------- 복사 유틸 ----------
 BATCH = 2000
 
+from sqlalchemy.dialects.mysql import insert
+
+from sqlalchemy.dialects.mysql import insert
+
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
-    """단일 테이블 데이터 복사"""
+    """단일 테이블 데이터 복사 (중복 시 UPDATE, 숫자 클리핑)"""
     name = table_obj.name
-    dst_table = dst_tables[name]  # 동일한 이름의 목적지 테이블
+    dst_table = dst_tables[name]
 
     total = src_conn.execute(select(func.count()).select_from(table_obj)).scalar_one()
     if total == 0:
         return 0
+
+    MAX_INT = 2147483647   # MySQL INT 최대
+    MIN_INT = -2147483648
 
     offset = 0
     while True:
@@ -88,16 +95,41 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         for row in rows:
             d = dict(row)
 
-            # ✅ id 컬럼 있으면 무시 (MySQL이 AUTO_INCREMENT로 새 채번)
+            # ✅ id는 AUTO_INCREMENT라 제외
             if "id" in d:
                 d.pop("id", None)
 
+            # ✅ price_min / price_max 같은 컬럼 클리핑
+            for col in ["price_min", "price_max"]:
+                if col in d and isinstance(d[col], int):
+                    if d[col] > MAX_INT:
+                        d[col] = MAX_INT
+                    elif d[col] < MIN_INT:
+                        d[col] = MIN_INT
+
             cleaned.append(d)
 
-        dst_conn.execute(dst_table.insert(), cleaned)
+        if cleaned:
+            stmt = insert(dst_table).values(cleaned)
+
+            # 중복 발생 시 → id 제외 나머지 전부 업데이트
+            update_dict = {
+                c.name: stmt.inserted[c.name]
+                for c in dst_table.columns
+                if c.name != "id"
+            }
+            stmt = stmt.on_duplicate_key_update(**update_dict)
+
+
+            result = dst_conn.execute(stmt)
+            print(f"[OK] {name}: {len(cleaned)} rows read, {result.rowcount} rows inserted/updated")
+
+
         offset += len(rows)
 
     return total
+
+
 
 
 # ---------- 실행 ----------
