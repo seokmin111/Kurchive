@@ -14,7 +14,7 @@ services:
       - mysql_data:/var/lib/mysql
 
   backend:
-    build:
+    build: 
       context: .
       dockerfile: BE/Dockerfile
     container_name: kurchive-backend
