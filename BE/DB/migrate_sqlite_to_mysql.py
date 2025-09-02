@@ -19,6 +19,8 @@ from dotenv import load_dotenv
 # 스크립트 위치 기준으로 프로젝트 루트 계산 (…/252Kurchive)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+
+
 load_dotenv(os.path.join(BASE_DIR, ".env"))  # 루트의 .env 로드
 
 # SQLite 경로 (필요시 수정)
@@ -30,6 +32,11 @@ MYSQL_PASS = quote_plus(os.getenv("MYSQL_PASSWORD") or "")
 MYSQL_DB   = os.getenv("MYSQL_DATABASE")
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
+
+print("MYSQL_HOST from .env =", os.getenv("MYSQL_HOST"))
+print("Full MySQL URL = ",
+      f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4")
+
 
 # ---------- 엔진 ----------
 sqlite_engine: Engine = create_engine(f"sqlite:///{SQLITE_PATH}")
