@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 import re
 import unicodedata
+from unidecode import unidecode
 # ---------- 경로/환경 설정 ----------
 # 스크립트 위치 기준으로 프로젝트 루트 계산 (…/252Kurchive)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -83,13 +84,12 @@ from sqlalchemy.dialects.mysql import insert
 def slugify(value: str) -> str:
     if not value:
         return "item"
-    # 유니코드 정규화 → 한글/특수문자도 안정적으로 처리
-    value = unicodedata.normalize("NFKD", str(value))
-    # 영문/숫자/공백/하이픈만 남기기
+    value = unidecode(value)  # → "왕십리닭곰탕" -> "wangsimnidakkogtang"
     value = re.sub(r"[^a-zA-Z0-9\s-]", "", value)
-    # 공백 → 하이픈, 소문자 변환
     value = re.sub(r"\s+", "-", value).strip().lower()
-    return value[:100]  # 길이 제한
+    return value[:100]
+
+
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
     """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, slug 자동 생성 포함)"""
     name = table_obj.name
