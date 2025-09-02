@@ -89,7 +89,6 @@ def slugify(value: str) -> str:
     value = re.sub(r"\s+", "-", value).strip().lower()
     return value[:100]
 
-
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
     """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, slug 자동 생성 포함)"""
     name = table_obj.name
@@ -124,23 +123,25 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                 base = d.get("name") or d.get("title") or "item"
                 d["slug"] = slugify(base)
 
-            # ✅ None 처리
+            # ✅ 목적지 테이블 컬럼 기준으로만 dict 구성
+            row_dict = {}
             for col in dst_table.columns:
-                if col.name in d and d[col.name] is None:
+                val = d.get(col.name)
+                if val is None:
                     if isinstance(col.type, DateTime):
-                        d[col.name] = None
+                        row_dict[col.name] = None
                     else:
-                        d[col.name] = ""
+                        row_dict[col.name] = ""
+                else:
+                    # 정수 클리핑
+                    if col.name in ["price_min", "price_max"] and isinstance(val, int):
+                        if val > MAX_INT:
+                            val = MAX_INT
+                        elif val < MIN_INT:
+                            val = MIN_INT
+                    row_dict[col.name] = val
 
-            # ✅ 정수 클리핑
-            for col in ["price_min", "price_max"]:
-                if col in d and isinstance(d[col], int):
-                    if d[col] > MAX_INT:
-                        d[col] = MAX_INT
-                    elif d[col] < MIN_INT:
-                        d[col] = MIN_INT
-
-            cleaned.append(d)
+            cleaned.append(row_dict)
 
         if cleaned:
             stmt = insert(dst_table).values(cleaned)
@@ -150,7 +151,6 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
-
 
 
 # ---------- 실행 ----------
