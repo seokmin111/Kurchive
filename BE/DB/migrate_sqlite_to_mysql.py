@@ -13,7 +13,7 @@ from typing import Dict
 from sqlalchemy import create_engine, MetaData, Table, Text, select, func, String, text, DateTime, Integer
 from sqlalchemy.engine import Engine, Connection
 from dotenv import load_dotenv
-
+import datetime
 
 import re
 import unicodedata
@@ -87,13 +87,13 @@ def slugify(value: str) -> str:
     value = re.sub(r"\s+", "-", value).strip().lower()
     return value[:100]
 
-
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
     """단일 테이블 데이터 복사
        - AUTO_INCREMENT 자동 채번
-       - slug 자동 생성
-       - 정수 컬럼 NULL 유지
-       - 문자열 컬럼 None → ""
+       - slug 자동 생성 (restaurants)
+       - 정수 컬럼: NULL 유지 ('' → NULL)
+       - 문자열 컬럼: None → ""
+       - DATETIME: None/'' → None, Unix timestamp → datetime 변환
        - price_min / price_max 값 클리핑
     """
     name = table_obj.name
@@ -134,7 +134,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                 val = d.get(col.name)
 
                 if isinstance(col.type, Integer):
-                    # 정수 컬럼: NULL은 그대로 NULL
+                    # 정수 컬럼: NULL 허용
                     if val is None or val == "":
                         row_dict[col.name] = None
                     else:
@@ -147,8 +147,15 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         row_dict[col.name] = val
 
                 elif isinstance(col.type, DateTime):
-                    # 날짜 컬럼: None 그대로 두면 DEFAULT 적용
-                    row_dict[col.name] = val if val is not None else None
+                    if val in (None, ""):
+                        row_dict[col.name] = None  # MySQL이 DEFAULT 있으면 자동 채움
+                    elif isinstance(val, (int, float)):
+                        try:
+                            row_dict[col.name] = datetime.datetime.fromtimestamp(val)
+                        except Exception:
+                            row_dict[col.name] = None
+                    else:
+                        row_dict[col.name] = val
 
                 else:
                     # 문자열/기타 컬럼: None → ""
