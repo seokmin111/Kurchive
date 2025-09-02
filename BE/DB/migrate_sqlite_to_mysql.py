@@ -15,6 +15,8 @@ from sqlalchemy.engine import Engine, Connection
 from dotenv import load_dotenv
 
 
+import re
+import unicodedata
 # ---------- 경로/환경 설정 ----------
 # 스크립트 위치 기준으로 프로젝트 루트 계산 (…/252Kurchive)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -77,8 +79,19 @@ from sqlalchemy.dialects.mysql import insert
 
 from sqlalchemy.dialects.mysql import insert
 
+# slug 자동 생성
+def slugify(value: str) -> str:
+    if not value:
+        return "item"
+    # 유니코드 정규화 → 한글/특수문자도 안정적으로 처리
+    value = unicodedata.normalize("NFKD", str(value))
+    # 영문/숫자/공백/하이픈만 남기기
+    value = re.sub(r"[^a-zA-Z0-9\s-]", "", value)
+    # 공백 → 하이픈, 소문자 변환
+    value = re.sub(r"\s+", "-", value).strip().lower()
+    return value[:100]  # 길이 제한
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
-    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, None 강제 처리)"""
+    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, slug 자동 생성 포함)"""
     name = table_obj.name
     dst_table = dst_tables[name]
 
@@ -106,7 +119,12 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
             if "id" in d and d["id"] is None:
                 d.pop("id", None)
 
-            # ✅ None 값 전부 변환 (DateTime 제외)
+            # ✅ slug 자동 생성 (restaurants 같은 경우)
+            if "slug" in dst_table.columns and "slug" not in d:
+                base = d.get("name") or d.get("title") or "item"
+                d["slug"] = slugify(base)
+
+            # ✅ None 처리
             for col in dst_table.columns:
                 if col.name in d and d[col.name] is None:
                     if isinstance(col.type, DateTime):
@@ -125,7 +143,6 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
             cleaned.append(d)
 
         if cleaned:
-            print(f"[DEBUG] First row for {name}:", cleaned[0])  # 👈 확인용 로그
             stmt = insert(dst_table).values(cleaned)
             result = dst_conn.execute(stmt)
             print(f"[OK] {name}: {len(cleaned)} rows inserted")
