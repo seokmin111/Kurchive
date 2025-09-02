@@ -78,7 +78,7 @@ from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.dialects.mysql import insert
 
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
-    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, 단순 INSERT)"""
+    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, NULL 처리 포함)"""
     name = table_obj.name
     dst_table = dst_tables[name]
 
@@ -102,11 +102,16 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         for row in rows:
             d = dict(row)
 
-            # ✅ id는 그대로 두되 NULL 가능 → MySQL이 AUTO_INCREMENT 채워줌
+            # ✅ id는 AUTO_INCREMENT라 NULL이면 제외
             if "id" in d and d["id"] is None:
                 d.pop("id", None)
 
-            # ✅ 정수 클리핑 (price_min / price_max 같은 컬럼)
+            # ✅ None → 빈 문자열로 변환 (NOT NULL 컬럼 방지)
+            for col, val in d.items():
+                if val is None and col in dst_table.columns and not dst_table.columns[col].nullable:
+                    d[col] = ""
+
+            # ✅ 정수 클리핑
             for col in ["price_min", "price_max"]:
                 if col in d and isinstance(d[col], int):
                     if d[col] > MAX_INT:
@@ -124,7 +129,6 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
-
 
 
 # ---------- 실행 ----------
