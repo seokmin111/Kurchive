@@ -71,7 +71,7 @@ from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.dialects.mysql import insert
 
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
-    """단일 테이블 데이터 복사 (중복 시 UPDATE, 숫자 클리핑)"""
+    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, 단순 INSERT)"""
     name = table_obj.name
     dst_table = dst_tables[name]
 
@@ -95,11 +95,11 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         for row in rows:
             d = dict(row)
 
-            # ✅ id는 AUTO_INCREMENT라 제외
-            if "id" in d:
+            # ✅ id는 그대로 두되 NULL 가능 → MySQL이 AUTO_INCREMENT 채워줌
+            if "id" in d and d["id"] is None:
                 d.pop("id", None)
 
-            # ✅ price_min / price_max 같은 컬럼 클리핑
+            # ✅ 정수 클리핑 (price_min / price_max 같은 컬럼)
             for col in ["price_min", "price_max"]:
                 if col in d and isinstance(d[col], int):
                     if d[col] > MAX_INT:
@@ -111,24 +111,12 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
         if cleaned:
             stmt = insert(dst_table).values(cleaned)
-
-            # 중복 발생 시 → id 제외 나머지 전부 업데이트
-            update_dict = {
-                c.name: stmt.inserted[c.name]
-                for c in dst_table.columns
-                if c.name != "id"
-            }
-            stmt = stmt.on_duplicate_key_update(**update_dict)
-
-
             result = dst_conn.execute(stmt)
-            print(f"[OK] {name}: {len(cleaned)} rows read, {result.rowcount} rows inserted/updated")
-
+            print(f"[OK] {name}: {len(cleaned)} rows inserted")
 
         offset += len(rows)
 
     return total
-
 
 
 
