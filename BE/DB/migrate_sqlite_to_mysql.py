@@ -10,7 +10,7 @@ SQLite -> MySQL migration (ORM 모델 불필요, 리플렉션 기반)
 import os
 from urllib.parse import quote_plus
 from typing import Dict
-from sqlalchemy import create_engine, MetaData, Table, Text, select, func, String, text, DateTime
+from sqlalchemy import create_engine, MetaData, Table, Text, select, func, String, text, DateTime, Integer
 from sqlalchemy.engine import Engine, Connection
 from dotenv import load_dotenv
 
@@ -78,8 +78,6 @@ BATCH = 2000
 
 from sqlalchemy.dialects.mysql import insert
 
-from sqlalchemy.dialects.mysql import insert
-
 # slug 자동 생성
 def slugify(value: str) -> str:
     if not value:
@@ -89,8 +87,15 @@ def slugify(value: str) -> str:
     value = re.sub(r"\s+", "-", value).strip().lower()
     return value[:100]
 
+
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
-    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, slug 자동 생성 포함)"""
+    """단일 테이블 데이터 복사
+       - AUTO_INCREMENT 자동 채번
+       - slug 자동 생성
+       - 정수 컬럼 NULL 유지
+       - 문자열 컬럼 None → ""
+       - price_min / price_max 값 클리핑
+    """
     name = table_obj.name
     dst_table = dst_tables[name]
 
@@ -118,28 +123,36 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
             if "id" in d and d["id"] is None:
                 d.pop("id", None)
 
-            # ✅ slug 자동 생성 (restaurants 같은 경우)
+            # ✅ slug 자동 생성 (restaurants 테이블)
             if "slug" in dst_table.columns and "slug" not in d:
                 base = d.get("name") or d.get("title") or "item"
                 d["slug"] = slugify(base)
 
-            # ✅ 목적지 테이블 컬럼 기준으로만 dict 구성
+            # ✅ 목적지 테이블 기준으로 dict 재구성
             row_dict = {}
             for col in dst_table.columns:
                 val = d.get(col.name)
-                if val is None:
-                    if isinstance(col.type, DateTime):
+
+                if isinstance(col.type, Integer):
+                    # 정수 컬럼: NULL은 그대로 NULL
+                    if val is None or val == "":
                         row_dict[col.name] = None
                     else:
-                        row_dict[col.name] = ""
+                        # price_min / price_max 클리핑
+                        if col.name in ["price_min", "price_max"] and isinstance(val, int):
+                            if val > MAX_INT:
+                                val = MAX_INT
+                            elif val < MIN_INT:
+                                val = MIN_INT
+                        row_dict[col.name] = val
+
+                elif isinstance(col.type, DateTime):
+                    # 날짜 컬럼: None 그대로 두면 DEFAULT 적용
+                    row_dict[col.name] = val if val is not None else None
+
                 else:
-                    # 정수 클리핑
-                    if col.name in ["price_min", "price_max"] and isinstance(val, int):
-                        if val > MAX_INT:
-                            val = MAX_INT
-                        elif val < MIN_INT:
-                            val = MIN_INT
-                    row_dict[col.name] = val
+                    # 문자열/기타 컬럼: None → ""
+                    row_dict[col.name] = val if val is not None else ""
 
             cleaned.append(row_dict)
 
@@ -151,7 +164,6 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
-
 
 # ---------- 실행 ----------
 with sqlite_engine.connect() as s_conn, mysql_engine.begin() as m_conn:
