@@ -78,7 +78,7 @@ from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.dialects.mysql import insert
 
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
-    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, NULL 처리 포함)"""
+    """단일 테이블 데이터 복사 (AUTO_INCREMENT 자동 채번, None 강제 처리)"""
     name = table_obj.name
     dst_table = dst_tables[name]
 
@@ -86,7 +86,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
     if total == 0:
         return 0
 
-    MAX_INT = 2147483647   # MySQL INT 최대
+    MAX_INT = 2147483647
     MIN_INT = -2147483648
 
     offset = 0
@@ -106,10 +106,13 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
             if "id" in d and d["id"] is None:
                 d.pop("id", None)
 
-            # ✅ None → 빈 문자열로 변환 (NOT NULL 컬럼 방지)
-            for col, val in d.items():
-                if val is None and col in dst_table.columns and not dst_table.columns[col].nullable:
-                    d[col] = ""
+            # ✅ None 값 전부 변환 (DateTime 제외)
+            for col in dst_table.columns:
+                if col.name in d and d[col.name] is None:
+                    if isinstance(col.type, DateTime):
+                        d[col.name] = None
+                    else:
+                        d[col.name] = ""
 
             # ✅ 정수 클리핑
             for col in ["price_min", "price_max"]:
@@ -122,6 +125,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
             cleaned.append(d)
 
         if cleaned:
+            print(f"[DEBUG] First row for {name}:", cleaned[0])  # 👈 확인용 로그
             stmt = insert(dst_table).values(cleaned)
             result = dst_conn.execute(stmt)
             print(f"[OK] {name}: {len(cleaned)} rows inserted")
@@ -129,6 +133,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
+
 
 
 # ---------- 실행 ----------
