@@ -87,13 +87,14 @@ def slugify(value: str) -> str:
     value = re.sub(r"\s+", "-", value).strip().lower()
     return value[:100]
 
+
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
     """단일 테이블 데이터 복사
        - AUTO_INCREMENT 자동 채번
        - slug 자동 생성 (restaurants)
-       - 정수 컬럼: NULL 유지 ('' → NULL)
-       - 문자열 컬럼: None → ""
-       - DATETIME: None/'' → None, Unix timestamp → datetime 변환
+       - Integer: NULL 유지 ('' → NULL)
+       - DateTime: NULL/'' → NULL, 숫자(timestamp) → datetime 변환
+       - 문자열: None → ""
        - price_min / price_max 값 클리핑
     """
     name = table_obj.name
@@ -134,7 +135,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                 val = d.get(col.name)
 
                 if isinstance(col.type, Integer):
-                    # 정수 컬럼: NULL 허용
+                    # 정수 컬럼: NULL 그대로
                     if val is None or val == "":
                         row_dict[col.name] = None
                     else:
@@ -147,8 +148,9 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         row_dict[col.name] = val
 
                 elif isinstance(col.type, DateTime):
-                    if val in (None, ""):
-                        row_dict[col.name] = None  # MySQL이 DEFAULT 있으면 자동 채움
+                    # ✅ created_at 같은 날짜 컬럼
+                    if val is None or val == "":
+                        row_dict[col.name] = None
                     elif isinstance(val, (int, float)):
                         try:
                             row_dict[col.name] = datetime.datetime.fromtimestamp(val)
