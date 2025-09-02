@@ -93,7 +93,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
     - AUTO_INCREMENT 자동 채번
     - slug 자동 생성 (restaurants)
     - Integer: NULL 유지 ('' → NULL)
-    - DateTime: NULL/'' → NULL, 숫자(timestamp) → datetime 변환
+    - DateTime: NULL → NULL, float(int) → datetime 변환
     - 문자열: None → ""
     - price_min / price_max 값 클리핑
     """
@@ -147,7 +147,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
                 # ---------- DateTime ----------
                 elif isinstance(col.type, DateTime):
-                    if val is None or val == "":
+                    if val is None:
                         row_dict[col.name] = None
                     elif isinstance(val, (int, float)):
                         try:
@@ -155,7 +155,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         except Exception:
                             row_dict[col.name] = None
                     else:
-                        row_dict[col.name] = None
+                        row_dict[col.name] = None  # 안전하게 NULL 처리
 
                 # ---------- String / Text / 기타 ----------
                 else:
@@ -171,6 +171,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
+
 
 # ---------- 실행 ----------
 with sqlite_engine.connect() as s_conn, mysql_engine.begin() as m_conn:
