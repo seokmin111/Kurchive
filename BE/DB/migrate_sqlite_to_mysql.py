@@ -147,7 +147,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
                 # ---------- DateTime ----------
                 elif isinstance(col.type, DateTime):
-                    if val is None or val == "":
+                    if val is None or val == "" or str(val).strip() == "":
                         row_dict[col.name] = None
                     elif isinstance(val, (int, float)):
                         try:
@@ -155,7 +155,8 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         except Exception:
                             row_dict[col.name] = None
                     else:
-                        row_dict[col.name] = None  # 안전하게 NULL 처리
+                        row_dict[col.name] = None
+                    continue  # ✅ 문자열 처리 블록 안 타도록 건너뜀
 
                 # ---------- String / Text / 기타 ----------
                 else:
@@ -171,6 +172,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
+
 
 
 # ---------- 실행 ----------
