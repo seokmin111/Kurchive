@@ -42,11 +42,23 @@ print("Full MySQL URL = ",
 
 
 # ---------- 엔진 ----------
-sqlite_engine: Engine = create_engine(f"sqlite:///{SQLITE_PATH}")
-mysql_engine:  Engine = create_engine(
-    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4",
-    pool_pre_ping=True,
+# SQLite (UTF-8 기본)
+sqlite_engine: Engine = create_engine(
+    f"sqlite:///{SQLITE_PATH}",
+    connect_args={"check_same_thread": False}
 )
+
+# MySQL (UTF-8 MB4 + Unicode 강제)
+mysql_engine: Engine = create_engine(
+    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}",
+    connect_args={
+        "charset": "utf8mb4",     # 4바이트 UTF-8
+        "use_unicode": True       # Python ↔ MySQL Unicode 변환 강제
+    },
+    pool_pre_ping=True,
+    echo=False  # True로 하면 쿼리 로그 확인 가능
+)
+
 
 # ---------- 스키마 리플렉션(원본) & 생성(목적지) ----------
 src_md = MetaData()
