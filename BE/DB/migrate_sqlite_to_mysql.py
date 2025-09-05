@@ -96,6 +96,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
     - DateTime: NULL → NULL, float(int) → datetime 변환
     - 문자열: None → ""
     - price_min / price_max 값 클리핑
+    - restaurants.created_at 컬럼은 스킵 (MySQL DEFAULT CURRENT_TIMESTAMP 사용)
     """
     name = table_obj.name
     dst_table = dst_tables[name]
@@ -131,6 +132,10 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
             row_dict = {}
             for col in dst_table.columns:
+                # 🔽 restaurants.created_at은 스킵
+                if name == "restaurants" and col.name == "created_at":
+                    continue
+
                 val = d.get(col.name)
 
                 # ---------- Integer ----------
@@ -154,9 +159,14 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                             row_dict[col.name] = datetime.datetime.fromtimestamp(val)
                         except Exception:
                             row_dict[col.name] = None
+                    elif isinstance(val, str):
+                        try:
+                            row_dict[col.name] = datetime.datetime.fromisoformat(val)
+                        except Exception:
+                            row_dict[col.name] = None
                     else:
                         row_dict[col.name] = None
-                    continue  # ✅ 문자열 처리 블록 안 타도록 건너뜀
+                    continue  # DateTime은 문자열 처리 블록 방지
 
                 # ---------- String / Text / 기타 ----------
                 else:
@@ -172,6 +182,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
+
 
 
 
