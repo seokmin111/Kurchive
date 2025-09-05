@@ -147,7 +147,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
                 # ---------- DateTime ----------
                 elif isinstance(col.type, DateTime):
-                    if val is None:
+                    if val is None or val == "":
                         row_dict[col.name] = None
                     elif isinstance(val, (int, float)):
                         try:
