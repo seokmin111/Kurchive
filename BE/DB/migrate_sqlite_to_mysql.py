@@ -87,16 +87,19 @@ def slugify(value: str) -> str:
     value = re.sub(r"\s+", "-", value).strip().lower()
     return value[:100]
 
+
+from sqlalchemy import Integer, Float, Numeric, DateTime
+
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
     """
     단일 테이블 데이터 복사
     - AUTO_INCREMENT 자동 채번
     - slug 자동 생성 (restaurants)
-    - Integer: NULL 유지 ('' → NULL)
-    - DateTime: NULL → NULL, float(int) → datetime 변환
+    - Integer/Float/Numeric: '' → NULL
+    - DateTime: NULL → NULL, float(epoch)/str(iso) → datetime 변환
     - 문자열: None → ""
     - price_min / price_max 값 클리핑
-    - restaurants.created_at 컬럼은 스킵 (MySQL DEFAULT CURRENT_TIMESTAMP 사용)
+    - restaurants.created_at은 스킵 (MySQL DEFAULT CURRENT_TIMESTAMP 사용)
     """
     name = table_obj.name
     dst_table = dst_tables[name]
@@ -143,12 +146,26 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                     if val is None or val == "":
                         row_dict[col.name] = None
                     else:
-                        if col.name in ["price_min", "price_max"] and isinstance(val, int):
-                            if val > MAX_INT:
-                                val = MAX_INT
-                            elif val < MIN_INT:
-                                val = MIN_INT
-                        row_dict[col.name] = val
+                        try:
+                            int_val = int(val)
+                            if col.name in ["price_min", "price_max"]:
+                                if int_val > MAX_INT:
+                                    int_val = MAX_INT
+                                elif int_val < MIN_INT:
+                                    int_val = MIN_INT
+                            row_dict[col.name] = int_val
+                        except Exception:
+                            row_dict[col.name] = None
+
+                # ---------- Float / Numeric ----------
+                elif isinstance(col.type, (Float, Numeric)):
+                    if val is None or val == "":
+                        row_dict[col.name] = None
+                    else:
+                        try:
+                            row_dict[col.name] = float(val)
+                        except Exception:
+                            row_dict[col.name] = None
 
                 # ---------- DateTime ----------
                 elif isinstance(col.type, DateTime):
@@ -166,7 +183,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                             row_dict[col.name] = None
                     else:
                         row_dict[col.name] = None
-                    continue  # DateTime은 문자열 처리 블록 방지
+                    continue  # ✅ DateTime은 문자열 블록 안 타도록
 
                 # ---------- String / Text / 기타 ----------
                 else:
