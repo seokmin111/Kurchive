@@ -162,7 +162,6 @@ class RestaurantDetailOut(BaseModel):
     created_at: float
 
 ALLOWED_IMAGE_CT = {"image/jpeg", "image/png", "image/webp"}
-UPLOAD_DIR = "static/uploads"
 
 class ImageOut(BaseModel):
     id: int
@@ -692,6 +691,7 @@ async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
 # 이미지
 # ============================
 from typing import List as TList
+from BE.src.utils.image_upload import save_image, delete_image_oci  # ✅ 추가
 
 @router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
 async def upload_restaurant_images(
@@ -718,8 +718,6 @@ async def upload_restaurant_images(
         if u.content_type not in ALLOWED_IMAGE_CT:
             raise HTTPException(status_code=415, detail=f"Unsupported type: {u.content_type}")
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
     # 교체 모드: 기존 레코드/파일 제거
     if replace:
         old_imgs = (await db.execute(
@@ -727,31 +725,20 @@ async def upload_restaurant_images(
         )).scalars().all()
         for img in old_imgs:
             try:
-                fp = img.image_url.lstrip("/")
-                if os.path.exists(fp):
-                    await anyio.to_thread.run_sync(os.remove, fp)
+                delete_image_oci(img.image_url)   # ✅ 로컬 삭제 → OCI 삭제
             except Exception as e:
-                print(f"[이미지 파일 삭제 실패] {e}")
+                print(f"[이미지 삭제 실패] {e}")
             await db.delete(img)
         await db.flush()
 
     out: TList[ImageOut] = []
     for u in files:
-        ext = os.path.splitext(u.filename or "")[1].lower() or ".jpg"
-        safe = f"{int(time.time()*1000)}_{secrets.token_hex(4)}{ext}"
-        save_path = os.path.join(UPLOAD_DIR, safe)
-
-        # 비동기 저장
-        async with aiofiles.open(save_path, "wb") as f:
-            while True:
-                chunk = await u.read(1024 * 1024)
-                if not chunk:
-                    break
-                await f.write(chunk)
+        # OCI 업로드 (prefix: restaurants/{id})
+        _, url_path = await save_image(u, f"restaurants/{restaurant_id}")
 
         img = RestaurantImage(
             restaurant_id=restaurant.id,
-            image_url=f"/{save_path}",
+            image_url=url_path,
             created_at=time.time()
         )
         db.add(img)
@@ -785,11 +772,9 @@ async def delete_restaurant_image(
         raise HTTPException(status_code=404, detail="Image not found")
 
     try:
-        file_path = img.image_url.lstrip("/")
-        if os.path.exists(file_path):
-            await anyio.to_thread.run_sync(os.remove, file_path)
+        delete_image_oci(img.image_url)   # ✅ 로컬 삭제 → OCI 삭제
     except Exception as e:
-        print(f"[이미지 파일 삭제 실패] {e}")
+        print(f"[이미지 삭제 실패] {e}")
 
     await db.delete(img)
     await db.commit()
