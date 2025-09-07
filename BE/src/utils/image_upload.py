@@ -1,43 +1,39 @@
-# BE/src/utils/image_upload.py
 import os, uuid, imghdr
 from typing import Tuple
 from fastapi import UploadFile, HTTPException, status
+import oci
 
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MAX_BYTES = int(os.getenv("IMAGE_MAX_BYTES", str(5 * 1024 * 1024)))
 
+# ============================
+# 로컬 저장 유틸
+# ============================
 
 def _ext_from_content(content: bytes) -> str:
     kind = imghdr.what(None, h=content)
-    # imghdr는 webp 인식이 약할 수 있음 -> MIME으로 보완
     mapping = {"jpeg": "jpg", "png": "png", "webp": "webp"}
     return mapping.get(kind, "")
 
-# 빈 파일 방지
-def _to_web_path(disk_path: str) -> str:    # ⬅️ 추가
+def _to_web_path(disk_path: str) -> str:
     posix = disk_path.replace("\\", "/")
     if posix.startswith(("uploads/", "static/")):
         return "/" + posix
     return "/" + posix if not posix.startswith("/") else posix
 
-
 async def save_image_local(file: UploadFile, base_dir: str) -> Tuple[str, str]:
-    # 1) MIME 1차 체크
     if (file.content_type or "").lower() not in ALLOWED_MIME:
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Only jpeg/png/webp allowed")
 
     os.makedirs(base_dir, exist_ok=True)
     raw = await file.read()
-    if not raw:                                  #
+    if not raw:
         raise HTTPException(status_code=422, detail="Empty file")
-    
     if len(raw) > MAX_BYTES:
         raise HTTPException(status_code=413, detail="Image too large (max 5MB)")
 
-    # 2) 파일 시그니처 기반 2차 체크
     ext = _ext_from_content(raw)
     if not ext:
-        # webp는 imghdr가 못잡는 경우 있어서 MIME으로 보완
         if file.content_type == "image/webp":
             ext = "webp"
         else:
@@ -51,8 +47,66 @@ async def save_image_local(file: UploadFile, base_dir: str) -> Tuple[str, str]:
     url_path = _to_web_path(disk_path)
     return disk_path, url_path
 
-# S3 등으로 바꿀 경우 이 함수를 동일 인터페이스로 교체
+# ============================
+# OCI Object Storage 유틸
+# ============================
+
+# SDK 클라이언트 초기화
+_config = oci.config.from_file("~/.oci/config")
+_object_storage = oci.object_storage.ObjectStorageClient(_config)
+_BUCKET_NAME = "kurchive-uploads"       # 네 버킷 이름
+_NAMESPACE = "axzbmseuxwhb"             # 콘솔에서 확인한 namespace
+_REGION = _config["region"]
+
+async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
+    """
+    Object Storage에 이미지 업로드
+    - prefix: 'restaurants/{id}' or 'recipes/{id}/thumbnail' 같은 경로 접두어
+    """
+    if (file.content_type or "").lower() not in ALLOWED_MIME:
+        raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Only jpeg/png/webp allowed")
+
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=422, detail="Empty file")
+    if len(raw) > MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Image too large (max 5MB)")
+
+    ext = _ext_from_content(raw)
+    if not ext:
+        if file.content_type == "image/webp":
+            ext = "webp"
+        else:
+            raise HTTPException(status_code=415, detail="Unsupported image content")
+
+    fname = f"{uuid.uuid4().hex}.{ext}"
+    object_name = f"{prefix}/{fname}"
+
+    _object_storage.put_object(
+        _NAMESPACE,
+        _BUCKET_NAME,
+        object_name,
+        raw
+    )
+
+    url_path = f"https://objectstorage.{_REGION}.oraclecloud.com/n/{_NAMESPACE}/b/{_BUCKET_NAME}/o/{object_name}"
+    return object_name, url_path
+
+def delete_image_oci(object_url: str):
+    """Object Storage에서 이미지 삭제"""
+    try:
+        object_name = object_url.split("/o/")[-1]
+        _object_storage.delete_object(_NAMESPACE, _BUCKET_NAME, object_name)
+    except Exception as e:
+        print(f"[OCI 이미지 삭제 실패] {e}")
+
+# ============================
+# 최종 인터페이스 (교체 가능)
+# ============================
+
 async def save_image(file: UploadFile, base_dir: str) -> Tuple[str, str]:
-    return await save_image_local(file, base_dir)
-
-
+    """
+    현재는 OCI Object Storage 업로드를 기본으로 사용.
+    base_dir 대신 prefix를 받는다고 생각하면 됨.
+    """
+    return await save_image_oci(file, base_dir)
