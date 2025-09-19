@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+# BE/src/routers/recipe.py
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Query
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -26,6 +27,7 @@ logger = logging.getLogger("convert")
 
 # 현재 유저가 staff/admin 권한인지 확인 (아니면 403 반환)
 
+'''
 async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
     # 권한 확인 
     is_privileged = current_user.role == 'staff' or current_user.is_admin
@@ -35,8 +37,11 @@ async def get_current_executive_user(current_user: User = Depends(get_current_us
             detail="Executive or admin access required",
         )
     return current_user
-
-router = APIRouter(prefix="/api/recipe", tags=["Recipe"], dependencies=[Depends(get_current_executive_user)])
+'''
+    
+# router = APIRouter(prefix="/api/recipe", tags=["Recipe"], dependencies=[Depends(get_current_executive_user)])
+# 로그인한 사용자면 다 접근할 수 있게 변경 
+router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
 
 
@@ -209,7 +214,7 @@ async def scale_recipe(
 async def convert_recipe(
     recipe_id: int, request: ConvertRequestDTO,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_executive_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     """
     단위 변환
@@ -247,7 +252,7 @@ async def convert_recipe(
 async def create_recipe(
     data: RecipeCreateDTO,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_executive_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     """
     레시피 생성
@@ -338,15 +343,9 @@ async def delete_recipe(
     """
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
-        raise HTTPException(404, "Recipe not found")
+        return
 
-
-    is_uploader = recipe.uploader_id == current_user.id
-    is_admin = current_user.is_admin  
-
-
-    if not (is_uploader or is_admin):
-        raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
+    await assert_can_edit_recipe(recipe, current_user)
 
     await db.delete(recipe)
     await db.commit()
@@ -361,7 +360,7 @@ async def upload_thumbnail(
     recipe_id: int,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_executive_user)
+    current_user: User = Depends(get_current_user_from_token)
 ):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
@@ -429,8 +428,9 @@ async def upload_step_images(
     recipe_id: int,
     step_order: int,
     files: List[UploadFile] = File(...),
+    replace: bool = Query(False, description="true면 해당 스텝의 기존 이미지를 모두 교체"),
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_executive_user),
+    current_user: User = Depends(get_current_user_from_token)
 ):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
@@ -440,6 +440,18 @@ async def upload_step_images(
     step = next((s for s in recipe.steps if s.step_order == step_order), None)
     if not step:
         raise HTTPException(404, f"Step {step_order} not found")
+    
+    if replace:
+        for img in list(step.images):
+            try:
+                fp = img.image_url.lstrip("/")
+                if fp.startswith("uploads/") and os.path.exists(fp):
+                    os.remove(fp)
+            except Exception as e:
+                print(f"[레시피 이미지 파일 삭제 실패] {e}")
+            # DB 레코드 삭제
+            await db.delete(img)
+        await db.flush()
 
     for f in files:
         _, url_path = await save_image(f, os.path.join(UPLOAD_DIR, str(recipe_id), f"steps/{step_order}"))
