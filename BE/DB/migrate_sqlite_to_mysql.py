@@ -42,11 +42,23 @@ print("Full MySQL URL = ",
 
 
 # ---------- 엔진 ----------
-sqlite_engine: Engine = create_engine(f"sqlite:///{SQLITE_PATH}")
-mysql_engine:  Engine = create_engine(
-    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4",
-    pool_pre_ping=True,
+# SQLite (UTF-8 기본)
+sqlite_engine: Engine = create_engine(
+    f"sqlite:///{SQLITE_PATH}",
+    connect_args={"check_same_thread": False}
 )
+
+# MySQL (UTF-8 MB4 + Unicode 강제)
+mysql_engine: Engine = create_engine(
+    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}",
+    connect_args={
+        "charset": "utf8mb4",     # 4바이트 UTF-8
+        "use_unicode": True       # Python ↔ MySQL Unicode 변환 강제
+    },
+    pool_pre_ping=True,
+    echo=False  # True로 하면 쿼리 로그 확인 가능
+)
+
 
 # ---------- 스키마 리플렉션(원본) & 생성(목적지) ----------
 src_md = MetaData()
@@ -87,15 +99,19 @@ def slugify(value: str) -> str:
     value = re.sub(r"\s+", "-", value).strip().lower()
     return value[:100]
 
+
+from sqlalchemy import Integer, Float, Numeric, DateTime
+
 def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> int:
     """
     단일 테이블 데이터 복사
     - AUTO_INCREMENT 자동 채번
     - slug 자동 생성 (restaurants)
-    - Integer: NULL 유지 ('' → NULL)
-    - DateTime: NULL → NULL, float(int) → datetime 변환
+    - Integer/Float/Numeric: '' → NULL
+    - DateTime: NULL → NULL, float(epoch)/str(iso) → datetime 변환
     - 문자열: None → ""
     - price_min / price_max 값 클리핑
+    - restaurants.created_at은 스킵 (MySQL DEFAULT CURRENT_TIMESTAMP 사용)
     """
     name = table_obj.name
     dst_table = dst_tables[name]
@@ -131,6 +147,10 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
             row_dict = {}
             for col in dst_table.columns:
+                # 🔽 restaurants.created_at은 스킵
+                if name == "restaurants" and col.name == "created_at":
+                    continue
+
                 val = d.get(col.name)
 
                 # ---------- Integer ----------
@@ -138,24 +158,44 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                     if val is None or val == "":
                         row_dict[col.name] = None
                     else:
-                        if col.name in ["price_min", "price_max"] and isinstance(val, int):
-                            if val > MAX_INT:
-                                val = MAX_INT
-                            elif val < MIN_INT:
-                                val = MIN_INT
-                        row_dict[col.name] = val
+                        try:
+                            int_val = int(val)
+                            if col.name in ["price_min", "price_max"]:
+                                if int_val > MAX_INT:
+                                    int_val = MAX_INT
+                                elif int_val < MIN_INT:
+                                    int_val = MIN_INT
+                            row_dict[col.name] = int_val
+                        except Exception:
+                            row_dict[col.name] = None
+
+                # ---------- Float / Numeric ----------
+                elif isinstance(col.type, (Float, Numeric)):
+                    if val is None or val == "":
+                        row_dict[col.name] = None
+                    else:
+                        try:
+                            row_dict[col.name] = float(val)
+                        except Exception:
+                            row_dict[col.name] = None
 
                 # ---------- DateTime ----------
                 elif isinstance(col.type, DateTime):
-                    if val is None:
+                    if val is None or val == "" or str(val).strip() == "":
                         row_dict[col.name] = None
                     elif isinstance(val, (int, float)):
                         try:
                             row_dict[col.name] = datetime.datetime.fromtimestamp(val)
                         except Exception:
                             row_dict[col.name] = None
+                    elif isinstance(val, str):
+                        try:
+                            row_dict[col.name] = datetime.datetime.fromisoformat(val)
+                        except Exception:
+                            row_dict[col.name] = None
                     else:
-                        row_dict[col.name] = None  # 안전하게 NULL 처리
+                        row_dict[col.name] = None
+                    continue  # ✅ DateTime은 문자열 블록 안 타도록
 
                 # ---------- String / Text / 기타 ----------
                 else:
@@ -171,6 +211,8 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
         offset += len(rows)
 
     return total
+
+
 
 
 # ---------- 실행 ----------
