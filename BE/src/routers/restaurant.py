@@ -20,6 +20,9 @@ from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
 from BE.AddressLatLong import extract_location_from_link
 
+from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
+from BE.src.utils.image_upload import save_image_local, save_image_oci
+
 # ---------------------------
 # 공통 응답 헬퍼
 # ---------------------------
@@ -657,26 +660,25 @@ async def update_restaurant(
 
 # 7. 식당 삭제(Delete)
 @router.delete("/restaurants/{restaurant_id}")
-async def delete_restaurant(
-    restaurant_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
-):
-    result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
-    restaurant = result.scalar_one_or_none()
+async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user_from_token)):
+    restaurant = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    # 권한확인 
     is_uploader = restaurant.uploaded_by == current_user.id
     is_admin = current_user.is_admin
     if not (is_uploader or is_admin):
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
 
+    # 헬퍼 호출
+    imgs = (await db.execute(select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id))).scalars().all()
+    await cleanup_restaurant_images(imgs)
+
     await db.execute(delete(RestaurantTag).where(RestaurantTag.restaurant_id == restaurant.id))
     await db.delete(restaurant)
     await db.commit()
     return {"message": "Restaurant deleted", "id": restaurant_id}
+
 
 # 8. 태그 검색 자동완성
 @router.get("/tags/search")
@@ -725,7 +727,7 @@ async def upload_restaurant_images(
         )).scalars().all()
         for img in old_imgs:
             try:
-                delete_image_oci(img.image_url)   # ✅ 로컬 삭제 → OCI 삭제
+                delete_image_oci(img.image_url)  
             except Exception as e:
                 print(f"[이미지 삭제 실패] {e}")
             await db.delete(img)
@@ -781,6 +783,7 @@ async def delete_restaurant_image(
     return
 
 
+# 이미지 여러 개 삭제
 @router.get("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut])
 async def list_restaurant_images(
     restaurant_id: int,

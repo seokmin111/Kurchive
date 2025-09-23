@@ -10,7 +10,7 @@ from typing import List, Optional
 from datetime import datetime
 import logging
 
-from BE.src.utils.image_upload import save_image, delete_image_oci
+
 from BE.src.database import get_async_db
 from BE.src.dependencies import get_current_user_from_token 
 from BE.src.models.recipes import (
@@ -18,8 +18,11 @@ from BE.src.models.recipes import (
     Ingredient, IngredientUnit, ConvertRequestDTO
 )
 from BE.src.models.users import User
-from BE.src.utils.units import convert_unit
 
+# Helper 함수 호출
+from BE.src.utils.units import convert_unit
+from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
+from BE.src.utils.image_upload import save_image, delete_image_oci
 
 logger = logging.getLogger("convert")
 
@@ -301,26 +304,23 @@ async def update_recipe(
     recipe = await _load_recipe_with_images(db, recipe_id)
     return _build_recipe_response(recipe)
 
-
+# Recipe 삭제
 @router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_recipe(
-    recipe_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
-):
+async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user_from_token)):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
     is_uploader = recipe.uploader_id == current_user.id
-    is_admin = current_user.is_admin  
-
+    is_admin = current_user.is_admin
     if not (is_uploader or is_admin):
         raise HTTPException(status_code=403, detail="You do not have permission to delete this recipe")
 
+    # 헬퍼 호출
+    await cleanup_recipe_images(recipe)
+
     await db.delete(recipe)
     await db.commit()
-    return
 
 
 # ============================================================
