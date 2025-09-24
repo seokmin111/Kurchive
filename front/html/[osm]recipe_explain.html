@@ -1,0 +1,64 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>레시피 편집</title>
+  <link rel="stylesheet" href="./[osm]recipe_explain.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span>뒤로가기</span>
+      <button>수정하기</button>
+    </header>
+    <main style="padding:16px">
+      <h1>음식 이름</h1>
+      <textarea placeholder="음식 설명"></textarea>
+
+      <div class="unit-row">
+        기본 단위 : (
+        <input type="text" placeholder="예: g, 개, 컵" /> )
+        <button>변경하기</button>
+      </div>
+
+      <div class="ingredients">
+        <p>기본 재료</p>
+        <input type="text" placeholder="재료 1" />
+        <input type="text" placeholder="재료 2" />
+        <input type="text" placeholder="재료 3" />
+      </div>
+
+      <div class="nutrition">
+        <input type="text" placeholder="영양성 자료" />
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-image">이미지<br>추가</div>
+          <textarea placeholder="내용"></textarea>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-image">이미지<br>추가</div>
+          <textarea placeholder="내용"></textarea>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-image">이미지<br>추가</div>
+          <textarea placeholder="내용"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button>스텝 추가하기</button>
+        <button class="delete">레시피 삭제하기</button>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

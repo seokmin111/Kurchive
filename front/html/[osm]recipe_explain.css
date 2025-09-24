@@ -1,0 +1,108 @@
+/* style.css */
+:root {
+  --brand-primary: #8A0D2A;
+  --brand-primary-light: #b53a55;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+}
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f9fafb;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--surface);
+  min-height: 100vh;
+  box-shadow: 0 0 5px rgba(0,0,0,0.05);
+}
+header {
+  background: var(--brand-primary);
+  color: #fff;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header button {
+  background: #F6D9DF;
+  color: var(--brand-primary);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+h1 {
+  text-align: center;
+  color: var(--brand-primary);
+  margin: 16px 0;
+}
+textarea, input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 8px;
+}
+.unit-row, .ingredients, .nutrition {
+  margin: 16px 0;
+}
+.divider {
+  border-top: 1px dashed var(--border);
+  margin: 24px 0;
+}
+.steps .step {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.step-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+.step-image {
+  width: 96px;
+  height: 96px;
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.step textarea {
+  flex: 1;
+  min-height: 96px;
+  resize: none;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.actions button {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+.delete {
+  color: red;
+  border-color: red;
+}
