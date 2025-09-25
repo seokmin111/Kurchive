@@ -322,16 +322,19 @@ async def get_restaurant(
         .where(Region.id == restaurant.location_tag_id)
     )
     rr = region_row.first()
-    region_dict = None
-    if rr:
-        region_dict = {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]}
+    region_dict = {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]} if rr else None
 
-    # 이미지
+    # 이미지 (대표 여부 포함)
     imgs_result = await db.execute(
         select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id)
     )
     image_list = [
-        {"id": i.id, "image_url": i.image_url, "created_at": i.created_at}
+        {
+            "id": i.id,
+            "image_url": i.image_url,
+            "created_at": i.created_at,
+            "is_cover": getattr(i, "is_cover", False)   # ✅ 대표 여부 포함
+        }
         for i in imgs_result.scalars().all()
     ]
 
@@ -351,8 +354,9 @@ async def get_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
-        "images": image_list
+        "images": image_list    # 모든 이미지 + 대표 여부
     }
+
 
 # 5. 식당 목록 조회 (조건부 필터링)
 '''region_id 없으면 지역 필터링 무시
@@ -363,7 +367,7 @@ tag_ids 없으면 태그 조건 무시, 있으면 AND 조건으로 모두 포함
 @router.get("/restaurants")
 async def list_restaurants(
     region_id: Optional[int] = None,
-    tag_ids: Optional[str] = None,   # "10,101"
+    tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     db: AsyncSession = Depends(get_async_db),
@@ -389,6 +393,7 @@ async def list_restaurants(
             requested_ids = None
 
     for r in restaurants:
+        # 태그
         trows = await db.execute(
             select(Tag.id, Tag.name)
             .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
@@ -401,6 +406,15 @@ async def list_restaurants(
             if not requested_ids.issubset(current):
                 continue
 
+        # 대표이미지 조회 (is_cover 우선, 없으면 첫 번째)
+        img_row = await db.execute(
+            select(RestaurantImage)
+            .where(RestaurantImage.restaurant_id == r.id)
+            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
+            .limit(1)
+        )
+        img = img_row.scalar_one_or_none()
+
         results.append({
             "id": r.id,
             "name": r.name,
@@ -409,10 +423,12 @@ async def list_restaurants(
             "summary": r.summary,
             "price_min": r.price_min,
             "price_max": r.price_max,
-            "tags": tag_list
+            "tags": tag_list,
+            "thumbnail_url": img.image_url if img else None  
         })
 
     return results
+
 
 # 5-2. 현위치/임의좌표 근접 검색 (지도용)
 """
@@ -430,7 +446,7 @@ async def list_restaurants_nearby(
     lat: float,
     lon: float,
     radius_km: float = 2.0,
-    tag_ids: Optional[str] = None,   # "10,101"
+    tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     limit: int = 200,
@@ -471,6 +487,15 @@ async def list_restaurants_nearby(
                 if not requested_ids.issubset(current):
                     continue
 
+            # 대표이미지 조회
+            img_row = await db.execute(
+                select(RestaurantImage)
+                .where(RestaurantImage.restaurant_id == r.id)
+                .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
+                .limit(1)
+            )
+            img = img_row.scalar_one_or_none()
+
             results.append({
                 "id": r.id,
                 "name": r.name,
@@ -482,6 +507,7 @@ async def list_restaurants_nearby(
                 "price_max": r.price_max,
                 "tags": tag_list,
                 "distance_km": round(d, 3),
+                "thumbnail_url": img.image_url if img else None   # ✅ 대표이미지
             })
 
     results.sort(key=lambda x: x["distance_km"])
