@@ -31,7 +31,7 @@ services:
       - ./wait-for-mysql.sh:/app/wait-for-mysql.sh
       - ./static/uploads:/app/static/uploads
       - /home/ubuntu/.oci:/root/.oci          # OCI 인증 파일 마운트 추가
-    command: ["/app/wait-for-mysql.sh", "python", "-m", "uvicorn", "BE.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["sh", "/app/wait-for-mysql.sh", "python", "-m", "uvicorn", "BE.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:
   mysql_data:
