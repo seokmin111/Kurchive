@@ -1,0 +1,15 @@
+<사용 스택>
+ - ts 
+ - css
+
+src : 실제 html, ts, css 등 개발 파일
+    - components/ : 공통적인 UI 컴포넌트 - 버튼, 카드
+    - pages/: 페이지 단위 컴포넌트(라우터 기준)
+    - styles/ : 스타일 정의 시트
+    - api/ : axios 모듈
+
+
+public : 
+    - 공통적으로 사용하는 icon
+    - 이미지 파일, 폰트
+    - 기타 정적 파일
