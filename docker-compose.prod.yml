@@ -14,9 +14,9 @@ services:
       - mysql_data:/var/lib/mysql
 
   backend:
-    # build: 
-      # context: .
-      # dockerfile: BE/Dockerfile
+    build: 
+      context: .
+      dockerfile: BE/Dockerfile
     image: kurchive_backend:latest
     container_name: kurchive-backend
     restart: always
@@ -29,9 +29,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-    - /home/ubuntu/Kurchive/wait-for-mysql.sh:/app/wait-for-mysql.sh
-      - ./static/uploads:/app/static/uploads
-      - /home/ubuntu/.oci:/root/.oci          # OCI 인증 파일 마운트 추가
+        - /home/ubuntu/Kurchive/wait-for-mysql.sh:/app/wait-for-mysql.sh
+        - ./static/uploads:/app/static/uploads
+        - /home/ubuntu/.oci:/root/.oci
+
     command: ["sh", "/app/wait-for-mysql.sh", "python", "-m", "uvicorn", "BE.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:
