@@ -7,10 +7,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # 시스템 deps (필요 시 추가)
 RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y default-mysql-client
 
 # 의존성
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 # 소스
 COPY . .
