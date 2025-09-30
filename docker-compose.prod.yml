@@ -17,6 +17,7 @@ services:
     build: 
       context: .
       dockerfile: BE/Dockerfile
+    image: kurchive_backend:latest
     container_name: kurchive-backend
     restart: always
     depends_on:
