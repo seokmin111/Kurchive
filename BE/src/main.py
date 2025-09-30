@@ -20,7 +20,7 @@ import BE.src.models.admin_config
 
 import BE.src.models
 
-from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth, ingredient
 from BE.src.errors import register_exception_handlers
 
 
@@ -67,5 +67,6 @@ app.include_router(map.router, prefix="/api", tags=["Map"])
 app.include_router(recipe.router)
 app.include_router(mypage.router)
 app.include_router(restaurant.router, prefix = "/api", tags=["Restaurants"])
+app.include_router(ingredient.router, prefix = "/api", tags = ["Ingredients"])
 app.include_router(admin_auth.router)
 app.include_router(admin.router)
