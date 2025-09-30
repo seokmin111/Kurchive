@@ -70,6 +70,13 @@ class RecipeUpdateDTO(BaseModel):
     base_serving: Optional[int] = None
     ingredients: Optional[List[IngredientDTO]] = None
     steps: Optional[List[RecipeStepDTO]] = None
+    
+class IngredientDTO(BaseModel):
+    name: str
+    quantity: float
+    unit_name: str
+    unit_type: Optional[str] = "mass"  # 기본은 mass
+
 
 class IngredientDetailDTO(BaseModel):
     ingredient_id: int
@@ -133,6 +140,45 @@ def _build_recipe_response(recipe: Recipe):
         "steps": steps,
         "ingredients": ingredients,
     }
+
+# 재료 추가 API
+'''DB에 없는 재료가 들어올 경우, 기본 재료 타입과 유닛 타입 지정'''
+async def get_or_create_ingredient(db: AsyncSession, name: str, unit_type: str = "mass"):
+    # 이름으로 먼저 조회
+    result = await db.execute(select(Ingredient).filter(Ingredient.name == name))
+    ingredient = result.scalar_one_or_none()
+
+    if ingredient:
+        return ingredient
+
+    # 없으면 새로 생성
+    ingredient = Ingredient(
+        name=name,
+        unit_type=unit_type
+    )
+    db.add(ingredient)
+    await db.commit()
+    await db.refresh(ingredient)
+
+    # 기본 단위 세트
+    default_units = {
+        "mass": ["g", "kg"],
+        "volume": ["ml", "L"],
+        "count": ["개"],
+        "misc": []
+    }
+
+    units = default_units.get(unit_type, ["g"])
+    for i, u in enumerate(units):
+        db.add(IngredientUnit(
+            ingredient_id=ingredient.id,
+            unit_name=u,
+            unit_type=unit_type,
+            is_default=(i == 0)
+        ))
+    await db.commit()
+
+    return ingredient
 
 
 # ============================================================
@@ -240,14 +286,18 @@ async def create_recipe(
     await db.commit()
     await db.refresh(recipe)
 
+    # 재료 처리
     for ing in data.ingredients:
+        ingredient = await get_or_create_ingredient(db, ing.name, ing.unit_type or "mass")
+
         db.add(RecipeIngredient(
             recipe_id=recipe.id,
-            ingredient_id=ing.ingredient_id,
+            ingredient_id=ingredient.id,
             quantity=ing.quantity,
             unit_name=ing.unit_name
         ))
 
+    # 단계 저장
     for step in data.steps:
         db.add(RecipeStep(
             recipe_id=recipe.id,
