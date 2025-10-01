@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from BE.src.database import get_async_db
 from BE.src.models.recipes import Ingredient, IngredientUnit, Recipe, RecipeIngredient
@@ -15,11 +16,14 @@ async def get_ingredient_info(
     mode: int = Query(..., description="1: 단위 목록, 2: 레시피 목록"),
     db: AsyncSession = Depends(get_async_db)
 ):
-    # 재료 검색
+    # 재료 검색 (단위 관계까지 함께 로드)
     result = await db.execute(
-        select(Ingredient).filter(Ingredient.name == ingredient_name)
+        select(Ingredient)
+        .options(selectinload(Ingredient.ingredient_units))
+        .filter(Ingredient.name == ingredient_name)
     )
     ingredient = result.scalar_one_or_none()
+
     if not ingredient:
         raise HTTPException(404, "Ingredient not found")
 
