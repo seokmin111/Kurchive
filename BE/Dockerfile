@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # 시스템 deps (필요 시 추가)
 RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install -y default-mysql-client
-RUN apt-get update && apt-get install -y netcat
+RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 
 # 의존성
