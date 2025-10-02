@@ -45,5 +45,6 @@ class RestaurantImage(Base):
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"), nullable=False)
     image_url = Column(String(500), nullable=False)
     created_at = Column(Float, default=lambda: time.time())
+    is_cover = Column(Boolean, default=False)
 
     restaurant = relationship("Restaurant", back_populates="images")
