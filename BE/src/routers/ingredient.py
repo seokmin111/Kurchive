@@ -18,15 +18,14 @@ async def get_ingredient_info(
 ):
     # 재료 검색 (단위 관계까지 함께 로드)
     result = await db.execute(
-        select(Ingredient)
-        .options(selectinload(Ingredient.ingredient_units))
-        .filter(Ingredient.name == ingredient_name)
-    )
-    ingredient = result.scalar_one_or_none()
+    select(Ingredient)
+    .options(selectinload(Ingredient.ingredient_units))
+    .filter(Ingredient.name == ingredient_name)
+)
+    ingredient = result.unique().scalar_one_or_none()
 
     if not ingredient:
         raise HTTPException(404, "Ingredient not found")
-
     # mode=1 → 단위 목록
     if mode == 1:
         return {
@@ -40,7 +39,8 @@ async def get_ingredient_info(
             select(Recipe).join(RecipeIngredient)
             .filter(RecipeIngredient.ingredient_id == ingredient.id)
         )
-        recipes = recipes_result.scalars().all()
+        recipes = recipes_result.unique().scalars().all()
+
         return {
             "ingredient": ingredient.name,
             "recipes": [{"id": r.id, "title": r.title} for r in recipes]
