@@ -16,36 +16,40 @@ async def get_ingredient_info(
     mode: int = Query(..., description="1: 단위 목록, 2: 레시피 목록"),
     db: AsyncSession = Depends(get_async_db)
 ):
-    # 재료 검색 (단위 관계까지 함께 로드)
+    # Ingredient 여러 unit을 포함할 수 있으므로 all()로 가져옴
     result = await db.execute(
-    select(Ingredient)
-    .options(selectinload(Ingredient.ingredient_units))
-    .filter(Ingredient.name == ingredient_name)
-)
-    ingredient = result.unique().scalar_one_or_none()
+        select(Ingredient)
+        .options(selectinload(Ingredient.ingredient_units))
+        .filter(Ingredient.name == ingredient_name)
+    )
+    ingredients = result.scalars().all()   # ✅ 리스트 형태로 반환
 
-    if not ingredient:
+    if not ingredients:
         raise HTTPException(404, "Ingredient not found")
-    # mode=1 → 단위 목록
+
+    # mode 1 → 단위 목록
     if mode == 1:
         return {
-            "ingredient": ingredient.name,
-            "units": [u.unit_name for u in ingredient.ingredient_units]
+            "ingredient": ingredient_name,
+            "units": list({
+                u.unit_name
+                for ing in ingredients
+                for u in ing.ingredient_units
+            })
         }
 
-    # mode=2 → 레시피 목록
+    # mode 2 → 레시피 목록
     elif mode == 2:
         recipes_result = await db.execute(
-            select(Recipe).join(RecipeIngredient)
-            .filter(RecipeIngredient.ingredient_id == ingredient.id)
+            select(Recipe)
+            .join(RecipeIngredient)
+            .filter(RecipeIngredient.ingredient_id.in_([ing.id for ing in ingredients]))
         )
-        recipes = recipes_result.unique().scalars().all()
-
+        recipes = recipes_result.scalars().all()
         return {
-            "ingredient": ingredient.name,
+            "ingredient": ingredient_name,
             "recipes": [{"id": r.id, "title": r.title} for r in recipes]
         }
 
-    # 잘못된 mode 값
     else:
         raise HTTPException(400, "Invalid mode. Use 1 or 2.")
