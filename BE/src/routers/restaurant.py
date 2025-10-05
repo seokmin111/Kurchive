@@ -460,6 +460,7 @@ async def list_restaurants(
             "id": r.id,
             "name": r.name,
             "address": r.address,
+            "region_id": r.location_tag_id,
             "rating": r.rating,
             "summary": r.summary,
             "price_min": r.price_min,
