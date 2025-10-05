@@ -466,7 +466,9 @@ async def list_restaurants(
             "price_min": r.price_min,
             "price_max": r.price_max,
             "tags": tag_list,
-            "thumbnail_url": img.image_url if img else None  
+            "thumbnail_url": img.image_url if img else None,  
+            "latitude": r.latitude,
+            "longitude": r.longitude
         })
 
     return results
