@@ -295,6 +295,47 @@ async def create_restaurant(
             "created_at": datetime.utcnow().isoformat()
         }
     }
+    
+# 5. 식당 이름 검색
+'''원래는 /restaurant/{restaurant_id} 밑에 있었는데 fastapi는 
+정적 경로를 동적 경로보다 먼저 탐색하기 때문에 순서 바꿈.'''
+@router.get("/restaurants/search")
+async def search_restaurants_by_name(
+    q: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    """
+    식당 이름 일부(q)로 식당을 검색합니다.
+    부분 일치 검색 (LIKE %q%)
+    """
+    result = await db.execute(
+        select(Restaurant).where(Restaurant.name.like(f"%{q}%")).limit(20)
+    )
+    restaurants = result.scalars().all()
+
+    out = []
+    for r in restaurants:
+        # 대표이미지 조회
+        img_row = await db.execute(
+            select(RestaurantImage)
+            .where(RestaurantImage.restaurant_id == r.id)
+            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
+            .limit(1)
+        )
+        img = img_row.scalar_one_or_none()
+
+        out.append({
+            "id": r.id,
+            "name": r.name,
+            "address": r.address,
+            "rating": r.rating,
+            "summary": r.summary,
+            "price_min": r.price_min,
+            "price_max": r.price_max,
+            "thumbnail_url": img.image_url if img else None,
+        })
+    return out
 
 # 4. 식당 상세 조회
 @router.get("/restaurants/{restaurant_id}")
@@ -356,45 +397,6 @@ async def get_restaurant(
         "created_at": restaurant.created_at,
         "images": image_list    # 모든 이미지 + 대표 여부
     }
-
-# 5. 식당 이름 검색
-@router.get("/restaurants/search")
-async def search_restaurants_by_name(
-    q: str,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
-):
-    """
-    식당 이름 일부(q)로 식당을 검색합니다.
-    부분 일치 검색 (LIKE %q%)
-    """
-    result = await db.execute(
-        select(Restaurant).where(Restaurant.name.like(f"%{q}%")).limit(20)
-    )
-    restaurants = result.scalars().all()
-
-    out = []
-    for r in restaurants:
-        # 대표이미지 조회
-        img_row = await db.execute(
-            select(RestaurantImage)
-            .where(RestaurantImage.restaurant_id == r.id)
-            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
-            .limit(1)
-        )
-        img = img_row.scalar_one_or_none()
-
-        out.append({
-            "id": r.id,
-            "name": r.name,
-            "address": r.address,
-            "rating": r.rating,
-            "summary": r.summary,
-            "price_min": r.price_min,
-            "price_max": r.price_max,
-            "thumbnail_url": img.image_url if img else None,
-        })
-    return out
 
 
 # 5-1. 식당 목록 조회 (조건부 필터링)
