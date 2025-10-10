@@ -68,9 +68,11 @@ class Ingredient(Base):
     average_weight = Column(Float)
     unit_type = Column(String(500))
     category_id = Column(Integer, ForeignKey("ingredient_categories.id"))
+    is_custom = Column(Boolean, default=False, nullable=False)
 
+    # 관계
     ingredient_units = relationship("IngredientUnit", back_populates="ingredient")
-
+    
 class Unit(Base):
     __tablename__ = "units"
 

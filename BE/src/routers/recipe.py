@@ -143,24 +143,30 @@ def _build_recipe_response(recipe: Recipe):
 
 # 재료 추가 API
 '''DB에 없는 재료가 들어올 경우, 기본 재료 타입과 유닛 타입 지정'''
-async def get_or_create_ingredient(db: AsyncSession, name: str, unit_type: str = "mass"):
-    # 이름으로 먼저 조회
+async def get_or_create_ingredient(
+    db: AsyncSession,
+    name: str,
+    unit_type: str = "mass",
+    is_custom: bool = False
+):
+    # 이름으로 조회
     result = await db.execute(select(Ingredient).filter(Ingredient.name == name))
     ingredient = result.scalar_one_or_none()
 
     if ingredient:
         return ingredient
 
-    # 없으면 새로 생성
+    # 새 재료 생성
     ingredient = Ingredient(
         name=name,
-        unit_type=unit_type
+        unit_type=unit_type,
+        is_custom=is_custom
     )
     db.add(ingredient)
     await db.commit()
     await db.refresh(ingredient)
 
-    # 기본 단위 세트
+    # custom 여부 상관없이 기본 단위 세트 등록
     default_units = {
         "mass": ["g", "kg"],
         "volume": ["ml", "L"],
@@ -173,11 +179,10 @@ async def get_or_create_ingredient(db: AsyncSession, name: str, unit_type: str =
         db.add(IngredientUnit(
             ingredient_id=ingredient.id,
             unit_name=u,
-            unit_type=unit_type,
             is_default=(i == 0)
         ))
-    await db.commit()
 
+    await db.commit()
     return ingredient
 
 
