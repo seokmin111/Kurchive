@@ -149,21 +149,29 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_async_db)):
     """
     로그인 API
     """
-    result = await db.execute(select(User).filter(User.userid == data.ID))
-    user = result.scalar_one_or_none()
-    if not user or not pwd_context.verify(data.PW, user.password):
-        raise HTTPException(status_code=400, detail="아이디 또는 비밀번호가 잘못되었습니다.")
+    import traceback
 
-    access_token = create_access_token(sub=str(user.id))
+    try:
+        result = await db.execute(select(User).filter(User.userid == data.ID))
+        user = result.scalar_one_or_none()
+        if not user or not pwd_context.verify(data.PW, user.password):
+            raise HTTPException(status_code=400, detail="아이디 또는 비밀번호가 잘못되었습니다.")
 
-    return {
-        "user_id": str(user.id),
-        "username": user.userid,
-        "role": user.role,
-        "loginSuccess": True,
-        "message": "로그인 성공",
-        "status": "ok",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": JWT_EXPIRE_MINUTES * 60,
-    }
+        access_token = create_access_token(sub=str(user.id))
+
+        return {
+            "user_id": str(user.id),
+            "username": user.userid,
+            "role": user.role,
+            "loginSuccess": True,
+            "message": "로그인 성공",
+            "status": "ok",
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": JWT_EXPIRE_MINUTES * 60,
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
