@@ -14,6 +14,8 @@ from BE.src.database import async_session_maker
 from BE.src.models.users import User
 from BE.src.models.signup_code import SignupCode
 
+from BE.src.database import get_async_db
+
 
 from BE.src.dependencies import create_access_token
 
@@ -57,12 +59,6 @@ class LoginResponse(BaseModel):
     message: str
     status: str
     access_token: str
-
-
-# -------- DB 세션 --------
-async def get_async_db():
-    async with async_session_maker() as session:
-        yield session
 
 
 # -------- API --------
