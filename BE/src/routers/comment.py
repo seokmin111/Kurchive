@@ -5,7 +5,7 @@ from BE.src.models.comments import Comment
 from BE.src.database import get_async_db
 from BE.src.dependencies import get_current_user_from_token
 
-router = APIRouter(prefix="/comments", tags=["Comments"])
+router = APIRouter(prefix="/api/comments", tags=["Comments"])
 
 from pydantic import BaseModel
 from datetime import datetime
