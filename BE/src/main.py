@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
 import BE.src.models.users
 import BE.src.models.tags 
@@ -19,6 +18,8 @@ import BE.src.models.restaurants
 import BE.src.models.admin_config
 
 import BE.src.models
+
+from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
 from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth, ingredient, comment
 from BE.src.errors import register_exception_handlers
