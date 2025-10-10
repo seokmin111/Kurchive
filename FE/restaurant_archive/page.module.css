@@ -1,0 +1,358 @@
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+.nomrg {
+    margin: 0;
+    padding: 0;
+}
+
+.title {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 30px !important;
+    font-weight: 500 !important;
+    margin: 0px 3px 0px 12px;
+}
+
+.sub_title {
+    font-family: 'Pretendard', sans-serif;
+    color: #8B0029;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+
+.search_container {
+    display: flex;              /* 가로 정렬 */
+    align-items: center;    /* 세로 중앙 */
+    width: 300px;               /* 전체 컨테이너 너비 */
+    border-radius: 30px;
+    overflow: hidden;           /* 둥근 모서리에 버튼 잘림 방지 */
+    background-color: #F2ECE5;
+    margin: 10px auto;
+}
+
+.search_btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-image: url('/images/search-icon.png'); /* 돋보기 아이콘 */
+    background-size: 30px 30px;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    background-color: #F2ECE5;
+    color : #8B0029 ;
+    border-radius: 50%;  /* 원형 버튼 */
+    margin-left: 5px;
+}
+
+.search_container .input_box {
+    flex: 1;  /* 남은 공간 모두 차지 */
+    border: none;
+    padding-left: 20px;
+    color: #F2ECE5;
+    background-color: transparent;
+    font-size: 14px;
+    outline: none;
+}
+
+.search_container .input_box::placeholder {
+    color: #8B0029;
+    opacity: 0.8;
+}
+
+.button_wrapper {
+    position: relative; /* 기준 부모 */
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+
+.red_btn {
+    font-family: 'SlowGothic', sans-serif;
+    display: inline-block;
+    box-sizing: content-box;
+    width: 160px;
+    height: 20px;
+    line-height: 20px;  
+    margin: 20px;
+    padding: 20px 25px 25px;
+    border-radius: 18px;
+    border: 0px;
+    font-size: 18px;
+    background-color: #8B0029;
+    color: #F2ECE5;
+    cursor: pointer;
+}  
+
+.back_btn {
+    position: absolute;
+    right: 50%;               /* 아카이빙 버튼 가운데 기준 */
+    transform: translateX(-60px); /* 아카이빙 버튼 왼쪽으로 이동 */
+    top: 0;
+    background: transparent;
+    border: none;
+    text-align: center;
+    margin : 10px 70px 0px 5px;
+    width : 20%;
+    max-width: 80px;
+    font-size: 10px;
+    color: #8B0029;
+    line-height: 1.2;
+    cursor : pointer;
+}
+
+.back_btn span {
+    display: block;
+}
+
+.back_btn::first-line {
+    font-size: 45px;
+    display: block;
+    line-height: 1;
+}
+
+.footer {
+    position: fixed;  /* 화면에 고정 */
+    bottom: 0;        /* 아래쪽 붙이기 */
+    left: 0;          /* 왼쪽 끝 */
+    width: 100%; 
+    height: 450px;
+    background: linear-gradient(to top, 
+                                rgba(218, 176, 155, 0.3) 90%,    /* 아래 0% */
+                                rgba(242, 236, 229, 0.2) 98%,             /* 중간 50% */
+                                rgba(139,0,41,0) 100%);  /* 위 100% */
+}
+
+@media (min-width: 400px) {
+    .search_container {
+    display: flex;              /* 가로 정렬 */
+    align-items: center;    /* 세로 중앙 */
+    width: 70vw;               /* 전체 컨테이너 너비 */
+    border-radius: 30px;
+    overflow: hidden;           /* 둥근 모서리에 버튼 잘림 방지 */
+    background-color: #F2ECE5;
+    margin: 10px auto;
+    }
+}
+
+@media (max-width: 320px) {
+    .search_container {
+    display: flex;              /* 가로 정렬 */
+    align-items: center;    /* 세로 중앙 */
+    width: 85vw;               /* 전체 컨테이너 너비 */
+    border-radius: 30px;
+    overflow: hidden;           /* 둥근 모서리에 버튼 잘림 방지 */
+    background-color: #F2ECE5;
+    margin: 10px auto;
+    }
+
+    .back_btn {
+        position: absolute;
+        right: 50%;               /* 아카이빙 버튼 가운데 기준 */
+        transform: translateX(-50px); /* 아카이빙 버튼 왼쪽으로 이동 */
+        top: 0;
+        background: transparent;
+        border: none;
+        text-align: center;
+        margin : 25px 0px 0px 5px;
+        font-size: 7px;
+        color: #8B0029;
+        line-height: 1.2;
+    }
+
+    .back_btn::first-line {
+        font-size: 30px;
+        display: block;
+        line-height: 1;
+    }
+
+    .red_btn {
+    font-family: 'SlowGothic', sans-serif;
+    display: inline-block;
+    box-sizing: content-box;
+    width: 45vw;
+    height: 20px;
+    line-height: 20px;  
+    margin: 20px;
+    padding: 20px 25px 25px;
+    border-radius: 18px;
+    border: 0px;
+    font-size: 14px;
+    background-color: #8B0029;
+    color: #F2ECE5;
+    cursor: pointer;
+    }  
+}
+
+@media (max-width: 260px) {
+    .red_btn {
+    font-family: 'SlowGothic', sans-serif;
+    display: inline-block;
+    box-sizing: content-box;
+    width: 45vw;
+    height: 20px;
+    line-height: 20px;  
+    margin: 20px 0 20px 0px;
+    padding: 10px 15px 13px;
+    border-radius: 18px;
+    border: 0px;
+    font-size: 11px;
+    background-color: #8B0029;
+    color: #F2ECE5;
+    cursor: pointer;
+    }  
+
+    .back_btn::first-line {
+    font-size: 45px;
+    display: block;
+    line-height: 1;
+    }
+
+    .back_btn {
+        position: absolute;
+        right: 50%;               /* 아카이빙 버튼 가운데 기준 */
+        transform: translateX(-38px); /* 아카이빙 버튼 왼쪽으로 이동 */
+        top: 0;
+        background: transparent;
+        border: none;
+        text-align: center;
+        margin : 18px 0px 0px 5px;
+        font-size: 5px;
+        color: #8B0029;
+        line-height: 1.2;
+    }
+
+    .back_btn::first-line {
+        font-size: 23px;
+        display: block;
+        line-height: 1;
+    }
+
+    .title {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 25px !important;
+    font-weight: 500 !important;
+    margin: 0px 3px 0px 12px;
+    }
+
+    .sub_title {
+        font-family: 'Pretendard', sans-serif;
+        color: #8B0029;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+    }
+
+    .search_container {
+    display: flex;              /* 가로 정렬 */
+    align-items: center;    /* 세로 중앙 */
+    width: 85vw;           /* 전체 컨테이너 너비 */
+    border-radius: 30px;
+    overflow: hidden;           /* 둥근 모서리에 버튼 잘림 방지 */
+    background-color: #F2ECE5;
+    margin: 10px auto;
+    }
+
+    .search_container .input_box {
+    flex: 1;  /* 남은 공간 모두 차지 */
+    border: none;
+    padding-left: 20px;
+    color: white;
+    background-color: transparent;
+    font-size: 10px;
+    outline: none;
+    }
+
+}
+
+.recipe_container {
+    display: grid;
+    grid-template-columns: repeat(5, 200px);
+    grid-template-rows: repeat(2, 100px);
+    row-gap: 80px;
+    column-gap: 25px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0;               /* 화면 끝까지 */
+    width: 100%;             /* 화면 전체 가로 폭 */
+    z-index: 10;
+    border-top-left-radius: 30px;  
+    border-top-right-radius: 30px;
+    background-color: white;
+    padding: 50px 20px 90px;      /* 좌우 여백도 충분히 줌 */
+    box-sizing: border-box; 
+    position: fixed;  /* 화면에 고정 */
+    bottom: 0;
+
+}
+
+.recipe_item {
+    flex: 0 0 auto;        /* 아이템 크기 고정 (늘어나지 않게) */
+    width: 200px;
+    height: 100px;
+    background: white;
+    border-color: #8B0029 !important;
+    border-radius: 12px;
+    border: solid 1.5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.recipe_contentCarrier{
+    margin-left: 15px;
+}
+
+.recipe_descriptionContainer{
+    display: flex;
+    align-items: center;
+}
+
+.recipe_text{
+    color: #8B0029;
+    font-size: 8px;
+    margin-bottom: 10px;
+}
+
+.recipe_title{
+    color: #8B0029;
+    font-size: 15px;
+    margin-bottom: 5px;
+    margin-top: 0px;
+}
+
+
+
+.recipe_icon{
+    width: 30px;
+    height: 30px;
+    background-color: #8B0029;
+    border-radius: 15px;
+    margin-right: 10px;
+}
+
+.recipe_reviewer{
+    font-size: 15px;
+    color: rgb(141, 141, 141);
+}
+
+.recipe_date{
+    font-size: 12px;
+    color: rgb(141, 141, 141);
+}
