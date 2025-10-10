@@ -51,6 +51,18 @@ class IngredientDTO(BaseModel):
     quantity: float
     unit_name: str
 
+class IngredientCreateDTO(BaseModel):
+    name: str
+    quantity: float
+    unit_name: str
+    unit_type: Optional[str] = "mass"
+
+class IngredientDetailDTO(BaseModel):
+    ingredient_id: int
+    name: str
+    quantity: float
+    unit_name: str
+
 class RecipeStepDTO(BaseModel):
     step_order: int
     description: str
@@ -62,7 +74,7 @@ class RecipeStepDTO(BaseModel):
 class RecipeCreateDTO(BaseModel):
     title: str
     base_serving: int
-    ingredients: List[IngredientDTO]
+    ingredients: List[IngredientCreateDTO]
     steps: List[RecipeStepDTO]
 
 class RecipeUpdateDTO(BaseModel):
@@ -71,18 +83,6 @@ class RecipeUpdateDTO(BaseModel):
     ingredients: Optional[List[IngredientDTO]] = None
     steps: Optional[List[RecipeStepDTO]] = None
     
-class IngredientDTO(BaseModel):
-    name: str
-    quantity: float
-    unit_name: str
-    unit_type: Optional[str] = "mass"  # 기본은 mass
-
-
-class IngredientDetailDTO(BaseModel):
-    ingredient_id: int
-    name: str
-    quantity: float
-    unit_name: str
 
 class RecipeResponseDTO(BaseModel):
     id: int
@@ -121,8 +121,10 @@ def _build_recipe_response(recipe: Recipe):
             "name": ri.ingredient.name,
             "quantity": ri.quantity,
             "unit_name": ri.unit_name,
+            "is_custom": getattr(ri.ingredient, "is_custom", False),  # 프론트용 추가
         } for ri in recipe.ingredients
     ]
+
     steps = [
         {
             "step_order": s.step_order,
@@ -147,7 +149,7 @@ async def get_or_create_ingredient(
     db: AsyncSession,
     name: str,
     unit_type: str = "mass",
-    is_custom: bool = False
+    is_custom: bool = True
 ):
     # 이름으로 조회
     result = await db.execute(select(Ingredient).filter(Ingredient.name == name))
