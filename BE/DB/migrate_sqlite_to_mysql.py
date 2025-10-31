@@ -18,7 +18,7 @@ import datetime
 import re
 import unicodedata
 from unidecode import unidecode
-# ---------- 경로/환경 설정 ----------
+#  경로/환경 설정 
 # 스크립트 위치 기준으로 프로젝트 루트 계산 (…/252Kurchive)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -41,7 +41,7 @@ print("Full MySQL URL = ",
       f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASS}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4")
 
 
-# ---------- 엔진 ----------
+#  엔진 
 # SQLite (UTF-8 기본)
 sqlite_engine: Engine = create_engine(
     f"sqlite:///{SQLITE_PATH}",
@@ -60,7 +60,7 @@ mysql_engine: Engine = create_engine(
 )
 
 
-# ---------- 스키마 리플렉션(원본) & 생성(목적지) ----------
+#  스키마 리플렉션(원본) & 생성(목적지) 
 src_md = MetaData()
 src_md.reflect(bind=sqlite_engine)   # SQLite의 모든 테이블/FK/인덱스 최대한 반영
 
@@ -71,7 +71,7 @@ for table in src_md.tables.values():
         elif isinstance(col.type, Text):
             col.type = String(500)
 
-        # 🔽 default CURRENT_TIMESTAMP가 걸려 있으면 DateTime으로 바꿔주기
+        # default CURRENT_TIMESTAMP가 걸려 있으면 DateTime으로 바꿔주기
         if getattr(col.server_default, "arg", None) is not None:
             if str(col.server_default.arg).upper() == "CURRENT_TIMESTAMP":
                 col.type = DateTime()
@@ -85,7 +85,7 @@ dst_md = MetaData()
 dst_md.reflect(bind=mysql_engine)
 dst_tables: Dict[str, Table] = {t.name: t for t in dst_md.tables.values()}
 
-# ---------- 복사 유틸 ----------
+#  복사 유틸 
 BATCH = 2000
 
 from sqlalchemy.dialects.mysql import insert
@@ -153,7 +153,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
                 val = d.get(col.name)
 
-                # ---------- Integer ----------
+                #  Integer 
                 if isinstance(col.type, Integer):
                     if val is None or val == "":
                         row_dict[col.name] = None
@@ -169,7 +169,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         except Exception:
                             row_dict[col.name] = None
 
-                # ---------- Float / Numeric ----------
+                #  Float / Numeric 
                 elif isinstance(col.type, (Float, Numeric)):
                     if val is None or val == "":
                         row_dict[col.name] = None
@@ -179,10 +179,10 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         except Exception:
                             row_dict[col.name] = None
 
-                # ---------- DateTime ----------
+                #  DateTime 
                 elif isinstance(col.type, DateTime):
                     if val is None or val == "" or str(val).strip() == "":
-                        row_dict[col.name] = None
+                        row_dict[col.name] = datetime.datetime.now()
                     elif isinstance(val, (int, float)):
                         try:
                             row_dict[col.name] = datetime.datetime.fromtimestamp(val)
@@ -197,7 +197,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                         row_dict[col.name] = None
                     continue  # ✅ DateTime은 문자열 블록 안 타도록
 
-                # ---------- String / Text / 기타 ----------
+                #  String / Text / 기타 
                 else:
                     row_dict[col.name] = val if val is not None else ""
 
@@ -215,7 +215,7 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
 
 
-# ---------- 실행 ----------
+#  실행 
 with sqlite_engine.connect() as s_conn, mysql_engine.begin() as m_conn:
     # FK 비활성화 (이관 중 관계 무결성 체크 끔)
     m_conn.execute(text("SET FOREIGN_KEY_CHECKS=0;"))
