@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: kurchive-mysql
+    container_name: kurchive-mysql-dev
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -22,7 +22,7 @@ services:
     depends_on:
       - mysql
     env_file:
-      - .env
+      - .dev.env
     environment:
       DATABASE_URL: "mysql+aiomysql://devuser:kurchive202508%21@mysql:3306/kurchive"
     ports:
