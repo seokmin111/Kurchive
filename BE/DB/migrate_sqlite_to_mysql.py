@@ -24,7 +24,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 
-load_dotenv(os.path.join(BASE_DIR, ".env"))  # 루트의 .env 로드
+load_dotenv(os.path.join(BASE_DIR, ".dev.env"))  # 루트의 .env 로드
 
 # SQLite 경로 (필요시 수정)
 SQLITE_PATH = os.path.join(BASE_DIR, "BE", "DB", "Data.db")
