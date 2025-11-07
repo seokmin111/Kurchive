@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8.0
@@ -19,7 +17,7 @@ services:
       context: ./BE
       dockerfile: Dockerfile.local
     container_name: kurchive-backend-dev
-    restart: always
+    restart: on-failure
     env_file:
       - .local.env
     depends_on:
@@ -29,8 +27,12 @@ services:
     networks:
       - kurchive-net
     volumes:
-      - ./BE:/app
-      - /app/__pycache__/
+      - ./BE:/app   # BE 폴더가 /app으로 마운트됨
+      - /app/node_modules
+    command: bash
+    tty: true
+    stdin_open: true
+
 
 volumes:
   mysql_data_dev:
