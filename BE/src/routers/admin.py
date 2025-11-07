@@ -8,11 +8,11 @@ from sqlalchemy import select, func
 from pydantic import BaseModel
 from typing import List
 
-from BE.src.database import get_async_db
-from BE.src.dependencies import get_current_admin_user
-from BE.src.models.users import User
+from src.database import get_async_db
+from src.dependencies import get_current_admin_user
+from src.models.users import User
 
-from BE.src.models.admin_config import AdminConfig, AuthCodeChangeRequest, PwdChangeStatus
+from src.models.admin_config import AdminConfig, AuthCodeChangeRequest, PwdChangeStatus
 
 router = APIRouter(
     prefix="/api/admin",

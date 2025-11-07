@@ -1,7 +1,7 @@
 # 지역만 관리
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from BE.src.database import Base
+from src.database import Base
 
 class Region(Base):
     __tablename__ = "regions"

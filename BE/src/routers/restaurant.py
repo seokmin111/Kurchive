@@ -13,15 +13,15 @@ import aiofiles
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from BE.src.dependencies import get_async_db, get_current_user_from_token
-from BE.src.models.users import User
-from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
-from BE.src.models.tags import Tag, TagCategory
-from BE.src.models.regions import Region
-from BE.AddressLatLong import extract_location_from_link
+from src.dependencies import get_async_db, get_current_user_from_token
+from src.models.users import User
+from src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
+from src.models.tags import Tag, TagCategory
+from src.models.regions import Region
+from AddressLatLong import extract_location_from_link
 
-from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
-from BE.src.utils.image_upload import save_image_local, save_image_oci
+from src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
+from src.utils.image_upload import save_image_local, save_image_oci
 
 # ---------------------------
 # 공통 응답 헬퍼
@@ -763,7 +763,7 @@ async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
 # 이미지
 # ============================
 from typing import List as TList
-from BE.src.utils.image_upload import save_image, delete_image_oci  # ✅ 추가
+from src.utils.image_upload import save_image, delete_image_oci  # ✅ 추가
 
 @router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
 async def upload_restaurant_images(

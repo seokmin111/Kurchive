@@ -10,14 +10,14 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt
 
-from BE.src.database import async_session_maker
-from BE.src.models.users import User
-from BE.src.models.signup_code import SignupCode
+from src.database import async_session_maker
+from src.models.users import User
+from src.models.signup_code import SignupCode
 
-from BE.src.database import get_async_db
+from src.database import get_async_db
 
 
-from BE.src.dependencies import create_access_token
+from src.dependencies import create_access_token
 
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

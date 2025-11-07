@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query
 import anyio
 
-from BE.AddressLatLong import extract_location_from_link
+from AddressLatLong import extract_location_from_link
 
 router = APIRouter(prefix="/utils", tags=["Utils"])
 

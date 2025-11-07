@@ -1,6 +1,6 @@
 # BE/src/utils/image_cleanup.py
 import logging
-from BE.src.utils.image_upload import delete_image_oci
+from src.utils.image_upload import delete_image_oci
 
 logger = logging.getLogger("image_cleanup")
 

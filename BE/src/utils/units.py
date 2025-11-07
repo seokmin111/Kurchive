@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from BE.src.models.recipes import Unit, UnitConversion
+from src.models.recipes import Unit, UnitConversion
 
 # 단위 변환 계수 계산
 async def get_conversion_coefficient(db: AsyncSession, from_unit_name: str, to_unit_name: str) -> Optional[float]:

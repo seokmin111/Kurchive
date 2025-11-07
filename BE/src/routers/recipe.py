@@ -11,18 +11,18 @@ from datetime import datetime
 import logging
 
 
-from BE.src.database import get_async_db
-from BE.src.dependencies import get_current_user_from_token 
-from BE.src.models.recipes import (
+from src.database import get_async_db
+from src.dependencies import get_current_user_from_token 
+from src.models.recipes import (
     Recipe, RecipeIngredient, RecipeStep, RecipeStepImage,
     Ingredient, IngredientUnit, ConvertRequestDTO
 )
-from BE.src.models.users import User
+from src.models.users import User
 
 # Helper 함수 호출
-from BE.src.utils.units import convert_unit
-from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
-from BE.src.utils.image_upload import save_image, delete_image_oci
+from src.utils.units import convert_unit
+from src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
+from src.utils.image_upload import save_image, delete_image_oci
 
 logger = logging.getLogger("convert")
 
