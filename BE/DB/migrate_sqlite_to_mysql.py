@@ -27,7 +27,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 load_dotenv(os.path.join(BASE_DIR, ".dev.env"))  # 루트의 .env 로드
 
 # SQLite 경로 (필요시 수정)
-SQLITE_PATH = os.path.join(BASE_DIR, "BE", "DB", "Data.db")
+SQLITE_PATH = os.path.join(BASE_DIR, "DB", "Data.db")
 
 # MySQL 접속정보 (.env에서)
 MYSQL_USER = os.getenv("MYSQL_USER")
