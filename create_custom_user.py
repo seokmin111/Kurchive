@@ -4,17 +4,17 @@ from passlib.context import CryptContext
 from sqlalchemy import select, or_
 
 
-from BE.src.models.users import User
-from BE.src.models.tags import Tag
-from BE.src.models.restaurants import Restaurant, RestaurantTag
-from BE.src.models.admin_config import AdminConfig
-from BE.src.models.favorites import Favorite
-from BE.src.models.recipes import Recipe
-from BE.src.models.regions import Region
-from BE.src.models.role_permissions import RolePermission
-from BE.src.models.signup_code import SignupCode
+from src.models.users import User
+from src.models.tags import Tag
+from src.models.restaurants import Restaurant, RestaurantTag
+from src.models.admin_config import AdminConfig
+from src.models.favorites import Favorite
+from src.models.recipes import Recipe
+from src.models.regions import Region
+from src.models.role_permissions import RolePermission
+from src.models.signup_code import SignupCode
 
-from BE.src.database import async_session_maker
+from src.database import async_session_maker
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
