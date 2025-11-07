@@ -11,3 +11,5 @@ from .tags import Tag
 from .regions import Region
 from .comments import Comment
 from .admin_config import AdminConfig
+
+

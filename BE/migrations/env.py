@@ -13,10 +13,10 @@ fileConfig(config.config_file_name)
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # --- Base import ---
-from src.models import Base
+from src.database import Base
+from src.models import *  # 모든 모델 로드해서 Base.metadata 채움
 
 target_metadata = Base.metadata
-
 
 def run_migrations_offline():
     """Offline 모드 (SQL 스크립트 출력용)"""
