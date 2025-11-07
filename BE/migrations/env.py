@@ -56,5 +56,19 @@ async def run_migrations_online():
 if context.is_offline_mode():
     run_migrations_offline()
 else:
+    # asyncio.run() 대신 직접 asyncio context로 실행
+    from sqlalchemy.ext.asyncio import AsyncEngine
+
+    connectable = create_async_engine(
+        config.get_main_option("sqlalchemy.url"),
+        poolclass=pool.NullPool,
+    )
+
+    async def run_migrations():
+        async with connectable.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+        await connectable.dispose()
+
     import asyncio
-    asyncio.run(run_migrations_online())
+    asyncio.get_event_loop().run_until_complete(run_migrations())
+
