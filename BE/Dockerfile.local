@@ -1,0 +1,16 @@
+FROM python:3.11
+
+WORKDIR /app
+
+# 시스템 패키지 (pymysql, dotenv 등 설치용)
+RUN pip install --upgrade pip
+
+# requirements.txt가 있다면 추가
+COPY ../requirements.txt ./  
+RUN pip install -r requirements.txt || true
+
+# 소스 복사
+COPY . .
+
+# uvicorn으로 FastAPI/백엔드 실행
+CMD ["python", "migrate_sqlite_to_mysql.py"]

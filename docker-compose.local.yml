@@ -5,17 +5,32 @@ services:
     image: mysql:8.0
     container_name: kurchive-mysql-dev
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    env_file:
+      - .local.env
     ports:
       - "3306:3306"
     volumes:
       - mysql_data_dev:/var/lib/mysql
     networks:
       - kurchive-net
+
+  backend:
+    build:
+      context: ./BE
+      dockerfile: Dockerfile.local
+    container_name: kurchive-backend-dev
+    restart: always
+    env_file:
+      - .local.env
+    depends_on:
+      - mysql
+    ports:
+      - "8000:8000"
+    networks:
+      - kurchive-net
+    volumes:
+      - ./BE:/app
+      - /app/__pycache__/
 
 volumes:
   mysql_data_dev:
