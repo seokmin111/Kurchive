@@ -192,7 +192,11 @@ async def get_or_create_ingredient(
 # 조회 API
 # ============================================================
 @router.get("/search", response_model=List[RecipeResponseDTO])
-async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
+async def search_recipes(
+    title: str, 
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+    ):
     result = await db.execute(
         select(Recipe).options(
             selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
@@ -203,7 +207,9 @@ async def search_recipes(title: str, db: AsyncSession = Depends(get_async_db)):
     return [_build_recipe_response(r) for r in recipes]
 
 @router.get("/list", response_model=List[RecipeResponseDTO])
-async def list_recipes(db: AsyncSession = Depends(get_async_db)):
+async def list_recipes(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)):
     result = await db.execute(
         select(Recipe).options(
             selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
