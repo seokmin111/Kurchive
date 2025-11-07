@@ -806,17 +806,18 @@ async def upload_restaurant_images(
         await db.flush()
 
     out: TList[ImageOut] = []
-    for u in files:
-        # OCI 업로드 (prefix: restaurants/{id})
+    for i, u in enumerate(files):
         _, url_path = await save_image(u, f"restaurants/{restaurant_id}")
 
+        # 첫 번째 업로드 이미지는 자동으로 썸네일로 지정
         img = RestaurantImage(
             restaurant_id=restaurant.id,
             image_url=url_path,
-            created_at=time.time()
+            created_at=time.time(),
+            is_cover=(i == 0)
         )
         db.add(img)
-        await db.flush()  # id 확보
+        await db.flush()
         out.append(ImageOut(id=img.id, image_url=img.image_url, created_at=img.created_at))
 
     await db.commit()

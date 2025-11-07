@@ -476,7 +476,8 @@ async def upload_step_images(
     step = next((s for s in recipe.steps if s.step_order == step_order), None)
     if not step:
         raise HTTPException(404, f"Step {step_order} not found")
-    
+
+    # 기존 이미지 교체
     if replace:
         for img in list(step.images):
             try:
@@ -485,13 +486,18 @@ async def upload_step_images(
                     os.remove(fp)
             except Exception as e:
                 print(f"[레시피 이미지 파일 삭제 실패] {e}")
-            # DB 레코드 삭제
             await db.delete(img)
         await db.flush()
 
-    for f in files:
+    # 이미지 업로드 + 썸네일 자동 설정
+    for i, f in enumerate(files):
         _, url_path = await save_image(f, f"recipes/{recipe_id}/steps/{step_order}")
         db.add(RecipeStepImage(step_id=step.id, image_url=url_path))
+
+        # 레시피에 썸네일이 아직 없으면 자동 지정
+        # (첫 번째로 업로드되는 이미지가 곧 썸네일이 됨)
+        if not recipe.thumbnail_url:
+            recipe.thumbnail_url = url_path
 
     await db.commit()
     recipe = await _load_recipe_with_images(db, recipe_id)
