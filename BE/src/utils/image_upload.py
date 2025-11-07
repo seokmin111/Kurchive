@@ -52,17 +52,43 @@ async def save_image_local(file: UploadFile, base_dir: str) -> Tuple[str, str]:
 # ============================
 
 # SDK 클라이언트 초기화
-_config = oci.config.from_file("~/.oci/config")
-_object_storage = oci.object_storage.ObjectStorageClient(_config)
-_BUCKET_NAME = "kurchive-uploads"       # 네 버킷 이름
-_NAMESPACE = "axzbmseuxwhb"             # 콘솔에서 확인한 namespace
-_REGION = _config["region"]
+import oci
+
+_config = None
+_object_storage = None
+_BUCKET_NAME = "kurchive-uploads"
+_NAMESPACE = "axzbmseuxwhb"
+_REGION = "ap-seoul-1"  # fallback
+
+def _ensure_client():
+    global _config, _object_storage, _REGION
+    if _object_storage is not None:
+        return _object_storage
+
+    try:
+        _config = oci.config.from_file("~/.oci/config")
+        _object_storage = oci.object_storage.ObjectStorageClient(_config)
+        _REGION = _config.get("region", _REGION)
+        print("✅ OCI ObjectStorageClient initialized")
+    except oci.exceptions.ConfigFileNotFound:
+        print("⚠️ OCI config not found — skipping OCI features.")
+        _object_storage = None
+    except Exception as e:
+        print(f"⚠️ OCI init failed: {e}")
+        _object_storage = None
+
+    return _object_storage
 
 async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
     """
     Object Storage에 이미지 업로드
     - prefix: 'restaurants/{id}' or 'recipes/{id}/thumbnail' 같은 경로 접두어
     """
+    # oci 있는지 체크
+    client = _ensure_client()
+    if client is None:
+        print("⚠️ Skipping OCI upload (no config)")
+        return None, f"/uploads/{prefix}/fake_{uuid.uuid4().hex}.jpg"
     if (file.content_type or "").lower() not in ALLOWED_MIME:
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Only jpeg/png/webp allowed")
 
@@ -94,6 +120,11 @@ async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
 
 def delete_image_oci(object_url: str):
     """Object Storage에서 이미지 삭제"""
+    # oci 있는지 체크
+    client = _ensure_client()
+    if client is None:
+        print("⚠️ Skipping OCI delete (no client)")
+        return
     try:
         object_name = object_url.split("/o/")[-1]
         _object_storage.delete_object(_NAMESPACE, _BUCKET_NAME, object_name)
