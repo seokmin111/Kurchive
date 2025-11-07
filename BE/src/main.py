@@ -11,13 +11,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 
-import BE.src.models.users
-import BE.src.models.tags 
-import BE.src.models.regions
-import BE.src.models.restaurants
-import BE.src.models.admin_config
+import src.models.users
+import src.models.tags 
+import src.models.regions
+import src.models.restaurants
+import src.models.admin_config
 
-import BE.src.models
+import src.models
 
 from src.database import Base, async_engine, set_sqlite_pragmas
 
