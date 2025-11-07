@@ -1,4 +1,4 @@
-# BE/src/routers/restaurants_async.py
+# BE/src/routers/restaurant.py
 
 from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from fastapi.responses import JSONResponse
