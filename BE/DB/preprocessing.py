@@ -11,8 +11,8 @@ import re
 import requests
 
 
-from BE.AddressExtraction import get_address
-from BE.AddressLatLong import get_coords_from_address
+from AddressExtraction import get_address
+from AddressLatLong import get_coords_from_address
 
 
 df = pd.read_csv('restaurants/restaurants.csv')
