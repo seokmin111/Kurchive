@@ -468,7 +468,9 @@ async def list_restaurants(
             "tags": tag_list,
             "thumbnail_url": img.image_url if img else None,  
             "latitude": r.latitude,
-            "longitude": r.longitude
+            "longitude": r.longitude,
+            "uploaded_by": r.uploaded_by,
+            "created_at": r.created_at
         })
 
     return results
