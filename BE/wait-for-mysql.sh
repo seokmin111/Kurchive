@@ -15,4 +15,3 @@ while ! nc -z kurchive-mysql 3306; do
 done
 
 echo "✅ MySQL is ready, starting backend!"
-exec uvicorn src.main:app --host 0.0.0.0 --port 8000
