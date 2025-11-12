@@ -199,7 +199,10 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
 
                 #  String / Text / 기타 
                 else:
-                    row_dict[col.name] = val if val is not None else ""
+                    if col.name == "is_custom" and (val is None or val == ""):
+                        row_dict[col.name] = 0  # ← 여기서 기본값 0으로 설정
+                    else:
+                        row_dict[col.name] = val if val is not None else ""
 
             cleaned.append(row_dict)
 
