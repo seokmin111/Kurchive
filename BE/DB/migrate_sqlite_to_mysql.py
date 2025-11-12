@@ -152,6 +152,9 @@ def copy_table(src_conn: Connection, dst_conn: Connection, table_obj: Table) -> 
                     continue
 
                 val = d.get(col.name)
+                
+                if col.name == "is_custom" and (val is None or val == ""):
+                    val = 0
 
                 #  Integer 
                 if isinstance(col.type, Integer):
