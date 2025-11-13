@@ -18,7 +18,7 @@ from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
-from AddressLatLong import extract_location_from_link
+from BE.AddressLatLong import extract_location_from_link
 
 from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image_local, save_image_oci
