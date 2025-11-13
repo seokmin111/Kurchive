@@ -33,7 +33,7 @@ print("SQLITE_PATH =", SQLITE_PATH)
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASS = quote_plus(os.getenv("MYSQL_PASSWORD") or "")
 MYSQL_DB   = os.getenv("MYSQL_DATABASE")
-MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "mysql")
 MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
 
 print("MYSQL_HOST from .env =", os.getenv("MYSQL_HOST"))
