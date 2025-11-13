@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from src.models.restaurants import Restaurant
-from src.dependencies import get_async_db
+from BE.src.models.restaurants import Restaurant
+from BE.src.dependencies import get_async_db
 
 import os
 import logging

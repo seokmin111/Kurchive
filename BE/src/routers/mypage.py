@@ -7,10 +7,10 @@ from typing import List, Optional
 from datetime import datetime
 from passlib.context import CryptContext
 
-from src.dependencies import get_current_user_from_token
-from src.database import get_async_db
-from src.models.users import User
-from src.models.restaurants import Restaurant
+from BE.src.dependencies import get_current_user_from_token
+from BE.src.database import get_async_db
+from BE.src.models.users import User
+from BE.src.models.restaurants import Restaurant
 
 router = APIRouter(prefix="/api/mypage", tags=["MyPage"])
 

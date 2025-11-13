@@ -1,7 +1,7 @@
 # 태그만 관리
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from src.database import Base
+from BE.src.database import Base
 
 class TagCategory(Base):
     __tablename__ = "restaurant_tag_categories"

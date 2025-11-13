@@ -13,8 +13,8 @@ fileConfig(config.config_file_name)
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # --- Base import ---
-from src.database import Base
-from src.models import *  # 모든 모델 로드해서 Base.metadata 채움
+from BE.src.database import Base
+from BE.src.models import *  # 모든 모델 로드해서 Base.metadata 채움
 
 target_metadata = Base.metadata
 

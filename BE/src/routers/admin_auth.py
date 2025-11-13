@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.database import get_async_db
-from src.dependencies import get_current_user_from_token, create_access_token
-from src.models.users import User
-from src.models.admin_config import AdminConfig
+from BE.src.database import get_async_db
+from BE.src.dependencies import get_current_user_from_token, create_access_token
+from BE.src.models.users import User
+from BE.src.models.admin_config import AdminConfig
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Authentication"])
 

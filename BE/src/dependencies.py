@@ -11,12 +11,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2Pas
 from jose import JWTError, jwt
 import os
 
-# from src.database import SessionLocal
-from src.models.users import User
+# from BE.src.database import SessionLocal
+from BE.src.models.users import User
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from src.database import get_async_db
+from BE.src.database import get_async_db
 
 # 요청마다 DB 세션을 열고 닫아주는 dependency.. 나중에 비동기로 수정?
 '''

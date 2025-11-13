@@ -19,10 +19,10 @@ import src.models.admin_config
 
 import src.models
 
-from src.database import Base, async_engine, set_sqlite_pragmas
+from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
-from src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth, ingredient, comment
-from src.errors import register_exception_handlers
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth, ingredient, comment
+from BE.src.errors import register_exception_handlers
 
 
 

@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from src.database import get_async_db
-from src.models.recipes import Ingredient, IngredientUnit, Recipe, RecipeIngredient
+from BE.src.database import get_async_db
+from BE.src.models.recipes import Ingredient, IngredientUnit, Recipe, RecipeIngredient
 
 router = APIRouter(prefix="/api/ingredient", tags=["Ingredient"])
 

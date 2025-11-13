@@ -5,8 +5,8 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import Dict
 
-from src.database import Base
-from src.models.users import User # 단방향
+from BE.src.database import Base
+from BE.src.models.users import User # 단방향
 
 
 class Recipe(Base):

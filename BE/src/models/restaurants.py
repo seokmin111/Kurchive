@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from src.database import Base
+from BE.src.database import Base
 import time
 
 class Restaurant(Base):

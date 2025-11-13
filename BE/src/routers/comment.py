@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from src.models.comments import Comment
-from src.database import get_async_db
-from src.dependencies import get_current_user_from_token
+from BE.src.models.comments import Comment
+from BE.src.database import get_async_db
+from BE.src.dependencies import get_current_user_from_token
 
 router = APIRouter(prefix="/api/comments", tags=["Comments"])
 
