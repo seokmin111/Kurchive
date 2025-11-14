@@ -27,3 +27,4 @@ BE/keys.py
 *.cert
 .env
 
+node_modules
