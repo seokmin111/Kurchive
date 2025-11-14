@@ -7,7 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // 출처: FE/src/tsx/recipeadding_osm/page.tsx
 import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
 import RestaurantReviewPage from "./tsx/restaurant_osm/page.tsx";
+import MyActivityPage from "./tsx/myactivity_pg/page.tsx";
 
+import QuitPage from "./tsx/quitpage_pg/page.tsx";
 // 출처: FE/src/MainPage.tsx   ← 네 파일 위치 기준, 정확히 이게 맞음
 import MainPage from "./MainPage.tsx";
 
@@ -22,6 +24,10 @@ export default function App() {
         <Route path="/restaurant" element={<RestaurantReviewPage />} />
 
         <Route path="/recipe" element={<RecipeEditPage />} />
+
+        <Route path="/myactivity" element={<MyActivityPage />} />
+
+        <Route path="/quitpage" element={<QuitPage />} />
       </Routes>
     </BrowserRouter>
   );
