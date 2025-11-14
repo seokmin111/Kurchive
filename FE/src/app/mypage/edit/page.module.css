@@ -1,0 +1,223 @@
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+.nomrg {
+    overflow: hidden;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header{
+    display: flex;
+    align-items:flex-end;
+    margin-left: 10px;
+}
+
+.chevronLeft{
+    color: #8B0029;
+    font-size: 30px;
+    font-weight: 100;
+}
+
+.header_title{
+    display: flex;
+    flex-direction: column;
+    margin-left: 30px;
+    margin-right: 280px;
+}
+
+.title {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 30px !important;
+    font-weight: 500 !important;
+    margin: 0px 3px 0px 0px;
+}
+
+.sub_title {
+    font-family: 'Pretendard', sans-serif;
+    color: #8B0029;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin-bottom: -0.1px;
+}
+
+.mypage{
+    font-family: var(--font-geist-mono);
+    font-weight: 700;
+    position: absolute;
+    right: 25px;
+    color: #8B0029;
+    border: 1px solid #8B0029;
+    padding: 15px;
+    border-radius: 50%;
+}
+
+.nicknameChange{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.nicknameChange__title{
+    font-size: 20px;
+    margin-bottom: 10px;
+    font: var(--font-geist-mono);
+    font-weight: 700;
+    color: #8B0029;
+}
+
+.nicknameChange__bar{
+    height: 1px;
+    width: 80vw;
+    background-color: #535353;
+}
+
+.nicknameChange__main{
+    margin-top: 30px;
+    width: 60vw;
+    display: flex;
+    justify-content: space-between;
+    align-items:flex-start;
+}
+
+.present__nickname{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.present__nickname__title{
+    font-family: var(--font-geist-mono);
+    font-size: 15px;
+    color: #8B0029;
+    margin-bottom: 15px;
+}
+
+.divider{
+    margin-top: -10px;
+    opacity: 20%;
+    height: 70px;
+    width: 1px;
+    background-color: #535353;
+}
+
+.new__nickname__title{
+    font-family: var(--font-geist-mono);
+    font-size: 15px;
+    color: #8B0029;
+    margin-bottom: 10px;
+}
+
+.new__nickname__input{
+    height: 30px;
+    width: 180px;
+    border: 1px solid rgb(216, 216, 216);
+    border-radius: 5px;
+}
+
+.nicknameChange__save{
+    font-family: var(--font-geist-mono);
+    font-size: 12px;
+    font-weight: 400;
+    text-align: center;
+    background-color: #8B0029;
+    color: white;
+    width: 60vw;
+    padding: 20px;
+    border-radius: 30px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.passwordChange{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.passwordChange__title{
+    font-size: 20px;
+    margin-bottom: 10px;
+    font: var(--font-geist-mono);
+    font-weight: 700;
+    color: #8B0029;
+}
+
+.passwordChange__input{
+    margin: 20px 0px;
+} 
+
+.passwordChange__input div{
+    color: #8B0029;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.passwordChange__input input{
+    width: 80vw;
+    height: 50px;
+    border: 1px solid rgb(216, 216, 216);
+    border-radius: 10px;
+}
+
+.passwordChange__submit__carrier{
+    position: relative;
+}
+
+.passwordChange__submit{
+    z-index: 1;
+    font-family: var(--font-geist-mono);
+    font-size: 12px;
+    font-weight: 400;
+    text-align: center;
+    background-color: white;
+    border: 1px solid #8B0029;
+    color: rgb(0, 0, 0);
+    width: 60vw;
+    padding: 20px;
+    border-radius: 30px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.passwordChange__submit__background{
+    position: absolute;
+    z-index: -1;
+    top: 5px;
+    left: 0;
+    background-color:#8B0029;
+    width: 60vw;
+    padding: 20px;
+    height: 20px;
+    border-radius: 30px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.designCircle{
+    position: absolute;
+    bottom: -420px;
+    z-index: -1;
+    width: 150vw;
+    height: 100vw;
+    border: 1px solid #8B0029;
+    border-radius: 90%;
+}

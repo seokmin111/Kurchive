@@ -1,0 +1,54 @@
+[00:00:00.506] Server  LOG      ✓ Ready in 336ms
+[00:00:01.680] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.060] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:03.561] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:20.323] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `TagSearch`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.324] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Food`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.324] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Food`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.324] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Food`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.325] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Food`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.325] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Food`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.325] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Food`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.326] Server  ERROR   You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.
+[00:01:20.326] Server  ERROR   You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.
+[00:01:20.326] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Atmosphere`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.326] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Atmosphere`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.326] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Atmosphere`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.326] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Atmosphere`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.327] Server  ERROR   Each child in a list should have a unique "key" prop.
+
+Check the render method of `Atmosphere`. See https://react.dev/link/warning-keys for more information.
+[00:01:20.528] Server  ERROR    ⨯ TypeError: Cannot convert argument to a ByteString because the character at index 11 has a value of 51648 which is greater than 255.
+[00:01:20.668] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:20.805] Browser ERROR   Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information. 
+
+Check the render method of `TagSearch`. 
+[00:01:20.805] Browser ERROR   You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.
+[00:01:20.805] Browser ERROR   You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`.
+[00:01:20.805] Browser LOG     {"max":500000,"min":1000}
+[00:01:27.937] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:13.154] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:13.833] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:31.159] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold

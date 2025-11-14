@@ -1,0 +1,27 @@
+/* [project]/Desktop/Kurchive/FE/src/app/pretendard_4a46e0e1.module.css [app-client] (css) */
+@font-face {
+  font-family: pretendard;
+  src: url("../media/PretendardVariable-s.p.77d5d991.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: pretendard Fallback;
+  src: local(Arial);
+  ascent-override: 93.76%;
+  descent-override: 23.75%;
+  line-gap-override: 0.0%;
+  size-adjust: 101.55%;
+}
+
+.pretendard_4a46e0e1-module__82WS2a__className {
+  font-family: pretendard, pretendard Fallback;
+  font-weight: 400;
+}
+
+.pretendard_4a46e0e1-module__82WS2a__variable {
+  --font-pretendard: "pretendard", "pretendard Fallback";
+}
+
+/*# sourceMappingURL=Desktop_Kurchive_FE_src_app_pretendard_4a46e0e1_module_css_bad6b30c._.single.css.map*/

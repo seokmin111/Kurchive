@@ -1,0 +1,13 @@
+__turbopack_load_page_chunks__("/_error", [
+  "static/chunks/8dcf9_next_dist_compiled_bd4938ce._.js",
+  "static/chunks/8dcf9_next_dist_shared_lib_21a48053._.js",
+  "static/chunks/8dcf9_next_dist_client_6932681d._.js",
+  "static/chunks/8dcf9_next_dist_0071e685._.js",
+  "static/chunks/8dcf9_next_error_c5e9c6d0.js",
+  "static/chunks/[next]_entry_page-loader_ts_655cf291._.js",
+  "static/chunks/8dcf9_react-dom_e18f9731._.js",
+  "static/chunks/8dcf9_7e425ee9._.js",
+  "static/chunks/[root-of-the-server]__14d901cb._.js",
+  "static/chunks/Desktop_Kurchive_FE_src_pages__error_2da965e7._.js",
+  "static/chunks/turbopack-Desktop_Kurchive_FE_src_pages__error_7522d150._.js"
+])
