@@ -27,7 +27,7 @@ services:
     networks:
       - kurchive-net
     volumes:
-      - ./BE:/app   # BE 폴더가 /app으로 마운트됨
+      - ./BE:/app/BE   # BE 폴더가 /app으로 마운트됨
       - /app/node_modules
     command: bash
     tty: true
