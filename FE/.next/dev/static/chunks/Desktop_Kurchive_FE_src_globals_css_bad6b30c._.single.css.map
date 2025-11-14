@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/Desktop/Kurchive/FE/src/globals.css"],"sourcesContent":["/* CSS 변수 */\n:root {\n  --background: #FFFFFF;\n  --foreground: #1a1a1a;\n\n  --main-color: #8B0029;\n  --secondary-red: #F1E6E6; \n  --beige-gray: #ECEBEA;\n  --white-gray: #F0EEEC;\n}\n\n/* body */\nbody {\n  margin: 0;\n  padding: 0;\n  font-family: Arial, sans-serif;\n  background-color: var(--background);\n  color: var(--foreground);\n}\n\n/* 버튼 */\n.red_btn {\n  padding: 0.5rem 1.75rem;\n  margin: 0 0.5rem;\n  border-radius: 0.125rem;\n  background-color: var(--main-color);\n  color: var(--foreground);\n  border: none;\n  cursor: pointer;\n}\n\n.beige_btn {\n  padding: 0.5rem 1.75rem;\n  margin: 0 0.5rem;\n  border-radius: 0.125rem;\n  background-color: var(--beige-gray);\n  color: var(--foreground);\n  border: none;\n  cursor: pointer;\n}\n\n/* 색상 클래스 */\n.kur_red { color: var(--main-color); }\n.light_red { color: var(--secondary-red); }\n.beige_gray { color: var(--beige-gray); }\n.white_gray { color: var(--white-gray); }\n.black { color: var(--foreground); }\n.white { color: var(--background); }"],"names":[],"mappings":"AACA;;;;;;;;;AAWA;;;;;;;;AASA;;;;;;;;;;AAUA;;;;;;;;;;AAWA;;;;AACA;;;;AACA;;;;AACA;;;;AACA;;;;AACA"}}]
+}

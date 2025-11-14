@@ -1,6 +1,36 @@
 {
-  "app": {},
-  "appUsingSizeAdjust": false,
+  "app": {
+    "[project]/Desktop/Kurchive/FE/src/app/_not-found/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/PretendardVariable-s.p.77d5d991.woff2"
+    ],
+    "[project]/Desktop/Kurchive/FE/src/app/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/PretendardVariable-s.p.77d5d991.woff2"
+    ],
+    "[project]/Desktop/Kurchive/FE/src/app/recipe_archive/search/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2"
+    ],
+    "[project]/Desktop/Kurchive/FE/src/app/restaurant_archive/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/PretendardVariable-s.p.77d5d991.woff2"
+    ],
+    "[project]/Desktop/Kurchive/FE/src/app/restaurant_archive/search/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/PretendardVariable-s.p.77d5d991.woff2"
+    ],
+    "[project]/Desktop/Kurchive/FE/src/app/restaurant_archive/search/result/page": [
+      "static/media/caa3a2e1cccd8315-s.p.853070df.woff2",
+      "static/media/797e433ab948586e-s.p.dbea232f.woff2",
+      "static/media/PretendardVariable-s.p.77d5d991.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
   "pages": {},
   "pagesUsingSizeAdjust": false
 }

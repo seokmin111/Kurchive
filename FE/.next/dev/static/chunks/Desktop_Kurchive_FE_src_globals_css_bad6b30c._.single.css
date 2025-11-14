@@ -1,0 +1,63 @@
+/* [project]/Desktop/Kurchive/FE/src/globals.css [app-client] (css) */
+:root {
+  --background: #fff;
+  --foreground: #1a1a1a;
+  --main-color: #8b0029;
+  --secondary-red: #f1e6e6;
+  --beige-gray: #ecebea;
+  --white-gray: #f0eeec;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+.red_btn {
+  background-color: var(--main-color);
+  color: var(--foreground);
+  cursor: pointer;
+  border: none;
+  border-radius: .125rem;
+  margin: 0 .5rem;
+  padding: .5rem 1.75rem;
+}
+
+.beige_btn {
+  background-color: var(--beige-gray);
+  color: var(--foreground);
+  cursor: pointer;
+  border: none;
+  border-radius: .125rem;
+  margin: 0 .5rem;
+  padding: .5rem 1.75rem;
+}
+
+.kur_red {
+  color: var(--main-color);
+}
+
+.light_red {
+  color: var(--secondary-red);
+}
+
+.beige_gray {
+  color: var(--beige-gray);
+}
+
+.white_gray {
+  color: var(--white-gray);
+}
+
+.black {
+  color: var(--foreground);
+}
+
+.white {
+  color: var(--background);
+}
+
+/*# sourceMappingURL=Desktop_Kurchive_FE_src_globals_css_bad6b30c._.single.css.map*/

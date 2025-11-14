@@ -1,0 +1,48 @@
+/* CSS 변수 */
+:root {
+  --background: #FFFFFF;
+  --foreground: #1a1a1a;
+
+  --main-color: #8B0029;
+  --secondary-red: #F1E6E6; 
+  --beige-gray: #ECEBEA;
+  --white-gray: #F0EEEC;
+}
+
+/* body */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* 버튼 */
+.red_btn {
+  padding: 0.5rem 1.75rem;
+  margin: 0 0.5rem;
+  border-radius: 0.125rem;
+  background-color: var(--main-color);
+  color: var(--foreground);
+  border: none;
+  cursor: pointer;
+}
+
+.beige_btn {
+  padding: 0.5rem 1.75rem;
+  margin: 0 0.5rem;
+  border-radius: 0.125rem;
+  background-color: var(--beige-gray);
+  color: var(--foreground);
+  border: none;
+  cursor: pointer;
+}
+
+/* 색상 클래스 */
+.kur_red { color: var(--main-color); }
+.light_red { color: var(--secondary-red); }
+.beige_gray { color: var(--beige-gray); }
+.white_gray { color: var(--white-gray); }
+.black { color: var(--foreground); }
+.white { color: var(--background); }
