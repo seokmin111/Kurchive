@@ -1,0 +1,26 @@
+.searchBar {
+  width: 556px;
+  height: 79px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #8b0029;
+
+  background-color: #fff;
+  font-size: 18px;
+  color: #8b0029;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  margin-top: 139px;
+  margin-left: 72px;
+  gap: 15px;
+}
+.search {
+  border: none; /* 기본 테두리 제거 */
+
+  background: transparent; /* 배경 투명하게 */
+  outline: none; /* 클릭했을 때 파란 테두리 제거 */
+  padding: 5px 0; /* 위아래 여백만 조금 주기 */
+  font-size: 16px; /* 글자 크기 */
+  width: 200px; /* 원하는 너비 */
+}
