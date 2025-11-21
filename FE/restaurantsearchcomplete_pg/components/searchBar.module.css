@@ -1,0 +1,25 @@
+.searchBar {
+  width: 556px;
+  height: 79px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #8b0029;
+
+  background-color: #fff;
+  font-size: 18px;
+  color: #8b0029;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 139px;
+  margin-left: 72px;
+  gap: 15px;
+}
+.search {
+  border: none;
+
+  background: transparent;
+  outline: none;
+  padding: 5px 0;
+  font-size: 16px;
+  width: 200px;
+}

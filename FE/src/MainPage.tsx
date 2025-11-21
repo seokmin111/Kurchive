@@ -4,7 +4,6 @@ import "./components/main.css"; // CSS 위치 맞게 조정
 export default function MainPage() {
   return (
     <div>
-
       {/* 프로필 이미지 */}
       <a href="#">
         <img
@@ -15,10 +14,14 @@ export default function MainPage() {
       </a>
 
       <div>
-        <br /><br /><br /><br />
+        <br />
+        <br />
+        <br />
+        <br />
         <h1 className="title">커카이브</h1>
         <p className="sub-title">우리만의 미식 지도</p>
-        <br /><br />
+        <br />
+        <br />
 
         {/* React Router 연결 */}
         <Link to="/restaurant" className="red-btn">

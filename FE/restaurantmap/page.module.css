@@ -1,0 +1,33 @@
+.mapContainer {
+  position: relative; /* 자식 요소를 absolute로 배치할 수 있게 */
+}
+.topBar {
+  display: flex;
+  flex-direction: row;
+  height: 60px;
+}
+.button {
+  flex: 1;
+  display: flex;
+  border-radius: 9999px; /* 완전 둥근 pill */
+  align-items: center; /* 수직 가운데 정렬 */
+  justify-content: center; /* 수평 가운데 정렬 */
+  margin: 8px 16px;
+  font-weight: bold;
+  background-color: #f3f3f3;
+}
+.backButton {
+  position: absolute;
+  bottom: 120px; /* 지도 아래쪽 여백 */
+  left: 110px; /* 왼쪽 여백 */
+  background-color: #f8f1ed;
+  border: none;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  font-size: 28px;
+  color: #a01b3f;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}

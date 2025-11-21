@@ -1,0 +1,200 @@
+:root {
+  --brand-primary: #8a0d2a;
+  --brand-primary-light: #b53a55;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+}
+
+.mainPage {
+  display: flex;
+  flex-direction: column;
+
+  background-color: white;
+  position: relative;
+  overflow: hidden;
+  width: 700px;
+  height: 999px;
+
+  margin: 0 auto;
+
+  min-height: 100vh;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  background-color: white;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1.2;
+  margin-left: 1vw;
+  flex-grow: 1;
+}
+
+.myPageButton {
+  border: 2px solid #a33e5c;
+  border-radius: 50%;
+  padding: 15px 15px;
+  background-color: white;
+  color: #a33e5c;
+  font-weight: bold;
+  cursor: pointer;
+  margin-right: 10%;
+  width: 28%;
+  height: 100%;
+  font-size: 18px;
+}
+
+.backstep_button {
+  margin-left: 1vw;
+}
+/* --- Favorites Section Styling --- */
+.favoritesSection {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #8b0029;
+}
+
+.listItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background-color: white;
+  border: 1px solid #8b0029;
+  border-radius: 40px;
+  box-shadow: 0 6px 9px rgba(0, 0, 0, 0.3);
+
+  width: 50%;
+  min-height: 100px;
+  padding: 15px 30px;
+  margin-top: 20%;
+  margin-left: 20%;
+  margin-bottom: 3vh;
+  cursor: pointer;
+}
+
+.listItem2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background-color: #f1e6e6;
+  border: 1px solid #8b0029;
+  border-radius: 40px;
+  box-shadow: 0 6px 9px rgba(0, 0, 0, 0.3);
+
+  width: 50%;
+  min-height: 100px;
+  padding: 15px 30px;
+  margin-left: 20%;
+  margin-bottom: 3vh;
+  cursor: pointer;
+}
+
+.highlightedItem {
+  border: 3px solid #63a4ff; /* Blue border for the highlight */
+  /* You may need to adjust the padding or margin slightly if the border makes it jump */
+}
+
+.listContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-grow: 1;
+}
+
+.listText {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #8b0029;
+  margin-bottom: 5px;
+}
+
+.heartCount {
+  font-size: 0.9rem;
+  color: #a33e5c;
+  font-weight: bold;
+}
+
+.arrow {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #a33e5c;
+}
+
+/* --- Recent Section Styling (Bottom part) --- */
+.recentSection {
+  margin-top: 100px;
+  text-align: center;
+}
+
+.recentTitle {
+  font-size: 1.1rem;
+  color: #8b0029;
+  margin-bottom: 20px;
+}
+
+.recentItems {
+  display: flex;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 5vw;
+  white-space: nowrap;
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  gap: 15px;
+  height: 50%;
+}
+
+.recentItemButton {
+  margin-top: 2%;
+  width: 150px;
+  flex-shrink: 0;
+  border: 1px solid #8b0029;
+  border-radius: 20px;
+  padding: 10px 20px;
+  background-color: white;
+  color: #a33e5c;
+  font-weight: bold;
+  cursor: pointer;
+}
+.underline {
+  border-bottom: 1.5px solid #0f0f0f;
+  width: 60%;
+  margin: 8px auto;
+  margin-bottom: 15%;
+}
+
+.underline2 {
+  border-bottom: 1.5px solid #0f0f0f;
+  width: 60%;
+  margin: 8px auto;
+}
+.blurImage {
+  position: absolute;
+  top: 30%;
+  left: -35%;
+
+  opacity: 0.1;
+  filter: blur(1px);
+  z-index: 1;
+
+  border: 1px solid #8b0029;
+  border-radius: 50%;
+}

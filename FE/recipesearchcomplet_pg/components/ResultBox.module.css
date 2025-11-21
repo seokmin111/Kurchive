@@ -1,0 +1,96 @@
+.restaurant {
+  display: flex;
+  flex-direction: row;
+  border: 10px;
+}
+.search {
+  width: 556px;
+  height: 79px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #8b0029;
+
+  background-color: #fff;
+  font-size: 18px;
+  color: #8b0029;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  margin-top: 139px;
+  margin-left: 72px;
+}
+
+.box {
+  width: 540px;
+  height: 159px;
+  margin: 0 auto;
+  background-color: #fff;
+  border: 2px solid #929292;
+  border-radius: 20.2px;
+  overflow: hidden;
+  margin-bottom: 30px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+#photo {
+  width: 220px;
+  height: 159px;
+  background-color: #f2ece5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  object-fit: cover;
+  border-left: 0;
+}
+
+#resName {
+  margin-top: 32px;
+  margin-left: 32px;
+  width: 72px;
+  height: 22px;
+  font-size: 100%;
+  color: #8b0029;
+  font-weight: bold;
+}
+
+#comment {
+  margin-left: 34px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 13px;
+  color: #8c8c8c;
+}
+
+.poster {
+  margin-top: 30px;
+  margin-left: 32px;
+  display: flex;
+  height: 25px;
+  position: relative;
+}
+
+.inform {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+#circle {
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background-color: #8b0029;
+}
+.rating {
+  margin-left: auto;
+  margin-right: 15px;
+  font-size: 12px;
+  position: absolute;
+  top: -10px;
+  right: 0px;
+}
+.link {
+  text-decoration: none; /* 밑줄 제거 */
+  color: inherit; /* 부모 색상 상속 */
+}
