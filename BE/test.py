@@ -3,34 +3,34 @@ import requests
 
 UA = {"User-Agent": "Mozilla/5.0"}
 
-def extract_place_id(url: str) -> str:
+def extract_kakao_place_coords_html(url: str):
     """
-    https://place.map.kakao.com/11992230 형태에서 숫자만 추출
+    place.map.kakao.com/{id} HTML 내부에서 좌표 패턴을 직접 찾아 추출.
+    API를 사용하지 않으므로 차단 없음.
     """
-    m = re.search(r"/(\d+)$", url)
-    return m.group(1) if m else None
+    r = requests.get(url, headers=UA, timeout=10)
+    html = r.text
 
+    # 1) "latitude": 37.x , "longitude": 127.x
+    m = re.search(r'"latitude"\s*:\s*([0-9]+\.[0-9]+)\s*,\s*"longitude"\s*:\s*([0-9]+\.[0-9]+)', html)
+    if m:
+        lat = float(m.group(1))
+        lng = float(m.group(2))
+        return lat, lng
 
-def extract_kakao_place_coords_from_api(url: str):
-    """
-    place.map.kakao.com/{id} → API 호출 → (lat, lng)
-    """
-    place_id = extract_place_id(url)
-    if not place_id:
-        return None
+    # 2) "y": 37.x , "x": 127.x
+    m = re.search(r'"y"\s*:\s*([0-9]+\.[0-9]+)\s*,\s*"x"\s*:\s*([0-9]+\.[0-9]+)', html)
+    if m:
+        lat = float(m.group(1))
+        lng = float(m.group(2))
+        return lat, lng
 
-    api_url = f"https://place.map.kakao.com/main/v/{place_id}"
-    r = requests.get(api_url, headers=UA, timeout=7)
-
-    # JSON 응답이므로 바로 처리
-    data = r.json()
-    info = data.get("basicInfo", {})
-
-    x = info.get("x")  # longitude
-    y = info.get("y")  # latitude
-
-    if x and y:
-        return y, x  # (lat, lng)
+    # 3) "lat": 37.x , "lng": 127.x
+    m = re.search(r'"lat"\s*:\s*([0-9]+\.[0-9]+)\s*,\s*"lng"\s*:\s*([0-9]+\.[0-9]+)', html)
+    if m:
+        lat = float(m.group(1))
+        lng = float(m.group(2))
+        return lat, lng
 
     return None
 
@@ -43,4 +43,4 @@ if __name__ == "__main__":
 
     for u in test_urls:
         print("\n=== Test:", u)
-        print("Result:", extract_kakao_place_coords_from_api(u))
+        print("Result:", extract_kakao_place_coords_html(u))

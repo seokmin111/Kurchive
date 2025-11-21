@@ -21,5 +21,5 @@ COPY . .
 
 # uvicorn 실행 (포트 8000)
 EXPOSE 8000
-WORKDIR /app/src
+WORKDIR /app
 CMD ["python","-m","uvicorn","BE.src.main:app","--host","0.0.0.0","--port","8000"]
