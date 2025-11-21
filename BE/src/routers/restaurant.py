@@ -80,21 +80,26 @@ class RestaurantCreate(BaseModel):
     price_max: int
     tag_ids: List[int]
 
+# 2025.11.21 수정 : locatin link 모든 형식 허용으로 수정
     @validator("location_link")
     def validate_location_link(cls, v: str):
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
+
+        # URL 기본 형식만 확인
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (http/https)")
-        allowed = (
+
+        # 지도 링크 여부만 기록해두기
+        cls.is_map_link = (
             v.startswith("https://map.kakao.com")
             or v.startswith("https://kko.kakao.com")
             or v.startswith("https://maps.app.goo.gl")
             or v.startswith("https://www.google.com/maps")
         )
-        if not allowed:
-            raise ValueError("location_link must be a Kakao or Google Maps link")
         return v
+
+
 
     @validator("name", "summary", "description")
     def not_empty(cls, v):
@@ -236,15 +241,17 @@ async def create_restaurant(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    # 1) 주소 + 좌표 추출 (실패해도 흐름 계속)
+   # 1) 지도 링크인 경우에만 주소/위경도 추출
     address, lat, lon = None, None, None
     try:
-        loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
-        if loc:
-            address = loc.get("road_address") or loc.get("address")
-            lat, lon = loc.get("lat"), loc.get("lng")
+        if getattr(payload.__class__, "is_map_link", False):
+            loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
+            if loc:
+                address = loc.get("road_address") or loc.get("address")
+                lat, lon = loc.get("lat"), loc.get("lng")
     except Exception as e:
         print(f"[주소 추출 실패] {e}")
+
 
     # 2) insert
     try:
@@ -664,15 +671,17 @@ async def update_restaurant(
     if not (is_uploader or is_admin):
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     
-    # 주소/좌표 재계산
+    # 주소/좌표 재계산 25.11.21 수정
     address, lat, lon = None, None, None
     try:
-        loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
-        if loc:
-            address = loc.get("road_address") or loc.get("address")
-            lat, lon = loc.get("lat"), loc.get("lng")
+        if getattr(payload.__class__, "is_map_link", False):
+            loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
+            if loc:
+                address = loc.get("road_address") or loc.get("address")
+                lat, lon = loc.get("lat"), loc.get("lng")
     except Exception as e:
         print(f"[주소/좌표 추출 실패] {e}")
+
 
     # 필드 반영
     restaurant.name = payload.name
