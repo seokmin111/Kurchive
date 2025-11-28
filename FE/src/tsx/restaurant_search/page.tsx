@@ -50,7 +50,7 @@ export default function RestaurantSearchPage() {
             <div className={styles.recipe_container}>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -63,7 +63,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -76,7 +76,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -89,7 +89,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -102,7 +102,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -115,7 +115,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -128,7 +128,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -141,7 +141,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -154,7 +154,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
@@ -167,7 +167,7 @@ export default function RestaurantSearchPage() {
                 </div>
                 <div className={styles.recipe_item}>
                     <div className={styles.recipe_contentCarrier}>
-                    <h4 className={styles.recipe_title}>음식 이름</h4>
+                    <h4 className={styles.recipe_title}>식당 이름</h4>
                     <div className={styles.recipe_text}>뭔가 내용이 들어갈듯</div>
                     <div className={styles.recipe_descriptionContainer}>
                         <div className={styles.recipe_icon}></div>
