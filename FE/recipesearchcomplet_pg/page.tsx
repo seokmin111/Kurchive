@@ -11,8 +11,14 @@ export default function Home() {
 
   const handleSearch = async (query: string) => {
     setKeyword(query);
+    const token = localStorage.getItem("access_token");
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/search?title=${query}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/recipe/search?title=${query}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     if (!res.ok) {
       console.error("API Error:", res.status);
