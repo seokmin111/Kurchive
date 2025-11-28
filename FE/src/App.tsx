@@ -1,5 +1,5 @@
 // 출처: FE/src/App.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 // MainPage 연결 → 파일 출처 명시
 
@@ -7,22 +7,31 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // 출처: FE/src/tsx/recipeadding_osm/page.tsx
 import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
 import RestaurantReviewPage from "./tsx/restaurant_osm/page.tsx";
+import RestaurantSearchPage from "./tsx/restaurant_search/page.tsx";
+import SearchPage from "./tsx/restaurant_search_process/page.tsx";
+import RecipeSearchPage from "./tsx/recipe_search/page.tsx";
 
 // 출처: FE/src/MainPage.tsx   ← 네 파일 위치 기준, 정확히 이게 맞음
 import MainPage from "./MainPage.tsx";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+      <div>
+
+        <Routes>
         {/* / → MainPage.tsx */}
         <Route path="/" element={<MainPage />} />
 
         {/* /restaurant → RecipeEditPage.tsx */}
-        <Route path="/restaurant" element={<RestaurantReviewPage />} />
+        <Route path="/restaurant" element={<RestaurantSearchPage/>} />
+        <Route path="/restaurant/archive" element={<RestaurantReviewPage></RestaurantReviewPage>}></Route>
+        <Route path="/restaurant/archive/search" element={<SearchPage></SearchPage>}></Route>
 
-        <Route path="/recipe" element={<RecipeEditPage />} />
+        <Route path="/recipe/edit" element={<RecipeEditPage />} />
+        <Route path="/recipe" element={<RecipeSearchPage></RecipeSearchPage>}></Route>
       </Routes>
-    </BrowserRouter>
+
+    
+    </div>
   );
 }
