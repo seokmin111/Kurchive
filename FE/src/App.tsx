@@ -15,7 +15,7 @@ import MainPage from "./MainPage.tsx";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <div>
       <Routes>
         {/* / → MainPage.tsx */}
         <Route path="/" element={<MainPage />} />
@@ -29,6 +29,6 @@ export default function App() {
 
         <Route path="/quitpage" element={<QuitPage />} />
       </Routes>
-    </BrowserRouter>
+    </div>
   );
 }
