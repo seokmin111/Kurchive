@@ -40,6 +40,7 @@ div {
 }
 
 .ivory-btn {
+    text-decoration: none;
     font-family: 'SlowGothic', sans-serif;
     display: inline-block;
     box-sizing: content-box;
@@ -57,6 +58,7 @@ div {
 }
 
 .red-btn {
+    text-decoration: none;
     font-family: 'SlowGothic', sans-serif;
     display: inline-block;
     box-sizing: content-box;
