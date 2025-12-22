@@ -38,7 +38,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",  # React 개발 환경
-    "http://localhost:5173"
+    "http://localhost:5173",
     "http://152.69.228.114:8000"    # 서버 도메인/IP
 ]
 
