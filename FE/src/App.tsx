@@ -14,7 +14,17 @@ import MyInfoEdit from "./tsx/myInfoEdit_2.1/page.tsx"
 import Login from "./tsx/loginpage/page.tsx"
 import QuitPage from "./tsx/quitpage_2.3/page.tsx";
 
+<<<<<<< HEAD
 import MainPage from "./MainPage.tsx";
+=======
+import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
+import RestaurantFormPage from "./tsx/restaurant_archive_osm/page.tsx";
+import RestaurantSearchPage from "./tsx/restaurant_search/page.tsx";
+import SearchPage from "./tsx/restaurant_search_process/page.tsx";
+import RecipeSearchPage from "./tsx/recipe_search/page.tsx";
+import MyActivityPage from "./tsx/myactivity_pg/page.tsx";
+import QuitPage from "./tsx/quitpage_pg/page.tsx";
+>>>>>>> b557ffdaecb5c92107c8227ed1763aaecb84715f
 
 export default function App() {
   return (
