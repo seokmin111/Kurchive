@@ -5,7 +5,7 @@ import LoginPage from "./tsx/loginpage_pg/page.tsx";
 import MainPage from "./MainPage.tsx";
 
 import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
-import RestaurantFormPage from "./tsx/restaurant_osm/page.tsx";
+import RestaurantFormPage from "./tsx/restaurant_archive_osm/page.tsx";
 import RestaurantSearchPage from "./tsx/restaurant_search/page.tsx";
 import SearchPage from "./tsx/restaurant_search_process/page.tsx";
 import RecipeSearchPage from "./tsx/recipe_search/page.tsx";
