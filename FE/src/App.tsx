@@ -1,7 +1,5 @@
-// 출처: FE/src/App.tsx
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-
-// MainPage 연결 → 파일 출처 명시
+import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // RecipeEditPage 연결 → 파일 출처 명시
 // 출처: FE/src/tsx/recipeadding_osm/page.tsx
@@ -20,9 +18,12 @@ import MainPage from "./MainPage.tsx";
 
 export default function App() {
   return (
-<div>
+    <div>
     <Routes>
-        {/* / → MainPage.tsx */}
+        {/* 공개 페이지도 여기 안에 둬도 됨 (whitelist로 통과) */}
+        <Route path="/login" element={<Login/>} />
+
+        {/* 나머지는 기본 보호 */}
         <Route path="/" element={<MainPage />} />
 
         {/*레스토랑 관련 라우팅*/}
