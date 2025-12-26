@@ -1,8 +1,8 @@
 "use client";
 
-import styles from "./page.module.css";
-import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import styles from "./page.module.css";
 
 import { listRecipes, searchRecipes } from "../../api/recipe";
 
@@ -11,7 +11,7 @@ export default function RecipeSearchPage() {
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 처음 들어오면 전체 레시피
+  // 처음 진입 시 전체 레시피 로드
   useEffect(() => {
     loadAll();
   }, []);
@@ -26,7 +26,7 @@ export default function RecipeSearchPage() {
     }
   };
 
-  const onSubmit = async (e: any) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!keyword.trim()) {
@@ -45,14 +45,18 @@ export default function RecipeSearchPage() {
 
   return (
     <main className={styles.nomrg}>
+      {/* 헤더 */}
       <div className={styles.header}>
         <br />
-        <h1 className={styles.title} style={{ display: "inline" }}>커카이브</h1>
+        <h1 className={styles.title} style={{ display: "inline" }}>
+          커카이브
+        </h1>
         <p className={styles.sub_title} style={{ display: "inline" }}>
           우리만의 미식 지도
         </p>
       </div>
 
+      {/* 검색 */}
       <form className={styles.search_container} onSubmit={onSubmit}>
         <input
           className={styles.input_box}
@@ -60,23 +64,46 @@ export default function RecipeSearchPage() {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
-        <button className={styles.search_btn}></button>
+        <button
+          type="submit"
+          className={styles.search_btn}
+          aria-label="레시피 검색"
+        />
       </form>
 
+      {/* 상단 버튼 */}
       <div className={styles.button_wrapper}>
         <Link to="/">
-          <button className={styles.back_btn}>&lt;<br />메인화면으로<br />돌아가기</button>
+          <button className={styles.back_btn}>
+            &lt;
+            <br />
+            메인화면으로
+            <br />
+            돌아가기
+          </button>
         </Link>
+
         <Link to="/recipe/edit">
           <button className={styles.red_btn}>레시피 아카이빙</button>
         </Link>
       </div>
 
-      {loading && <div style={{ padding: 12 }}>불러오는 중…</div>}
+      {/* 로딩 */}
+      {loading && (
+        <div style={{ padding: 12 }}>
+          불러오는 중…
+        </div>
+      )}
 
+      {/* 레시피 목록 */}
       <div className={styles.recipe_container}>
         {recipes.map((r) => (
-          <div className={styles.recipe_item} key={r.id}>
+          <Link
+            key={r.id}
+            to={`/recipe/${r.id}`}
+            className={styles.recipe_item}
+            style={{ textDecoration: "none" }}
+          >
             <div className={styles.recipe_contentCarrier}>
               <h4 className={styles.recipe_title}>{r.title}</h4>
 
@@ -85,7 +112,7 @@ export default function RecipeSearchPage() {
               </div>
 
               <div className={styles.recipe_descriptionContainer}>
-                <div className={styles.recipe_icon}></div>
+                <div className={styles.recipe_icon} />
                 <div className={styles.recipe_underContainer}>
                   <div className={styles.recipe_reviewer}>
                     업로더 ID: {r.uploader_id}
@@ -95,17 +122,18 @@ export default function RecipeSearchPage() {
                   </div>
                 </div>
               </div>
-
             </div>
-          </div>
+          </Link>
         ))}
 
         {!loading && recipes.length === 0 && (
-          <div style={{ padding: 12 }}>레시피가 없습니다.</div>
+          <div style={{ padding: 12 }}>
+            레시피가 없습니다.
+          </div>
         )}
       </div>
 
-      <div className={styles.footer}></div>
+      <div className={styles.footer} />
     </main>
   );
 }
