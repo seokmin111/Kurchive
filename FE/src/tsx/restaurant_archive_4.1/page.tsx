@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import styles from "./page.module.css";
+import styles from './page.module.css';
 import { getFoodParents, getFoodChildren } from "../../api/tags";
 import { getRegionParents, getRegionChildren } from "../../api/regions";
 
@@ -22,6 +22,8 @@ export default function RestaurantFormPage() {
     getFoodParents().then(res => setFoodParents(res.data));
     getRegionParents().then(res => setRegionParents(res.data));
   }, []);
+
+  useEffect(()=>{console.log(foodParents)},[foodParents])
 
   // 🔵 3) 👉 여기 handleFoodParentClick (4번 내용)
   const handleFoodParentClick = async (parentId: number) => {

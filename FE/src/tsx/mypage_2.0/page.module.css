@@ -1,0 +1,239 @@
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+.nomrg {
+    overflow: hidden;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header{
+    display: flex;
+    align-items:flex-end;
+    margin-left: 10px;
+}
+
+.chevronLeft{
+    color: #8B0029;
+    font-size: 30px;
+    font-weight: 100;
+}
+
+.header_title{
+    display: flex;
+    flex-direction: column;
+    margin-left: 30px;
+    margin-right: 280px;
+}
+
+.title {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 30px !important;
+    font-weight: 500 !important;
+    margin: 0px 3px 0px 0px;
+}
+
+.sub_title {
+    font-family: 'Pretendard', sans-serif;
+    color: #8B0029;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin-bottom: -0.1px;
+}
+
+.mypage{
+    font-family: var(--font-geist-mono);
+    font-weight: 700;
+    position: absolute;
+    right: 25px;
+    color: #8B0029;
+    border: 1px solid #8B0029;
+    padding: 15px;
+    border-radius: 50%;
+}
+
+.info__body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    z-index: 5;
+    margin-top: 110px;
+    background-color: white;
+    border: 1px solid #8B0029;
+    width: 80vw;
+    height: 30vh;
+    border-radius: 35px;
+}
+
+.body__title__my{
+    font-family: var(--font-geist-mono);
+    color: #8B0029;
+}
+
+.body__title__curchive{
+    color: #8B0029;
+    font-family: 'SlowGothic', sans-serif;
+    font-size: 25px;
+}
+
+.body__title__card{
+    font-family: var(--font-geist-mono);
+    color: #8B0029;
+}
+
+.body__main{
+    position: relative;
+    z-index: 1;
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.body__main__picture{
+    width: 150px;
+    height: 150px;
+    background-color: #8B0029;
+}
+
+.body__main__info{
+    margin-left: 60px;
+    display: flex;
+}
+
+.body__main__info__title{
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    justify-content: space-around;
+    font-size: 10px;
+    font-family: var(--font-geist-mono);
+    font-weight: 500;
+    margin-right: 40px;
+}
+
+.body__main__info__info{
+    display: flex;
+    flex-direction: column;
+    height: 150px;
+    justify-content: space-around;
+}
+
+.body__main__date{
+    margin-top: 30px;
+    font-family: var(--font-geist-mono);
+    font-size: 20px;
+    font-weight: 300;
+    color: #898989;
+}
+
+.info__shadow{
+    padding: 20px;
+    z-index: -1;
+    border: 1px solid #8B0029;
+    background-color: rgba(0, 0, 0, 0.2);
+    width: 80vw;
+    height: 30vh;
+    border-radius: 35px;
+    position: absolute;
+    top: 200px;
+    left: 50px;
+}
+
+.info__logo{
+    opacity: 0.1;
+    z-index: 0;
+    right: 50px;
+    bottom: 420px;
+    position: absolute;
+    width: 200px;
+    height: 200px;
+}
+
+.mychoice{
+    margin-top: 90px;
+    border-radius: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60vw;
+    height: 90px;
+    color: white;
+    background-color: #8B0029;
+}
+
+.mychoice__title{
+    font-family: var(--font-geist-mono);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: white;
+}
+
+.mychoice__specefic{
+    font-family: var(--font-geist-mono);
+    font-size: 10px;
+    font-weight: 400;
+    width: 20vw;
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 10px 15px;
+}
+
+.info_change{
+    font-family: var(--font-geist-mono);
+    margin-top: 30px;
+    margin-left: 320px;
+    background-color: #ECEBEA;
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 10px;
+    text-decoration: none;
+    color: #414141;
+}
+
+.leave{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 70px;
+}
+
+.leave__title{
+    color:#898989;
+    text-decoration: none;
+}
+
+.leave__bar{
+    width: 120px;
+    border: 1px solid #898989;
+}
+
+.logo{
+    z-index: -1;
+    width: 400px;
+    position: absolute;
+    right: -200px;
+    top: 250px;
+    opacity: 0.2;
+}

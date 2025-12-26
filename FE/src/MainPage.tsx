@@ -5,13 +5,10 @@ export default function MainPage() {
   return (
     <div>
       {/* 프로필 이미지 */}
-      <a href="#">
-        <img
-          src="/images/kurchive_profile.png"
-          alt="마이페이지"
-          className="profile"
-        />
-      </a>
+
+      <Link to="/mypage">
+      <img src="../public/kurchive_profile.png" className="mypage"></img>
+      </Link>
 
       <div>
         <br />

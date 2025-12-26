@@ -60,7 +60,7 @@
 }
 .no {
   flex-grow: 2;
-  height: 110%;
+  height: 40%;
   padding: 15px 10px;
   background-color: #404040;
   color: white;
@@ -70,12 +70,13 @@
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+  text-decoration: none;
 
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .yes {
-  height: 110%;
+  height: 40%;
   flex-grow: 1;
   padding: 15px 10px;
 
@@ -88,6 +89,7 @@
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .mainBlock {

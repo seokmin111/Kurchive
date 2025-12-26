@@ -5,7 +5,8 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import axios from 'axios';
 import { useEffect } from 'react';
 
-import RestaurantFormPage from '../restaurant_osm/page';
+
+import RestaurantFormPage from '../restaurant_archive_4.1/page';
 
 export default function RestaurantSearchPage() {
 
@@ -25,22 +26,19 @@ export default function RestaurantSearchPage() {
 
             
             <div className={styles.header}>
+                <Link to="/">
+                    <button className={styles.back_btn}>&lt;<br />메인화면으로 <br /> 돌아가기</button>
+                </Link>
                 <br />
                 <h1 className={styles.title} style={{ display: 'inline' }}>커카이브</h1>
                 <p className={styles.sub_title} style={{ display: 'inline' }}>우리만의 미식 지도</p>
             </div>
 
-            <div>
-                <form className={styles.search_container} action="#" method="get"> {/* 검색어 보낼 주소 */}
-                    <input type="text" className={styles.input_box} placeholder="식당 정보를 입력해주세요" />
-                    <button type="submit" className={styles.search_btn}></button>
-                </form>
-            </div>
+            <Link to="/restaurant/search">
+                    <button className={styles.ivory_btn}>식당 검색하기</button>
+            </Link>
 
             <div className={styles.button_wrapper}>
-                <Link to="/">
-                    <button className={styles.back_btn}>&lt;<br />메인화면으로 <br /> 돌아가기</button>
-                </Link>
                 
                 <Link to="/restaurant/archive">
                     <button className={styles.red_btn}>식당 아카이빙</button>

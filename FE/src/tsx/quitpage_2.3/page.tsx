@@ -1,4 +1,5 @@
 import style from "./page.module.css";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
@@ -61,8 +62,8 @@ export default function Home() {
           정말 탈퇴하시겠습니까?
         </div>
         <div className={style.buttonBox}>
-          <button className={style.no}>아니요</button>
-          <button className={style.yes}>예</button>
+          <Link className={style.no} to="/mypage">아니요</Link>
+          <Link className={style.yes} to="/login">예</Link>
         </div>
       </footer>
     </div>

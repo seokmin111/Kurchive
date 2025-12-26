@@ -51,7 +51,10 @@ export default function SearchPage() {
 
     return (
         <main className={styles.nomrg}>
-            <div>
+            <div className={styles.nav_carrier}>
+                <Link to="/restaurant">
+                    <button className={styles.back_btn}>&lt;</button>
+                </Link>
                 <br />
                 <h1 className={styles.title} style={{ display: 'inline' }}>커카이브</h1>
                 <p className={styles.sub_title} style={{ display: 'inline' }}>우리만의 미식 지도</p>
@@ -388,9 +391,6 @@ interface SpecificRegionProps{
 
 //상세 지역 modal
 function SpecificRegion({regionName,handleAddItem,upperRegions}:SpecificRegionProps){ 
-
-    //local에서 axios 호출할 때 주소 앞에 baseURL 붙여야 함
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
     //하위 지역들 저장
     const [smallRegions,setSmallRegions] = useState<a[]|null>(null) 

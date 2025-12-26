@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 export default function MainPage() {
 	const [preview, setPreview] = useState<string | null>(null); // 대표 사진
@@ -65,7 +66,7 @@ export default function MainPage() {
 			<form action="#" method="get" className={`${styles.form} recipes-form`}>
 				<div className={styles.btnCarrier}>
 				{/*돌아가기 버튼*/}
-				<Link href="/recipe_archive" className={styles.returnBtn}>&lt;</Link>
+				<Link to="/recipe" className={styles.returnBtn}>&lt;</Link>
 
 				{/* 완료 버튼 */}
 				<button type="submit" className={styles.submitButton}>완료</button>

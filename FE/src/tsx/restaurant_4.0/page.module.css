@@ -91,7 +91,7 @@
     width: 160px;
     height: 20px;
     line-height: 20px;  
-    margin: 20px;
+    margin: 10px;
     padding: 20px 25px 25px;
     border-radius: 18px;
     border: 0px;
@@ -101,6 +101,23 @@
     cursor: pointer;
 }  
 
+.ivory_btn{
+    font-family: 'SlowGothic', sans-serif;
+    display: inline-block;
+    box-sizing: content-box;
+    width: 160px;
+    height: 20px;
+    line-height: 20px;  
+    margin-top: 100px;
+    padding: 20px 25px 25px;
+    border-radius: 18px;
+    border: 0px;
+    font-size: 18px;
+    background-color: #F2ECE5;
+    color:#8B0029;
+    cursor: pointer;
+}
+
 .back_btn {
     position: absolute;
     right: 50%;               /* 아카이빙 버튼 가운데 기준 */
@@ -109,7 +126,7 @@
     background: transparent;
     border: none;
     text-align: center;
-    margin : 15px 70px 0px 5px;
+    margin : 15px 80px 0px 5px;
     width : 20%;
     max-width: 80px;
     font-size: 10px;

@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import axios from 'axios';
 import { useEffect } from 'react';
 
-import RestaurantFormPage from '../restaurant_osm/page';
+import RestaurantFormPage from '../restaurant_archive_4.1/page';
 
 export default function RecipeSearchPage() {
 
@@ -42,7 +42,7 @@ export default function RecipeSearchPage() {
                     <button className={styles.back_btn}>&lt;<br />메인화면으로 <br /> 돌아가기</button>
                 </Link>
                 
-                <Link to="/recipe/edit">
+                <Link to="/recipe/archive">
                     <button className={styles.red_btn}>레시피 아카이빙</button>
                 </Link>
             </div>

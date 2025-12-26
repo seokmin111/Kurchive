@@ -11,8 +11,40 @@
     font-weight: 400;
     font-display: swap;
 }
-    
 
+.nav_carrier{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.back_btn{
+    position: absolute;
+    right: 50%;               /* 아카이빙 버튼 가운데 기준 */
+    transform: translateX(-60px); /* 아카이빙 버튼 왼쪽으로 이동 */
+    top: 10px;
+    background: transparent;
+    border: none;
+    text-align: center;
+    margin : 15px 80px 0px 5px;
+    width : 20%;
+    max-width: 80px;
+    font-size: 10px;
+    color: #8B0029;
+    line-height: 1.2;
+    cursor : pointer;
+}
+
+.back_btn span {
+    display: block;
+}
+
+.back_btn::first-line {
+    font-size: 45px;
+    display: block;
+    line-height: 1;
+}
 
 .tagSearchContainer {
     /* 애니메이션 속성 (유지) */
