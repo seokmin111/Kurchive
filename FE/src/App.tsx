@@ -1,30 +1,20 @@
 import { Routes, Route } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
 
-// RecipeEditPage 연결 → 파일 출처 명시
-// 출처: FE/src/tsx/recipeadding_osm/page.tsx
-import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page.tsx";
-import RestaurantPage from "./tsx/restaurant_4.0/page.tsx";
-import SearchPage from "./tsx/restaurant_search_4.21/page.tsx";
-import RecipeSearchPage from "./tsx/recipe_3.0/page.tsx";
-import MyActivityPage from "./tsx/myactivity_2.2/page.tsx";
-import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page.tsx"
-import MyPage from "./tsx/mypage_2.0/page.tsx"
-import MyInfoEdit from "./tsx/myInfoEdit_2.1/page.tsx"
-import Login from "./tsx/loginpage/page.tsx"
-import QuitPage from "./tsx/quitpage_2.3/page.tsx";
+// pages
+import MainPage from "./MainPage";
+import Login from "./tsx/loginpage/page";
 
-<<<<<<< HEAD
-import MainPage from "./MainPage.tsx";
-=======
-import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
-import RestaurantFormPage from "./tsx/restaurant_archive_osm/page.tsx";
-import RestaurantSearchPage from "./tsx/restaurant_search/page.tsx";
-import SearchPage from "./tsx/restaurant_search_process/page.tsx";
-import RecipeSearchPage from "./tsx/recipe_search/page.tsx";
-import MyActivityPage from "./tsx/myactivity_pg/page.tsx";
-import QuitPage from "./tsx/quitpage_pg/page.tsx";
->>>>>>> b557ffdaecb5c92107c8227ed1763aaecb84715f
+import RestaurantPage from "./tsx/restaurant_4.0/page";
+import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
+import SearchPage from "./tsx/restaurant_search_4.21/page";
+
+import RecipeSearchPage from "./tsx/recipe_3.0/page";
+import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
+
+import MyPage from "./tsx/mypage_2.0/page";
+import MyActivityPage from "./tsx/myactivity_2.2/page";
+import MyInfoEdit from "./tsx/myInfoEdit_2.1/page";
+import QuitPage from "./tsx/quitpage_2.3/page";
 
 export default function App() {
   return (
