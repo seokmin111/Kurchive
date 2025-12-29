@@ -1,34 +1,57 @@
-// 출처: FE/src/App.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-// MainPage 연결 → 파일 출처 명시
+// pages
+import MainPage from "./MainPage";
+import Login from "./tsx/loginpage/page";
 
-// RecipeEditPage 연결 → 파일 출처 명시
-// 출처: FE/src/tsx/recipeadding_osm/page.tsx
-import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
-import RestaurantReviewPage from "./tsx/restaurant_osm/page.tsx";
-import MyActivityPage from "./tsx/myactivity_pg/page.tsx";
+import RestaurantPage from "./tsx/restaurant_4.0/page";
+import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
+import SearchPage from "./tsx/restaurant_search_4.21/page";
+import RestaurantSearchResultsPage from "./tsx/restaurant_search_result_4.3/page";
 
-import QuitPage from "./tsx/quitpage_pg/page.tsx";
-// 출처: FE/src/MainPage.tsx   ← 네 파일 위치 기준, 정확히 이게 맞음
-import MainPage from "./MainPage.tsx";
+import RecipeSearchPage from "./tsx/recipe_3.0/page";
+import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
+
+import MyPage from "./tsx/mypage_2.0/page";
+import MyActivityPage from "./tsx/myactivity_2.2/page";
+import MyInfoEdit from "./tsx/myInfoEdit_2.1/page";
+import QuitPage from "./tsx/quitpage_2.3/page";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* / → MainPage.tsx */}
-        <Route path="/" element={<MainPage />} />
+    <Routes>
+      {/* 초기 진입 → 로그인 */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* /restaurant → RecipeEditPage.tsx */}
-        <Route path="/restaurant" element={<RestaurantReviewPage />} />
+      {/* 로그인 */}
+      <Route path="/login" element={<Login />} />
 
-        <Route path="/recipe" element={<RecipeEditPage />} />
+      {/* 메인 이후 페이지들 */}
+      <Route path="/main" element={<MainPage />} />
 
-        <Route path="/myactivity" element={<MyActivityPage />} />
+      {/* 레스토랑 */}
+      <Route path="/restaurant" element={<RestaurantPage />} />
+      <Route path="/restaurant/archive" element={<RestaurantArchivePage />} />
+      <Route path="/restaurant/search" element={<SearchPage />} />
+      <Route
+        path="/restaurant/search/results"
+        element={<RestaurantSearchResultsPage />} />
 
-        <Route path="/quitpage" element={<QuitPage />} />
-      </Routes>
-    </BrowserRouter>
+      {/* 레시피 */}
+      <Route path="/recipe" element={<RecipeSearchPage />} />
+      <Route path="/recipe/archive" element={<RecipeArchivePage />} />
+
+      {/* 마이페이지 */}
+      <Route path="/mypage" element={<MyPage />} />
+      <Route path="/myactivity" element={<MyActivityPage />} />
+      <Route path="/infoedit" element={<MyInfoEdit />} />
+      <Route path="/quitpage" element={<QuitPage />} />
+
+      {/* 404 */}
+      <Route
+        path="*"
+        element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>}
+      />
+    </Routes>
   );
 }

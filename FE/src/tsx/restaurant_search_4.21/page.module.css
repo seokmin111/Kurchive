@@ -1,0 +1,626 @@
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Pretendard';
+    src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+    font-weight: 400;
+    font-display: swap;
+}
+
+.nav_carrier{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.back_btn{
+    position: absolute;
+    right: 50%;               /* 아카이빙 버튼 가운데 기준 */
+    transform: translateX(-60px); /* 아카이빙 버튼 왼쪽으로 이동 */
+    top: 10px;
+    background: transparent;
+    border: none;
+    text-align: center;
+    margin : 15px 80px 0px 5px;
+    width : 20%;
+    max-width: 80px;
+    font-size: 10px;
+    color: #8B0029;
+    line-height: 1.2;
+    cursor : pointer;
+}
+
+.back_btn span {
+    display: block;
+}
+
+.back_btn::first-line {
+    font-size: 45px;
+    display: block;
+    line-height: 1;
+}
+
+.tagSearchContainer {
+    /* 애니메이션 속성 (유지) */
+    position: fixed;
+    top: 800px; /* 또는 이전의 100vh */
+    left: 0;
+    transition: all 1s;
+
+    /* .tagSearch에서 가져온 Flexbox 스타일 (추가) */
+    display: flex;
+    flex-direction: column;
+    height: 95vh; /* 80vh 또는 90vh 등 패널의 전체 높이 */
+    width: 100%;
+
+    /* (기존) */
+    align-items: center;
+    background-color: rgb(255, 255, 255);
+    border-top-left-radius: 50px;
+    border-top-right-radius: 50px;
+    box-shadow: 0px 70px 100px rgb(117, 0, 0);
+}
+
+.show{
+    top:50px;
+}
+
+.devider{
+    width: 100%;
+    height: 5px;
+    background-color: #D9D9D9;
+    margin: 20px 0px;
+}
+
+.nomrg {
+    margin: 0;
+    padding: 0;
+}
+
+.title {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 30px !important;
+    font-weight: 500 !important;
+    margin: 0px 3px 0px 12px;
+}
+
+.sub_title {
+    font-family: 'Pretendard', sans-serif;
+    color: #8B0029;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.search_container {
+  position: relative; 
+  display: flex;
+  align-items: center;
+  width: 300px;
+  border-radius: 30px;
+  overflow: visible;
+  background-color: #F2ECE5;
+  margin: 10px auto;
+}
+
+
+.search_btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-image: url('/images/search-icon.png'); /* 돋보기 아이콘 */
+    background-size: 30px 30px;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    background-color: #F2ECE5;
+    color:#8B0029;
+    border-radius: 50%;  /* 원형 버튼 */
+    margin-left: 5px;
+}
+
+.search_container .input_box {
+    flex: 1;  /* 남은 공간 모두 차지 */
+    border: none;
+    padding-left: 20px;
+    color:#8B0029;
+    background-color: transparent;
+    font-size: 14px;
+    outline: none;
+}
+
+.search_container .input_box::placeholder {
+    color: rgb(128, 0, 0);
+    opacity: 0.7;
+}
+
+.tagSearch__title{
+    font-size: 20px;
+    margin-bottom: 40px;
+}
+
+.tagSearch__title:hover{
+    color: #8B0029;
+}
+
+.tagSearch__tags{
+    font-family: var(--font-pretendard),sans-serif;
+    font-weight: 600;
+    background-color: white;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content:center;
+    z-index: 10;
+}
+
+.tagSearch__tag{
+    font-size: 15px;
+    display: flex;
+    margin: 0px 15px;
+    background-color: none;
+    color: rgb(42, 42, 42);
+    border: 1px solid rgb(42, 42, 42);
+    padding: 7px 20px;
+    border-radius: 15px;
+}
+
+.tagSearch__tag:hover{
+    border: 1px solid white;
+    background-color: #8B0029;
+    color: white;
+}
+
+.scrollableContent{
+  height: 70vh;
+  flex: 1; /* 헤더와 푸터를 제외한 남은 공간을 모두 차지 */
+  overflow-y: scroll; /* 이 컨테이너 내부에서만 세로 스크롤 발생 */
+  min-height: 0;
+}
+
+.tagSearch__body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 560px;
+    padding: 0;
+}
+
+.tagSearch__type{
+    color: #8B0029;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.tagSearch__bar{
+    width: 100%;
+    height: 3px;
+    background-color:rgb(177, 177, 177);
+}
+
+.tagSearch__regions{
+    width: 100vw;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 20px;
+    margin-bottom: 20px;
+}
+
+.tagSearch__regions span{
+    font-family: var(--font-pretendard),sans-serif;
+    font-weight: 700;
+    padding: 4px 19px;
+    border: 1px solid white;
+    justify-self: center;
+}
+
+.tagSearch__regions span:first-child:last-child {
+  grid-column: 1 / -1; 
+  margin: 0;
+}
+
+.tagSearch__regions span:hover{
+    border: 1px solid #8B0029;
+    border-radius: 15px;
+}
+
+.specificRegions{
+    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: center;
+    align-items: center;
+    width: 80vw;
+    height: 230px;
+    padding: 10px;
+    border: 2px solid rgb(177, 177, 177);
+    border-radius: 30px;
+    margin-bottom: 30px;
+}
+
+.specificRegions div{
+    text-align: center;
+    font-size: 13px;
+    margin: 5px 15px;
+    background-color: #8B0029;
+    color: white;
+    padding: 7px 0px;
+    border-radius: 10px;
+}
+
+.tagSearch__submit{
+    z-index: 5;
+    flex-shrink: 0;
+    background-color: white;
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+}
+
+.tagSearch__iconAndTags{
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    overflow-x: scroll;
+}
+
+.tagSearch__trashcan{
+    font-weight: 900;
+    margin-left: 12px;
+    width: 20px;
+    height: 20px;
+    border-radius: 15px;
+    border: 2px solid rgb(97, 97, 97);
+    flex-shrink: 0;
+    padding: 4px;
+}
+
+.tagSearch__selectedTag{
+    margin: 0px 5px;
+    color: #8B0029;
+    border: 2px solid #8B0029;
+    padding: 2px 7px;
+    border-radius: 15px;
+    flex-shrink: 0;
+}
+
+.tagSearch__tagDel{
+    font-size: 10px;
+}
+
+.tagSearch__submitBtns{
+    display: flex;
+    justify-content: center;
+}
+
+.tagSearch__apply{
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 270px;
+    height: 50px;
+    border-radius: 15px;
+    background-color: #8B0029;
+    color: white;
+    margin: 0px 10px;
+}
+
+.tagSearch__close{
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    background-color: #F2ECE5;
+    height: 50px;
+    width: 100px;
+    border-radius: 12px;
+    margin: 0px 10px;
+}
+
+.tagSearch__chevron{
+    position: absolute;
+    top: 730px;
+    left: 48vw;
+}
+
+.tagSearch__chevron div{
+    font-size: 30px;
+    color: #8B0029;
+}
+
+
+/*여기부터 JS용*/
+.red{
+    border: 1px solid white;
+    background-color: #8B0029;
+    color: white;
+}
+
+.redBorder{
+    border: 1px solid #8B0029;
+    border-radius: 15px;
+}
+
+
+.Food__container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 60vh;
+}
+
+.Food__mapImg{
+    width: 420px;
+    height: 210px;
+    background-color: rgb(88, 88, 88);
+}
+
+.Food__tag{
+    font-family: var(--font-pretendard),sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    width: 70px;
+    padding: 5px 8px;
+    text-align: center;
+    border: 2px solid rgb(187, 187, 187);
+    border-radius: 20px;
+}
+
+.Food__tag:hover{
+    border: 2px solid #8B0029;
+}
+
+.Food__tagContainer{
+    margin-top: 20px;
+    width: 400px;
+    height: 200px;
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    row-gap: 10px;
+    justify-items: center;
+    align-items: center;
+}
+
+.Food__foodTags{
+    margin-top: 15px;
+    padding: 10px 30px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    row-gap: 20px;
+    width: 350px;
+    height: 20vh;
+    border: 2px solid rgb(177, 177, 177);
+    border-radius: 30px;
+    margin-bottom: 30px;
+    justify-items: center;
+    align-items: center;
+}
+
+.Food__foodTags div{
+    background-color: #F2ECE5;
+    padding: 5px 30px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.Food__foodTags div:hover{
+    background-color: #8B0029;
+    color: aliceblue;
+}
+
+.reset{
+    color: #9D9D9D;
+    font-size: 12px;
+    position: absolute;
+    border: none;
+    background-color: white;
+    top: 0;
+    right: 20px;
+}
+
+.Price__container{
+    height: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.Price__contents{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Price__rangeGraphic{
+    width: 80vw;
+    height: 150px;
+    background-color: darkgray;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+
+.Price__range{
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    width: 80vw;
+    height: 1.5rem; /* thumb의 height와 일치 */
+    margin: 0; /* reset margin */
+    padding: 0; /* reset padding */
+    background-color: transparent;
+    z-index: 5;
+    position: absolute;
+    bottom: -10px;
+}
+
+.Price__range::-webkit-slider-thumb { /* Webkit 기반 브라우저 */
+    appearance: none;
+    width: 1.5rem; /* height와 일치 */
+    height: 1.5rem;
+    border:2px solid #8B0029;
+    border-radius: 50%;
+    background-color: white;
+    transition: all 0.15s ease-in-out;
+    margin-top: calc((0.5rem - 1.5rem) * 0.5);
+}
+
+.Price__range::-webkit-slider-runnable-track { /* Webkit 기반 브라우저 */
+    margin-top: 20px;
+    cursor: pointer;
+    width: 80vw;
+    height: 5px;
+    background-color: #d3d9de;
+    border-radius: 0.25rem;
+}
+
+.Price__range2{
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    width: 80vw;
+    height: 1.5rem; /* thumb의 height와 일치 */
+    margin-top: 0; /* reset margin */
+    padding: 0; /* reset padding */
+    background-color: transparent;
+    z-index: 5;
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+}
+
+.Price__range2::-webkit-slider-thumb { /* Webkit 기반 브라우저 */
+    appearance: none;
+    width: 1.5rem; /* height와 일치 */
+    height: 1.5rem;
+    border:2px solid white;
+    border-radius: 50%;
+    background-color:#8B0029;
+    transition: all 0.15s ease-in-out;
+    margin-top: calc((0.5rem - 1.5rem) * 0.5);
+}
+
+.Price__range2::-webkit-slider-runnable-track { /* Webkit 기반 브라우저 */
+    cursor: pointer;
+    width: 80vw;
+    height: 5px;
+    background-color: #d3d9de;
+    border-radius: 0.25rem;
+}
+
+.Price__rangeNums{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.Price__rangeNums div{
+    font-size: 15px;
+    margin: 18px;
+    color: #9D9D9D;
+}
+
+.Price__selfInput{
+    color: #9D9D9D;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.Price__input{
+    padding: 2px 10px;
+    width: 100px;
+    height: 30px;
+    border-radius: 20px;
+    border: none;
+    background-color: #F0F0F0;
+}
+
+.Price__submit{
+    color: #9D9D9D;
+    background-color: white;
+    border: 2px solid #9D9D9D;
+    margin-left: 20px;
+    height: 30px;
+    padding: 5px 20px;
+    border-radius: 20px;
+}
+
+.Price__submit:hover{
+    color: #8B0029;
+    border: 2px solid #8B0029;
+}
+
+.atmo__carrier{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 560px;
+    display: flex;
+}
+
+.atmo__container{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-items: center;
+    row-gap: 30px;
+    width: 450px;
+}
+
+
+.atmo__item{
+    font-family: var(--font-pretendard),sans-serif;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: 30px;
+    border: 2px solid #d3d9de;
+    border-radius: 20px;
+}
+.atmo__item:hover{
+    border: 2px solid #8B0029;
+}
+
+/* ===== 자동완성 리스트 ===== */
+.suggestion_list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 300px;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+
+  z-index: 9999;
+}
+
+.suggestion_list li {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #8B0029;
+}
+
+.suggestion_list li:hover {
+  background: #F2ECE5;
+}
