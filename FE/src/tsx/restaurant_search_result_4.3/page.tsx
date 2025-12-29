@@ -1,124 +1,164 @@
-"use client"; // 1. 클라이언트 컴포넌트
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation'; // 2. 훅 import
-import axios from 'axios';
-import qs from 'qs'; // npm install qs 필요 (배열 처리를 위해 권장)
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import client from "../../api/client"; // ✅ 너희 client.ts 경로에 맞게 조정
 
-// 타입 정의 (그대로 유지)
-interface Restaurant {
+type Restaurant = {
   id: number;
   name: string;
-  address: string;
-  region_id: number;
-  thumbnail_url: string;
-  // ... (나머지 필드)
-}
+  address?: string | null;
+  rating?: number | null;
+  summary?: string | null;
+  price_min?: number | null;
+  price_max?: number | null;
+  thumbnail_url?: string | null;
+};
 
+export default function RestaurantSearchResultsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-export default function SearchResultsPage() { 
-  
-  const searchParams = useSearchParams(); 
+  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]); //받아올 레스토랑 데이터 저장
-  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+  const q = (params.get("q") || "").trim();
+  const region_id = (params.get("region_id") || "").trim();
+  const tag_ids = (params.get("tag_ids") || "").trim(); // "1,2,3" 형태
+  const price_min = (params.get("price_min") || "").trim();
+  const price_max = (params.get("price_max") || "").trim();
+
+  const [items, setItems] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
 
   useEffect(() => {
-    if (!searchParams) return;
+    const fetchResults = async () => {
+      setLoading(true);
+      setErrMsg("");
 
-    // 1. 빈 객체로 시작
-    const params: any = {};
+      try {
+        // client.ts에 baseURL/헤더(토큰 인터셉터)가 있다면 그대로 자동으로 붙음
+        // 만약 client.ts가 토큰 자동첨부를 안 한다면, 아래 주석의 방법 중 하나로 추가해야 함.
+        // (보통은 client.ts에서 interceptor로 붙이는 게 정석)
 
-    // 2. 지역 ID: 배열이 비어있지 않을 때만 추가
-    const regions = searchParams.getAll('region_id');
-    if (regions.length > 0) {
-        params.region_id = regions;
-    }
-
-    // 3. 태그 ID: 배열이 비어있지 않을 때만 추가
-    const tags = searchParams.getAll('tag_ids'); 
-    if (tags.length > 0) {
-        params.tag_ids = tags;
-    }
-
-    // 4. 가격: 값이 존재하고 '0'이 아닐 때만 추가 (필요에 따라 조건 조절)
-    const minPrice = searchParams.get('price_min');
-    if (minPrice && minPrice !== '0') {
-        params.price_min = minPrice;
-    }
-
-    const maxPrice = searchParams.get('price_max');
-    if (maxPrice && maxPrice !== '0') {
-        params.price_max = maxPrice;
-    }
-
-    const query = searchParams.get("q");
-    if (query?.length != 0){
-        params.q = query
-    }
-
-    if ("q" in params){
-        axios.get("http://152.69.228.114:8000/api/restaurants/search",{
-            headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNSIsImlhdCI6MTc2MzcyNzk0MywiZXhwIjoxNzYzNzMxNTQzLCJzY29wZSI6InVzZXIifQ.0zHPTwC_JgkxyktfkDSOGWHe3F1vT_JT-L8Ar1xfk98` }, // (필요시 주석 해제)
-            params: params
-        })
-        .then((res) => {
-        console.log("✅ 받아온 데이터:", res.data);
-        setRestaurants(res.data);
-    })
-        .catch((err) => {
-        console.error("❌ API 에러:", err);
-    })
-        .finally(() => {
-        setLoading(false);
-    });
-    }
-
-    else{
-    axios.get(`http://152.69.228.114:8000/api/restaurants`, {
-        headers: {Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNSIsImlhdCI6MTc2MzcyNzk0MywiZXhwIjoxNzYzNzMxNTQzLCJzY29wZSI6InVzZXIifQ.0zHPTwC_JgkxyktfkDSOGWHe3F1vT_JT-L8Ar1xfk98` }, // (필요시 주석 해제)
-        params: params,
-        
-        // 6. (중요) 배열 파라미터 직렬화 (FastAPI 호환용)
-        // qs 라이브러리가 없다면 이 부분 지우고 테스트 해보세요.
-        paramsSerializer: (p) => {
-            return qs.stringify(p, { arrayFormat: 'repeat' }) 
+        // 1) 이름 검색
+        if (q) {
+          const res = await client.get("/restaurants/search", { params: { q } });
+          setItems(Array.isArray(res.data) ? res.data : []);
+          return;
         }
-    })
-    .then((res) => {
-        console.log("✅ 받아온 데이터:", res.data);
-        setRestaurants(res.data);
-    })
-    .catch((err) => {
-        console.error("❌ API 에러:", err);
-    })
-    .finally(() => {
-        setLoading(false);
-    });
 
-  }}, [searchParams]); // 7. URL이 바뀔 때마다 재실행
+        // 2) 필터 검색
+        const res = await client.get("/restaurants", {
+          params: {
+            ...(region_id ? { region_id } : {}),
+            ...(tag_ids ? { tag_ids } : {}),
+            ...(price_min ? { price_min } : {}),
+            ...(price_max ? { price_max } : {}),
+          },
+        });
+
+        setItems(Array.isArray(res.data) ? res.data : []);
+      } catch (err: any) {
+        if (err?.response?.status === 401) {
+          setItems([]);
+          setErrMsg("로그인이 만료되었습니다. 다시 로그인해주시기 바랍니다!");
+          // navigate("/login");
+          return;
+        }
+        console.error(err);
+        setItems([]);
+        setErrMsg("검색 결과를 불러오지 못했습니다. 네트워크/서버 상태를 확인해주세요.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [q, region_id, tag_ids, price_min, price_max, navigate]);
 
   return (
-    <main style={{ padding: '20px' }}>
-      <h1>검색 결과</h1>
-      
-      {loading ? (
-          <div>로딩 중...</div>
-      ) : (
-          <div style={{ display: 'grid', gap: '10px' }}>
-            {restaurants.length > 0 ? (
-                restaurants.map((r) => (
-                    <div key={r.id} style={{ border: '1px solid #ccc', padding: '10px' }}>
-                        <img src={r.thumbnail_url}/>
-                        <h3>{r.name}</h3>
-                        <p>주소: {r.address}</p>
-                    </div>
-                ))
-            ) : (
-                <div>검색 결과가 없습니다. (조건을 확인해주세요)</div>
-            )}
+    <main style={{ padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Link to="/restaurant/search">← 뒤로</Link>
+        <h2 style={{ margin: 0 }}>검색 결과</h2>
+      </div>
+
+      <div style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
+        {q ? (
+          <>
+            키워드: <b>{q}</b>
+          </>
+        ) : (
+          <>필터 검색</>
+        )}
+      </div>
+
+      {loading && <p style={{ marginTop: 12 }}>로딩중...</p>}
+      {!loading && errMsg && <p style={{ marginTop: 12, color: "crimson" }}>{errMsg}</p>}
+
+      {!loading && !errMsg && items.length === 0 && <p style={{ marginTop: 12 }}>결과가 없어!</p>}
+
+      <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+        {items.map((r) => (
+          <div
+            key={r.id}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: 14,
+              padding: 12,
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              // TODO: 상세 페이지 라우트 생기면 연결
+              // navigate(`/restaurant/${r.id}`);
+            }}
+          >
+            <div
+              style={{
+                width: 84,
+                height: 84,
+                background: "#f5f5f5",
+                borderRadius: 12,
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
+              {r.thumbnail_url ? (
+                <img
+                  src={r.thumbnail_url}
+                  alt={r.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : null}
+            </div>
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{r.name}</div>
+              <div
+                style={{
+                  fontSize: 12,
+                  opacity: 0.8,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {r.address || "주소 없음"}
+              </div>
+              <div style={{ fontSize: 12, marginTop: 8, opacity: 0.9 }}>
+                ⭐ {r.rating ?? 0} · {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
+              </div>
+              {r.summary ? (
+                <div style={{ fontSize: 12, marginTop: 6, opacity: 0.9 }}>{r.summary}</div>
+              ) : null}
+            </div>
           </div>
-      )}
+        ))}
+      </div>
     </main>
   );
 }

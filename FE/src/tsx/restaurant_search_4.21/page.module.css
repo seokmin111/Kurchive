@@ -100,14 +100,16 @@
 }
 
 .search_container {
-    display: flex;              /* 가로 정렬 */
-    align-items: center;    /* 세로 중앙 */
-    width: 300px;               /* 전체 컨테이너 너비 */
-    border-radius: 30px;
-    overflow: hidden;           /* 둥근 모서리에 버튼 잘림 방지 */
-    background-color: #F2ECE5;
-    margin: 10px auto;
+  position: relative; 
+  display: flex;
+  align-items: center;
+  width: 300px;
+  border-radius: 30px;
+  overflow: visible;
+  background-color: #F2ECE5;
+  margin: 10px auto;
 }
+
 
 .search_btn {
     width: 40px;
@@ -593,4 +595,32 @@
 }
 .atmo__item:hover{
     border: 2px solid #8B0029;
+}
+
+/* ===== 자동완성 리스트 ===== */
+.suggestion_list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 300px;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+
+  z-index: 9999;
+}
+
+.suggestion_list li {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #8B0029;
+}
+
+.suggestion_list li:hover {
+  background: #F2ECE5;
 }

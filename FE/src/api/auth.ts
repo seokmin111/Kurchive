@@ -10,16 +10,17 @@ export type SignupRequest = {
 };
 
 export const signup = (body: SignupRequest) =>
-  client.post("/api/signup", body).then(r => r.data);
+  client.post("/signup", body).then(r => r.data);
 
 export const checkIdDuplicate = (userid: string) =>
-  client.get("/api/signup/check_id", { params: { userid } }).then(r => r.data);
+  client.get("/signup/check_id", { params: { userid } }).then(r => r.data);
 
 export const checkNicknameDuplicate = (nickname: string) =>
-  client.get("/api/check_nickname", { params: { nickname } }).then(r => r.data);
+  client.get("/check_nickname", { params: { nickname } }).then(r => r.data);
 
 export const validateSignupCode = (code: string) =>
-  client.post("/api/validate_code", { code }).then(r => r.data);
+  client.post("/validate_code", { code }).then(r => r.data);
 
+// 백엔드가 ID/PW 대문자 필드를 요구함
 export const login = (ID: string, PW: string) =>
-  client.post("/api/login", { ID, PW }).then(r => r.data);
+  client.post("/login", { ID, PW }).then(r => r.data);

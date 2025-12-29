@@ -5,12 +5,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import axios from 'axios';
 import { useEffect } from 'react';
 
-<<<<<<< HEAD:FE/src/tsx/restaurant_4.0/page.tsx
-
 import RestaurantFormPage from '../restaurant_archive_4.1/page';
-=======
-import RestaurantFormPage from '../restaurant_archive_osm/page';
->>>>>>> b557ffdaecb5c92107c8227ed1763aaecb84715f:FE/src/tsx/restaurant_search/page.tsx
 
 export default function RestaurantSearchPage() {
 

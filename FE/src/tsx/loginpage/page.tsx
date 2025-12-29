@@ -17,18 +17,22 @@ export default function LoginPage() {
   const onSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const res = await login(id, pw);
 
-      // 백엔드가 access_token을 줌
+      // 로그인 성공 여부 확정 체크
+      if (!res?.access_token) {
+        throw new Error("로그인 응답에 access_token이 없습니다.");
+      }
+
       localStorage.setItem("access_token", res.access_token);
 
-      // (선택) 로그인 성공 후 이동
-      const from = (location.state as any)?.from || "/";
-      navigate(from, { replace: true });
+     const from = (location.state as any)?.from || "/main";
+     navigate(from, { replace: true });
+
 
     } catch (err: any) {
+
       // 백엔드가 400이면 "아이디 또는 비밀번호" 메시지 나옴.
       const msg =
         err?.response?.data?.detail ||
@@ -103,4 +107,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
 
