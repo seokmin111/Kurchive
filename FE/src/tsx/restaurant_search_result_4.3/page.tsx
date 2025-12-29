@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import client from "../../api/client"; // ✅ 너희 client.ts 경로에 맞게 조정
+import { useLocation, useNavigate } from "react-router-dom";
+import client from "../../api/client";
+import styles from "./page.module.css"; 
 
 type Restaurant = {
   id: number;
@@ -23,7 +24,7 @@ export default function RestaurantSearchResultsPage() {
 
   const q = (params.get("q") || "").trim();
   const region_id = (params.get("region_id") || "").trim();
-  const tag_ids = (params.get("tag_ids") || "").trim(); // "1,2,3" 형태
+  const tag_ids = (params.get("tag_ids") || "").trim();
   const price_min = (params.get("price_min") || "").trim();
   const price_max = (params.get("price_max") || "").trim();
 
@@ -37,18 +38,12 @@ export default function RestaurantSearchResultsPage() {
       setErrMsg("");
 
       try {
-        // client.ts에 baseURL/헤더(토큰 인터셉터)가 있다면 그대로 자동으로 붙음
-        // 만약 client.ts가 토큰 자동첨부를 안 한다면, 아래 주석의 방법 중 하나로 추가해야 함.
-        // (보통은 client.ts에서 interceptor로 붙이는 게 정석)
-
-        // 1) 이름 검색
         if (q) {
           const res = await client.get("/restaurants/search", { params: { q } });
           setItems(Array.isArray(res.data) ? res.data : []);
           return;
         }
 
-        // 2) 필터 검색
         const res = await client.get("/restaurants", {
           params: {
             ...(region_id ? { region_id } : {}),
@@ -63,7 +58,6 @@ export default function RestaurantSearchResultsPage() {
         if (err?.response?.status === 401) {
           setItems([]);
           setErrMsg("로그인이 만료되었습니다. 다시 로그인해주시기 바랍니다!");
-          // navigate("/login");
           return;
         }
         console.error(err);
@@ -75,86 +69,35 @@ export default function RestaurantSearchResultsPage() {
     };
 
     fetchResults();
-  }, [q, region_id, tag_ids, price_min, price_max, navigate]);
+  }, [q, region_id, tag_ids, price_min, price_max]);
 
   return (
-    <main style={{ padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <Link to="/restaurant/search">← 뒤로</Link>
-        <h2 style={{ margin: 0 }}>검색 결과</h2>
+    <main className={styles.container}>
+      <div className={styles.header}>
+        <span className={styles.back} onClick={() => navigate(-1)}>
+          ←
+        </span>
+        <span className={styles.searchTitle}>검색 결과</span>
       </div>
 
-      <div style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
-        {q ? (
-          <>
-            키워드: <b>{q}</b>
-          </>
-        ) : (
-          <>필터 검색</>
-        )}
-      </div>
+      {loading && <p>로딩중...</p>}
+      {!loading && errMsg && <p className={styles.empty}>{errMsg}</p>}
 
-      {loading && <p style={{ marginTop: 12 }}>로딩중...</p>}
-      {!loading && errMsg && <p style={{ marginTop: 12, color: "crimson" }}>{errMsg}</p>}
+      {!loading && !errMsg && items.length === 0 && (
+        <p className={styles.empty}>검색 결과가 없습니다</p>
+      )}
 
-      {!loading && !errMsg && items.length === 0 && <p style={{ marginTop: 12 }}>결과가 없어!</p>}
-
-      <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+      <div className={styles.list}>
         {items.map((r) => (
-          <div
-            key={r.id}
-            style={{
-              border: "1px solid #eee",
-              borderRadius: 14,
-              padding: 12,
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              // TODO: 상세 페이지 라우트 생기면 연결
-              // navigate(`/restaurant/${r.id}`);
-            }}
-          >
-            <div
-              style={{
-                width: 84,
-                height: 84,
-                background: "#f5f5f5",
-                borderRadius: 12,
-                overflow: "hidden",
-                flexShrink: 0,
-              }}
-            >
-              {r.thumbnail_url ? (
-                <img
-                  src={r.thumbnail_url}
-                  alt={r.name}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              ) : null}
+          <div key={r.id} className={styles.card}>
+            <div className={styles.cardLeft}>
+              <div className={styles.name}>{r.name}</div>
+              <div className={styles.sub}>{r.address || "주소 정보 없음"}</div>
+              <div className={styles.ratingRow}>⭐ {r.rating ?? 0}</div>
             </div>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{r.name}</div>
-              <div
-                style={{
-                  fontSize: 12,
-                  opacity: 0.8,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {r.address || "주소 없음"}
-              </div>
-              <div style={{ fontSize: 12, marginTop: 8, opacity: 0.9 }}>
-                ⭐ {r.rating ?? 0} · {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
-              </div>
-              {r.summary ? (
-                <div style={{ fontSize: 12, marginTop: 6, opacity: 0.9 }}>{r.summary}</div>
-              ) : null}
+            <div className={styles.cardRight}>
+              <span className={styles.cardRightText}>음식 사진</span>
             </div>
           </div>
         ))}

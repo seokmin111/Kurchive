@@ -1,142 +1,114 @@
 .container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #1a1a1a; /* 배경색 (필요에 따라 수정) */
-  color: white;
+  padding: 16px;
+  background: #ffffff;
   min-height: 100vh;
+  font-family: Pretendard, sans-serif;
 }
 
+/* 상단 */
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.title {
-  font-size: 1.8rem;
-  font-weight: bold;
+.back {
+  font-size: 20px;
+  cursor: pointer;
+  color: #8b0029;
 }
 
-.backButton {
-  padding: 0.5rem 1rem;
-  background-color: #333;
-  color: white;
-  text-decoration: none;
-  border-radius: 5px;
-  font-size: 0.9rem;
-  transition: 0.2s;
+.searchTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #8b0029;
 }
 
-.backButton:hover {
-  background-color: #555;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 반응형 그리드 */
-  gap: 20px;
-}
-
-/* 카드 스타일 */
-.card {
-  background-color: #2c2c2c;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  transition: transform 0.2s;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-}
-
-.imageContainer {
-  width: 100%;
-  height: 200px;
-  background-color: #444;
-  overflow: hidden;
-}
-
-.image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.noImage {
-  width: 100%;
-  height: 100%;
+/* 카드 리스트 */
+.list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.card {
+  display: flex;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+
+  /* 카드 높이 통일 */
+  height: 120px;
+}
+
+.cardLeft {
+  flex: 1;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  color: #888;
-}
-
-.info {
-  padding: 1.5rem;
-}
-
-.cardHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
 }
 
 .name {
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8b0029;
+  line-height: 1.2;
 }
 
-.rating {
-    color: #ffd700; /* 금색 */
-    font-weight: bold;
+.sub {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #898989;
+  line-height: 1.2;
 }
 
-.address {
-  color: #aaa;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.price {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #ddd;
-}
-
-.summary {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: #ccc;
-  margin-bottom: 1rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 2줄까지만 표시 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.tags {
+.ratingRow {
+  /* 별점은 아래로 내려서 이미지처럼 */
+  margin-top: auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #8b0029;
 }
 
-.tag {
-  background-color: #444;
-  padding: 4px 8px;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  color: #eee;
+
+/* 별점 */
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #8b0029;
 }
 
-.empty, .error {
+/* 오른쪽 레드 영역 */
+.cardRight {
+  width: 84px;
+  background: #8b0029;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardRightText {
+  color: white;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* 빈 상태 */
+.empty {
+  margin-top: 40px;
   text-align: center;
-  padding: 3rem;
-  font-size: 1.2rem;
-  color: #aaa;
+  color: #898989;
+  font-size: 14px;
 }

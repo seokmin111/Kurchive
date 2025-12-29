@@ -65,7 +65,7 @@ export default function SearchPage() {
   const handleSearch = () => {
     const q = query.trim();
     if (!q) return;
-    navigate(`/restaurant_archive/search/results?q=${encodeURIComponent(q)}`);
+    navigate(`/restaurant/search/results?q=${encodeURIComponent(q)}`);
   };
 
   return (
@@ -115,7 +115,7 @@ export default function SearchPage() {
                 key={item.id}
                 onClick={() => {
                   setQuery(item.name);
-                  navigate(`/restaurant_archive/search/results?q=${encodeURIComponent(item.name)}`);
+                  navigate(`/restaurant/search/results?q=${encodeURIComponent(item.name)}`);
                 }}
                 style={{ cursor: "pointer" }}
               >
@@ -250,8 +250,10 @@ function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps
     if (priceMin != null) params.set("price_min", String(priceMin));
     if (priceMax != null) params.set("price_max", String(priceMax));
 
-    // 결과 페이지에서 이 쿼리스트링으로 /api/restaurants 호출하면 됨
-    window.location.href = `/restaurant_archive/search/results?${params.toString()}`;
+    const navigate = useNavigate();
+
+    navigate(`/restaurant/search/results?${params.toString()}`);
+
   };
 
   useEffect(() => handleScroll(), [activeTag]);
