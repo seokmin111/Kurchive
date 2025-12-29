@@ -19,7 +19,10 @@ export default function RestaurantSearchResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const params = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
 
   const q = (params.get("q") || "").trim();
   const region_id = (params.get("region_id") || "").trim();
@@ -37,18 +40,14 @@ export default function RestaurantSearchResultsPage() {
       setErrMsg("");
 
       try {
-        // client.ts에 baseURL/헤더(토큰 인터셉터)가 있다면 그대로 자동으로 붙음
-        // 만약 client.ts가 토큰 자동첨부를 안 한다면, 아래 주석의 방법 중 하나로 추가해야 함.
-        // (보통은 client.ts에서 interceptor로 붙이는 게 정석)
-
-        // 1) 이름 검색
         if (q) {
-          const res = await client.get("/restaurants/search", { params: { q } });
+          const res = await client.get("/restaurants/search", {
+            params: { q },
+          });
           setItems(Array.isArray(res.data) ? res.data : []);
           return;
         }
 
-        // 2) 필터 검색
         const res = await client.get("/restaurants", {
           params: {
             ...(region_id ? { region_id } : {}),
@@ -68,7 +67,9 @@ export default function RestaurantSearchResultsPage() {
         }
         console.error(err);
         setItems([]);
-        setErrMsg("검색 결과를 불러오지 못했습니다. 네트워크/서버 상태를 확인해주세요.");
+        setErrMsg(
+          "검색 결과를 불러오지 못했습니다. 네트워크/서버 상태를 확인해주세요."
+        );
       } finally {
         setLoading(false);
       }
@@ -95,9 +96,13 @@ export default function RestaurantSearchResultsPage() {
       </div>
 
       {loading && <p style={{ marginTop: 12 }}>로딩중...</p>}
-      {!loading && errMsg && <p style={{ marginTop: 12, color: "crimson" }}>{errMsg}</p>}
+      {!loading && errMsg && (
+        <p style={{ marginTop: 12, color: "crimson" }}>{errMsg}</p>
+      )}
 
-      {!loading && !errMsg && items.length === 0 && <p style={{ marginTop: 12 }}>결과가 없어!</p>}
+      {!loading && !errMsg && items.length === 0 && (
+        <p style={{ marginTop: 12 }}>결과가 없어!</p>
+      )}
 
       <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
         {items.map((r) => (
@@ -137,7 +142,9 @@ export default function RestaurantSearchResultsPage() {
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{r.name}</div>
+              <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>
+                {r.name}
+              </div>
               <div
                 style={{
                   fontSize: 12,
@@ -153,7 +160,9 @@ export default function RestaurantSearchResultsPage() {
                 ⭐ {r.rating ?? 0} · {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
               </div>
               {r.summary ? (
-                <div style={{ fontSize: 12, marginTop: 6, opacity: 0.9 }}>{r.summary}</div>
+                <div style={{ fontSize: 12, marginTop: 6, opacity: 0.9 }}>
+                  {r.summary}
+                </div>
               ) : null}
             </div>
           </div>

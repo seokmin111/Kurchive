@@ -1,62 +1,94 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import style from "./App.module.css";
+import logo from "./assets/logo.png";
 
-import style from "./page.module.css";
-import logo from "../../assets/logo.png";
-import { login } from "../../api/auth";
-
-export default function LoginPage() {
+interface FormData {
+  id: string;
+  password: string;
+}
+function loginPage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
+  const [formData, setFormData] = useState<FormData>({
+    id: "",
+    password: "",
+  });
 
-  const [id, setId] = useState("");
-  const [pw, setPw] = useState("");
-  const [loading, setLoading] = useState(false);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  const onSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+
+    console.log("로그인 시도");
+
+    const loginData = {
+      ID: formData.id,
+      PW: formData.password,
+    };
+
     try {
-      const res = await login(id, pw);
+      const response = await fetch("/api/login", {
+        // POST API 엔드포인트
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-      // 로그인 성공 여부 확정 체크
-      if (!res?.access_token) {
-        throw new Error("로그인 응답에 access_token이 없습니다.");
+        body: JSON.stringify(loginData),
+      });
+      const responseText = await response.text();
+      const responseData = responseText ? JSON.parse(responseText) : {};
+
+      if (response.ok) {
+        // 성공 로직: 토큰 저장 및 처리
+        const token = responseData.access_token;
+
+        if (token) {
+          localStorage.setItem("authToken", token);
+          console.log("로그인 성공! 토큰 저장됨:", token);
+          alert("로그인 성공!");
+
+          navigate("/main");
+        } else {
+          console.warn(
+            "로그인 성공! 응답 본문에 토큰 키가 없습니다. 쿠키/헤더를 확인하세요."
+          );
+          alert("로그인 성공했으나, 토큰을 찾을 수 없습니다.");
+        }
+      } else {
+        // 실패 로직: 오류 메시지 출력 (422 오류 포함)
+        const errorMessage =
+          responseData.message ||
+          (response.status === 422
+            ? "요청 데이터 구조가 잘못되었습니다. (키 불일치)"
+            : response.statusText);
+
+        console.error("로그인 실패:", responseData);
+        alert(`로그인 실패 (${response.status}): ${errorMessage}`);
       }
-
-      localStorage.setItem("access_token", res.access_token);
-
-     const from = (location.state as any)?.from || "/main";
-     navigate(from, { replace: true });
-
-
-    } catch (err: any) {
-
-      // 백엔드가 400이면 "아이디 또는 비밀번호" 메시지 나옴.
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "로그인에 실패했습니다.";
-      alert(msg);
-      console.error(err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("API 통신 오류:", error);
+      alert("서버와 통신하는 중 오류가 발생했습니다.");
     }
   };
 
   return (
     <div className={style.container}>
       <header className={style.header}>베너 이미지</header>
-
       <main className={style.main}>
         <div className={style.logoGroup}>
           <img className={style.logo} src={logo} alt="logo" />
           <div className={style.brandName}>커카이브</div>
           <div className={style.pageTitle}>로그인 페이지</div>
         </div>
-
-        <form className={style.loginForm} onSubmit={onSubmit}>
+        <form className={style.loginForm} onSubmit={handleSubmit}>
           <div className={style.inputGroup}>
             <label htmlFor="id">ID</label>
             <input
@@ -65,11 +97,10 @@ export default function LoginPage() {
               name="id"
               placeholder="Value"
               required
-              value={id}
-              onChange={(e) => setId(e.target.value)}
+              value={formData.id}
+              onChange={handleChange}
             />
           </div>
-
           <div className={style.inputGroup}>
             <label htmlFor="password">Password</label>
             <input
@@ -78,29 +109,22 @@ export default function LoginPage() {
               name="password"
               placeholder="Value"
               required
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
             />
           </div>
-
-          <button type="submit" className={style.loginButton} disabled={loading}>
-            {loading ? "로그인 중..." : "로그인"}
+          <button type="submit" className={style.loginButton}>
+            로그인
           </button>
         </form>
-
         <div className={style.linkGroup}>
           <a href="#">아이디를 잊으셨나요?</a>
           <span className={style.separator}>|</span>
           <a href="#">비밀번호를 잊으셨나요?</a>
         </div>
       </main>
-
       <footer className={style.footer}>
-        <button
-          type="button"
-          className={style.signupButton}
-          onClick={() => navigate("/signup")} // 회원가입 라우트로 수정 가능
-        >
+        <button type="button" className={style.signupButton}>
           회원가입
         </button>
       </footer>
@@ -108,5 +132,4 @@ export default function LoginPage() {
   );
 }
 
-
-
+export default loginPage;
