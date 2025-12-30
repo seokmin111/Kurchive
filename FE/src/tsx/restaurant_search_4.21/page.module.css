@@ -445,82 +445,82 @@
     flex-direction: column;
     align-items: center;
 }
-
-.Price__rangeGraphic{
-    width: 80vw;
-    height: 150px;
-    background-color: darkgray;
-    margin-bottom: 10px;
-    position: relative;
+.Price__rangeGraphic {
+  position: relative;
+  width: 80vw;
+  height: 40px; /* thumb 공간 */
 }
 
-
-.Price__range{
-    appearance: none;
-    cursor: pointer;
-    outline: none;
-    width: 80vw;
-    height: 1.5rem; /* thumb의 height와 일치 */
-    margin: 0; /* reset margin */
-    padding: 0; /* reset padding */
-    background-color: transparent;
-    z-index: 5;
-    position: absolute;
-    bottom: -10px;
+/* 바닥 트랙(회색) */
+.Price__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  background: #d3d9de;
+  border-radius: 999px;
+  z-index: 1;
 }
 
-.Price__range::-webkit-slider-thumb { /* Webkit 기반 브라우저 */
-    appearance: none;
-    width: 1.5rem; /* height와 일치 */
-    height: 1.5rem;
-    border:2px solid #8B0029;
-    border-radius: 50%;
-    background-color: white;
-    transition: all 0.15s ease-in-out;
-    margin-top: calc((0.5rem - 1.5rem) * 0.5);
+/* 선택 구간(버건디) */
+.Price__rangeFill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  background: #8B0029;
+  border-radius: 999px;
+  z-index: 2;
 }
 
-.Price__range::-webkit-slider-runnable-track { /* Webkit 기반 브라우저 */
-    margin-top: 20px;
-    cursor: pointer;
-    width: 80vw;
-    height: 5px;
-    background-color: #d3d9de;
-    border-radius: 0.25rem;
+/* 두 range는 투명하게 올려놓기 */
+.Price__range,
+.Price__range2 {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background: none;
+  -webkit-appearance: none;
+  pointer-events: none; /* 트랙은 클릭 X */
+  z-index: 3;
 }
 
-.Price__range2{
-    appearance: none;
-    cursor: pointer;
-    outline: none;
-    width: 80vw;
-    height: 1.5rem; /* thumb의 height와 일치 */
-    margin-top: 0; /* reset margin */
-    padding: 0; /* reset padding */
-    background-color: transparent;
-    z-index: 5;
-    position: absolute;
-    left: 0;
-    bottom: -10px;
+/* 겹칠 때 max가 위로 */
+.Price__min { z-index: 3; }
+.Price__max { z-index: 4; }
+
+/* 기본 트랙은 “투명” 처리 (우리가 div로 트랙을 깔았으니까) */
+.Price__range::-webkit-slider-runnable-track,
+.Price__range2::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
 }
 
-.Price__range2::-webkit-slider-thumb { /* Webkit 기반 브라우저 */
-    appearance: none;
-    width: 1.5rem; /* height와 일치 */
-    height: 1.5rem;
-    border:2px solid white;
-    border-radius: 50%;
-    background-color:#8B0029;
-    transition: all 0.15s ease-in-out;
-    margin-top: calc((0.5rem - 1.5rem) * 0.5);
+/* thumb만 드래그 가능 */
+.Price__range::-webkit-slider-thumb,
+.Price__range2::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  pointer-events: auto;
+  position: relative;
+  z-index: 10; /* ✅ thumb가 항상 위 */
 }
 
-.Price__range2::-webkit-slider-runnable-track { /* Webkit 기반 브라우저 */
-    cursor: pointer;
-    width: 80vw;
-    height: 5px;
-    background-color: #d3d9de;
-    border-radius: 0.25rem;
+/* min(빈 원) */
+.Price__range::-webkit-slider-thumb {
+  background: white;
+  border: 3px solid #8B0029;
+}
+
+/* max(채운 원) */
+.Price__range2::-webkit-slider-thumb {
+  background: #8B0029;
+  border: 3px solid #8B0029;
 }
 
 .Price__rangeNums{
@@ -534,6 +534,76 @@
     margin: 18px;
     color: #9D9D9D;
 }
+
+.Price__ticks{
+  position: relative;
+  width: 80vw;
+  height: 40px;
+  margin: 12px auto 0;
+}
+
+.Price__tick{
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+
+  font-size: 12px;       /* 줄이기 */
+  line-height: 1;
+  color: rgba(0,0,0,0.35);
+
+  /* 겹치면 잘라서라도 안 겹치게(선택) */
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 수평선 + 눈금 */
+/* 숫자선 컨테이너 */
+.Price__ticksLine{
+  position: relative;
+  width: 80vw;
+  height: 46px;         /* 막대 + 라벨 공간 */
+  margin: 10px auto 0;
+}
+
+/* 작은 세로 막대 */
+.Price__tickBar{
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  width: 2px;
+  background: rgba(0,0,0,0.18);
+  border-radius: 2px;
+}
+
+/* minor tick: 짧게 */
+.Price__tickMinor{
+  height: 8px;
+}
+
+/* major tick: 길게 */
+.Price__tickMajor{
+  height: 14px;
+  background: rgba(0,0,0,0.28);
+}
+
+/* major tick 래퍼 (막대+라벨 같이 움직이게) */
+.Price__tickMajorWrap{
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+/* 숫자 라벨 */
+.Price__tickLabel{
+  margin-top: 18px;    /* 막대 아래로 */
+  font-size: 12px;
+  color: rgba(0,0,0,0.35);
+  white-space: nowrap;
+  text-align: center;
+}
+
 
 .Price__selfInput{
     color: #9D9D9D;
@@ -624,3 +694,67 @@
 .suggestion_list li:hover {
   background: #F2ECE5;
 }
+
+/* 하단 하얀 박스(항상 보이는 핸들) */
+.tagSearchHandle{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 120px;
+  background: #fff;
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+  box-shadow: 0px -10px 30px rgba(0,0,0,0.08);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  z-index: 30;
+  cursor: pointer;
+}
+
+.tagSearchHandle__chevron div{
+  font-size: 30px;
+  color: #8B0029;
+  line-height: 1;
+}
+
+.tagSearchHandle__text{
+  font-family: 'Pretendard', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8B0029;
+  opacity: 0.85;
+}
+
+
+/* 마우스 커서 클릭으로 변환 */
+.tagSearch__tag {
+  cursor: pointer;
+}
+
+.tagSearch__regions span {
+  cursor: pointer;
+}
+
+.specificRegions div {
+  cursor: pointer;
+}
+
+.Food__tag {
+  cursor: pointer;
+}
+
+.Food__foodTags div {
+  cursor: pointer;
+}
+
+.atmo__item {
+  cursor: pointer;
+}
+

@@ -126,7 +126,23 @@ export default function SearchPage() {
         )}
       </div>
 
+      {/* 항상 보이는 하단 하얀 박스(핸들) */}
+      {!isTagSearchOpen && (
+        <div
+          className={styles.tagSearchHandle}
+          onClick={() => setIsTagSearchOpen(true)}
+        >
+          <div className={styles.tagSearchHandle__chevron}>
+            <div><FontAwesomeIcon icon={faChevronUp} /></div>
+            <div><FontAwesomeIcon icon={faChevronUp} /></div>
+          </div>
+          <div className={styles.tagSearchHandle__text}>태그로 검색하기</div>
+        </div>
+      )}
+
+
       <TagSearch isTagSearchOpen={isTagSearchOpen} setIsTagSearchOpen={setIsTagSearchOpen} />
+
     </main>
   );
 }
@@ -147,6 +163,7 @@ type SelectedItem = {
 
 //태그로 검색하기 누르면 올라오는 Modal
 function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps) {
+  const navigate = useNavigate();
   const tags: string[] = ["지역", "음식 종류", "가격", "분위기"];
   const [activeTag, setActiveTag] = useState<string>("");
   const [sellectedTags, setSellectedTags] = useState<SelectedItem[]>([]);
@@ -250,7 +267,7 @@ function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps
     if (priceMin != null) params.set("price_min", String(priceMin));
     if (priceMax != null) params.set("price_max", String(priceMax));
 
-    const navigate = useNavigate();
+  
 
     navigate(`/restaurant/search/results?${params.toString()}`);
 
@@ -535,98 +552,189 @@ interface PriceLimitType {
 }
 
 //가격 Modal
+//가격 Modal (LOG SCALE)
 function Price({ handleAddItem }: PriceLimitType) {
-  const min_price_ref = useRef<HTMLInputElement>(null);
-  const max_price_ref = useRef<HTMLInputElement>(null);
+  // ====== 실제 가격 범위 ======
+  const PRICE_MIN = 1000;
+  const PRICE_MAX = 500000;
+
+  // ====== UI 슬라이더는 "포지션"으로 움직이기 (선형) ======
+  // 값 범위가 클 때 부드럽게 하려면 0~1000 정도가 적당
+  const POS_MIN = 0;
+  const POS_MAX = 1000;
+
+  // 실제 가격 step / 최소 간격(항상 min < max)
+  const STEP_VALUE = 1000;     // 가격 스텝(원)
+  const MIN_GAP_VALUE = 1000;  // 최소 간격(원) - 0이면 같아질 수 있어 UX 별로라 1000 추천
+
+  // 라벨 tick (원하는 대로 바꿔도 됨)
+  const MAJOR_TICKS = [1000, 10000, 100000, 500000]; // 숫자 표시
+  const MINOR_TICKS = [2000, 3000, 4000, 5000, 7000, 20000, 30000, 40000, 50000, 200000, 300000, 400000]; // 막대만
+
+
+  // ====== 로그 변환 준비 ======
+  const LOG_MIN = Math.log(PRICE_MIN);
+  const LOG_MAX = Math.log(PRICE_MAX);
+
+  // pos(0~POS_MAX) -> 실제 가격(로그)
+  const posToValue = (pos: number) => {
+    const t = (pos - POS_MIN) / (POS_MAX - POS_MIN); // 0~1
+    const raw = Math.exp(LOG_MIN + t * (LOG_MAX - LOG_MIN));
+    const stepped = Math.round(raw / STEP_VALUE) * STEP_VALUE;
+    return Math.min(PRICE_MAX, Math.max(PRICE_MIN, stepped));
+  };
+
+  // 실제 가격 -> pos(0~POS_MAX)
+  const valueToPos = (value: number) => {
+    const v = Math.min(PRICE_MAX, Math.max(PRICE_MIN, value));
+    const t = (Math.log(v) - LOG_MIN) / (LOG_MAX - LOG_MIN); // 0~1
+    return Math.round(POS_MIN + t * (POS_MAX - POS_MIN));
+  };
+
+  // ====== 상태는 "실제 가격"으로 관리(서버/필터용) ======
+  const [minVal, setMinVal] = useState<number>(PRICE_MIN);
+  const [maxVal, setMaxVal] = useState<number>(PRICE_MAX);
 
   const [minMaxPrice, setMinMaxPrice] = useState<SelectedItem>({
     type: "price",
     id: null,
     name: "default",
-    priceMin: 1000,
-    priceMax: 500000,
+    priceMin: PRICE_MIN,
+    priceMax: PRICE_MAX,
   });
 
-  const handleMinMaxPrice = () => {
-    const minV = Number(min_price_ref.current?.value ?? 1000);
-    const maxV = Number(max_price_ref.current?.value ?? 500000);
+  // 표시용(콤마)
+  const fmt = (n: number) => n.toLocaleString("ko-KR");
 
+  // ====== 드래그 핸들러(포지션 -> 값 변환 + clamp) ======
+  const onMinPosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextPos = Number(e.target.value);
+    const nextVal = posToValue(nextPos);
+    // min은 max - gap 넘을 수 없음
+    setMinVal(Math.min(nextVal, maxVal - MIN_GAP_VALUE));
+  };
+
+  const onMaxPosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextPos = Number(e.target.value);
+    const nextVal = posToValue(nextPos);
+    // max는 min + gap보다 작을 수 없음
+    setMaxVal(Math.max(nextVal, minVal + MIN_GAP_VALUE));
+  };
+
+  // ====== 표시용 SelectedItem 업데이트 ======
+  useEffect(() => {
     setMinMaxPrice({
       type: "price",
       id: null,
-      name: `${minV}원 ~ ${maxV}원`,
-      priceMin: minV,
-      priceMax: maxV,
+      name: `${fmt(minVal)}원 ~ ${fmt(maxVal)}원`,
+      priceMin: minVal,
+      priceMax: maxVal,
     });
-  };
+  }, [minVal, maxVal]);
 
   const handleSubmitPrice = () => {
-    // 최신값 반영 후 바로 추가하려면, 현재 input 값으로 만든 객체를 즉시 add
-    const minV = Number(min_price_ref.current?.value ?? 1000);
-    const maxV = Number(max_price_ref.current?.value ?? 500000);
     const item: SelectedItem = {
       type: "price",
       id: null,
-      name: `${minV}원 ~ ${maxV}원`,
-      priceMin: minV,
-      priceMax: maxV,
+      name: `${fmt(minVal)}원 ~ ${fmt(maxVal)}원`,
+      priceMin: minVal,
+      priceMax: maxVal,
     };
     setMinMaxPrice(item);
     handleAddItem(item);
   };
 
+  // ====== fill 바 계산(%): "pos 기준" ======
+  const minPos = valueToPos(minVal);
+  const maxPos = valueToPos(maxVal);
+  const minPct = (minPos / POS_MAX) * 100;
+  const maxPct = (maxPos / POS_MAX) * 100;
+
+  // tick 위치(%): tick 값 -> pos -> %
+  const tickLeftPct = (v: number) => (valueToPos(v) / POS_MAX) * 100;
+
   return (
     <div className={styles.Price__container}>
       <div className={styles.Price__contents}>
         <div className={styles.Price__rangeGraphic}>
-          <input
-            type="range"
-            step={10000}
-            min={1000}
-            max={500000}
-            className={styles.Price__range}
-            ref={min_price_ref}
-            onChange={handleMinMaxPrice}
+          {/* 바닥 트랙 */}
+          <div className={styles.Price__track} />
+
+          {/* 선택 구간만 버건디 */}
+          <div
+            className={styles.Price__rangeFill}
+            style={{ left: `${minPct}%`, width: `${maxPct - minPct}%` }}
           />
 
+          {/* min thumb (빈 원) : value는 "pos" */}
           <input
             type="range"
-            step={10000}
-            min={1000}
-            max={500000}
-            className={styles.Price__range2}
-            ref={max_price_ref}
-            onChange={handleMinMaxPrice}
+            min={POS_MIN}
+            max={POS_MAX}
+            step={1}
+            value={valueToPos(minVal)}
+            onChange={onMinPosChange}
+            className={`${styles.Price__range} ${styles.Price__min}`}
+          />
+
+          {/* max thumb (채운 원) : value는 "pos" */}
+          <input
+            type="range"
+            min={POS_MIN}
+            max={POS_MAX}
+            step={1}
+            value={valueToPos(maxVal)}
+            onChange={onMaxPosChange}
+            className={`${styles.Price__range2} ${styles.Price__max}`}
           />
         </div>
 
-        <div className={styles.Price__rangeNums}>
-          <div>1,000</div>
-          <div>10,000</div>
-          <div>20,000</div>
-          <div>30,000</div>
-          <div>40,000</div>
-          <div>500,000</div>
-        </div>
+        {/* tick 라벨 (로그 스케일에 맞춰 위치 계산) */}
+        <div className={styles.Price__ticksLine}>
+        {/* minor: 막대만 */}
+        {MINOR_TICKS.map((v) => (
+          <div
+            key={`m-${v}`}
+            className={`${styles.Price__tickBar} ${styles.Price__tickMinor}`}
+            style={{ left: `${tickLeftPct(v)}%` }}
+          />
+        ))}
+
+        {/* major: 막대 + 숫자 */}
+        {MAJOR_TICKS.map((v) => (
+          <div
+            key={`M-${v}`}
+            className={styles.Price__tickMajorWrap}
+            style={{ left: `${tickLeftPct(v)}%` }}
+          >
+            <div className={`${styles.Price__tickBar} ${styles.Price__tickMajor}`} />
+            <div className={styles.Price__tickLabel}>{fmt(v)}</div>
+          </div>
+        ))}
+      </div>
+
+
 
         <div>
           <div className={styles.Price__selfInput}>직접 입력</div>
           <input
             type="text"
-            placeholder="1000"
-            value={minMaxPrice.priceMin ?? 1000}
+            value={fmt(minVal)}
             className={styles.Price__input}
             readOnly
           />
           <span> ~ </span>
           <input
             type="text"
-            placeholder="500,000"
-            value={minMaxPrice.priceMax ?? 500000}
+            value={fmt(maxVal)}
             className={styles.Price__input}
             readOnly
           />
-          <button className={styles.Price__submit} type="button" onClick={handleSubmitPrice}>
+          <button
+            className={styles.Price__submit}
+            type="button"
+            onClick={handleSubmitPrice}
+          >
             적용
           </button>
         </div>
@@ -634,6 +742,7 @@ function Price({ handleAddItem }: PriceLimitType) {
     </div>
   );
 }
+
 
 //분위기 Modal
 function Atmosphere({ handleAddItem }: HandleSellectedTagsType) {
