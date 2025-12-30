@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
-
+import client from "../../api/client"; // 
 
 interface FormData {
   id: string;
   password: string;
 }
-function loginPage() {
+
+export default function LoginPage() { 
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<FormData>({
@@ -17,65 +18,41 @@ function loginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    console.log("로그인 시도");
-
-    const loginData = {
-      ID: formData.id,
-      PW: formData.password,
-    };
-
     try {
-      const response = await fetch("/api/login", {
-        // POST API 엔드포인트
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify(loginData),
+      // 백엔드 스펙 맞추기: ID/PW (대문자)
+      const res = await client.post("/login", {
+        ID: formData.id,
+        PW: formData.password,
       });
-      const responseText = await response.text();
-      const responseData = responseText ? JSON.parse(responseText) : {};
 
-      if (response.ok) {
-        // 성공 로직: 토큰 저장 및 처리
-        const token = responseData.access_token;
+      const token = res.data?.access_token;
+      if (!token) throw new Error("access_token 없음");
 
-        if (token) {
-          localStorage.setItem("authToken", token);
-          console.log("로그인 성공! 토큰 저장됨:", token);
-          alert("로그인 성공!");
+      // 프로젝트 전체에서 이 키로 통일(인터셉터가 이거 읽음)
+      localStorage.setItem("access_token", token);
 
-          navigate("/main");
-        } else {
-          console.warn(
-            "로그인 성공! 응답 본문에 토큰 키가 없습니다. 쿠키/헤더를 확인하세요."
-          );
-          alert("로그인 성공했으나, 토큰을 찾을 수 없습니다.");
-        }
+      alert("로그인 성공!");
+      navigate("/main"); 
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+
+      // 422면 “요청 형식 틀림” (대부분 키 불일치)
+      if (status === 422) {
+        alert("로그인 요청 형식이 잘못됐어(422). ID/PW 키 확인해줘.");
+      } else if (status === 401) {
+        alert("아이디/비밀번호가 틀렸습니다.");
       } else {
-        // 실패 로직: 오류 메시지 출력 (422 오류 포함)
-        const errorMessage =
-          responseData.message ||
-          (response.status === 422
-            ? "요청 데이터 구조가 잘못되었습니다. (키 불일치)"
-            : response.statusText);
-
-        console.error("로그인 실패:", responseData);
-        alert(`로그인 실패 (${response.status}): ${errorMessage}`);
+        alert(detail || "로그인 실패");
       }
-    } catch (error) {
-      console.error("API 통신 오류:", error);
-      alert("서버와 통신하는 중 오류가 발생했습니다.");
+
+      console.error(err);
     }
   };
 
@@ -85,10 +62,10 @@ function loginPage() {
       <main className={style.main}>
         <div className={style.logoGroup}>
           <img className={style.logo} src="/curson_logo.png" alt="logo" />
-
           <div className={style.brandName}>커카이브</div>
           <div className={style.pageTitle}>로그인 페이지</div>
         </div>
+
         <form className={style.loginForm} onSubmit={handleSubmit}>
           <div className={style.inputGroup}>
             <label htmlFor="id">ID</label>
@@ -102,6 +79,7 @@ function loginPage() {
               onChange={handleChange}
             />
           </div>
+
           <div className={style.inputGroup}>
             <label htmlFor="password">Password</label>
             <input
@@ -114,16 +92,19 @@ function loginPage() {
               onChange={handleChange}
             />
           </div>
+
           <button type="submit" className={style.loginButton}>
             로그인
           </button>
         </form>
+
         <div className={style.linkGroup}>
           <a href="#">아이디를 잊으셨나요?</a>
           <span className={style.separator}>|</span>
           <a href="#">비밀번호를 잊으셨나요?</a>
         </div>
       </main>
+
       <footer className={style.footer}>
         <button type="button" className={style.signupButton}>
           회원가입
@@ -132,5 +113,3 @@ function loginPage() {
     </div>
   );
 }
-
-export default loginPage;
