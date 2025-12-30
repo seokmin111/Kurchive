@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import style from "./App.module.css";
-import logo from "./assets/logo.png";
+import style from "./page.module.css";
+
 
 interface FormData {
   id: string;
@@ -84,7 +84,8 @@ function loginPage() {
       <header className={style.header}>베너 이미지</header>
       <main className={style.main}>
         <div className={style.logoGroup}>
-          <img className={style.logo} src={logo} alt="logo" />
+          <img className={style.logo} src="/curson_logo.png" alt="logo" />
+
           <div className={style.brandName}>커카이브</div>
           <div className={style.pageTitle}>로그인 페이지</div>
         </div>
