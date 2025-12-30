@@ -20,7 +20,10 @@ export default function RestaurantSearchResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const params = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
 
   const q = (params.get("q") || "").trim();
   const region_id = (params.get("region_id") || "").trim();
@@ -39,7 +42,9 @@ export default function RestaurantSearchResultsPage() {
 
       try {
         if (q) {
-          const res = await client.get("/restaurants/search", { params: { q } });
+          const res = await client.get("/restaurants/search", {
+            params: { q },
+          });
           setItems(Array.isArray(res.data) ? res.data : []);
           return;
         }
@@ -62,7 +67,9 @@ export default function RestaurantSearchResultsPage() {
         }
         console.error(err);
         setItems([]);
-        setErrMsg("검색 결과를 불러오지 못했습니다. 네트워크/서버 상태를 확인해주세요.");
+        setErrMsg(
+          "검색 결과를 불러오지 못했습니다. 네트워크/서버 상태를 확인해주세요."
+        );
       } finally {
         setLoading(false);
       }
@@ -82,7 +89,6 @@ export default function RestaurantSearchResultsPage() {
 
       {loading && <p>로딩중...</p>}
       {!loading && errMsg && <p className={styles.empty}>{errMsg}</p>}
-
       {!loading && !errMsg && items.length === 0 && (
         <p className={styles.empty}>검색 결과가 없습니다</p>
       )}
@@ -93,7 +99,16 @@ export default function RestaurantSearchResultsPage() {
             <div className={styles.cardLeft}>
               <div className={styles.name}>{r.name}</div>
               <div className={styles.sub}>{r.address || "주소 정보 없음"}</div>
-              <div className={styles.ratingRow}>⭐ {r.rating ?? 0}</div>
+
+              <div className={styles.ratingRow}>
+                ⭐ {r.rating ?? 0}
+                {" · "}
+                {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
+              </div>
+
+              {r.summary ? (
+                <div className={styles.sub}>{r.summary}</div>
+              ) : null}
             </div>
 
             <div className={styles.cardRight}>
