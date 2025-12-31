@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // pages
 import MainPage from "./MainPage";
 import Login from "./tsx/loginpage/page";
+import SignupPage from "./tsx/signUp_1.2/page"
 
 import RestaurantPage from "./tsx/restaurant_4.0/page";
 import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
@@ -25,6 +26,9 @@ export default function App() {
 
       {/* 로그인 */}
       <Route path="/login" element={<Login />} />
+
+      {/* 회원가입 */}
+       <Route path="/signup" element={<SignupPage />} />
 
       {/* 메인 이후 페이지들 */}
       <Route path="/main" element={<MainPage />} />

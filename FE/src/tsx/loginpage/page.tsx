@@ -106,10 +106,15 @@ export default function LoginPage() {
       </main>
 
       <footer className={style.footer}>
-        <button type="button" className={style.signupButton}>
+        <button
+          type="button"
+          className={style.signupButton}
+          onClick={() => navigate("/signup")}
+        >
           회원가입
         </button>
       </footer>
+
     </div>
   );
 }
