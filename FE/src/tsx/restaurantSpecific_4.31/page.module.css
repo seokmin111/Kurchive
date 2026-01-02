@@ -1,0 +1,129 @@
+.main{
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.navbar{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-bottom: 70px;
+}
+
+.nav_title{
+    color:#8B0029;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.upper_boxes{
+    display: flex;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.leftBox{
+    background-color: #f2ece5;
+    height: 150px;
+    width: 250px;
+    border-radius: 10px;
+    border: 1px dotted black;
+    margin-right: 20px;
+}
+
+.rightBox{
+    border: 1px dotted black;
+    height: 150px;
+    width: 80%;
+    border-radius: 10px;
+}
+
+.recommend{
+    margin-left: 50%;
+    display: flex;
+}
+
+.rec_point{
+    color: #8B0029;
+    font-weight: 700;
+    margin-right: 10px;
+}
+
+.tags{
+    width: 100%;
+    margin-top: 50px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.tags_title{
+    margin-right: 30px;
+    font-weight: 700;
+}
+
+.tags_tag{
+    margin-left: 15px;
+    background-color: #f2ece5;
+    padding: 8px;
+    border-radius: 10px;
+}
+
+.line{
+    height: 1px;
+    width: 100%;
+    background-color: black;
+    margin-bottom: 20px;
+}
+
+.middle_container{
+    width: 100%;
+}
+
+.rec_menus{
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.rec_menus_title{
+    margin-right: 0px;
+    font-weight: 700;
+}
+
+.rec_menus_menu{
+    margin-left: 15px;
+    background-color: #f2ece5;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px dotted black;
+}
+
+.rec_menus_pictures{
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    width: 100%;
+    white-space: nowrap;
+    overflow-x: auto;
+}
+
+.rec_menus_pictures_picture{
+    width: 200px;
+    height: 200px;
+    background-color: #8B0029;
+    margin-left: 20px;
+    flex-shrink: 0;
+    color: white;
+    border-radius: 15px;
+}
+
+.lower_box{
+    width: 100%;
+    height: 300px;
+    border: 1px dotted black;
+    border-radius: 20px;
+}

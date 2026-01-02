@@ -1,0 +1,200 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 812px;
+  width: 375px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  margin: 0 auto; /* 중앙 정렬 */
+}
+.logo {
+  width: 56px;
+  height: 56px;
+}
+.header {
+  width: 100%;
+  height: 96px;
+  background-color: #f2ece5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+}
+.main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 30px;
+}
+.footer {
+  width: 375px;
+  height: 96px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.logoGroup {
+  margin-top: 45px;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 20px;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 5px;
+}
+
+.brandName {
+  font-size: 30px;
+  color: #8b0029;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+.pageTitle {
+  font-size: 18px;
+  color: #a7a7a7; /* 진한 버건디 색상 */
+  font-weight: bold;
+  margin-top: 5px;
+  margin-bottom: 20px; /* 폼과의 간격 */
+}
+
+.loginForm {
+  width: 100%; /* 메인 콘텐츠 너비에 맞춤 (375px - 60px) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inputGroup {
+  width: 300px;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.lastGroup{
+  margin-top: -40px;
+}
+
+.inputGroup label {
+  position: absolute;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 14px;
+  top: -20px;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) inset;
+}
+
+.inputGroup button{
+  border: none;
+  border-radius: 3px;
+  position: absolute;
+  right: 0;
+  bottom: -30px;
+}
+
+.inputGroup button:hover{
+  background-color: #8b0021;
+  color: white;
+}
+
+.loginButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #8b0021;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.linkGroup {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* 중앙 정렬을 위해 너비 확보 */
+}
+
+.linkGroup a {
+  color: #555;
+  text-decoration: none;
+}
+
+.separator {
+  margin: 0 10px;
+  color: #ccc;
+}
+.signupButton {
+  width: 65%;
+  padding: 12px;
+  background-color: #f2ece5; /* 연한 배경색 */
+  color: #555;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pw_alert{
+  color: #8b0021;
+  font-size: 10px;
+  position: absolute;
+  right: 0px;
+  bottom: -18px;
+}
+
+.codeTitle{
+  margin-top: 0px;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.codeBox{
+  width: 300px;
+  height: 50px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.codeCheck{
+  border: none;
+  border-radius: 3px;
+}
+
+.codeCheck:hover{
+  background-color: #8b0021;
+  color: white;
+}
+
+.submit{
+  width: 250px;
+  height: 40px;
+  border: none;
+  color: #616161;
+  background-color: #f2ece5;
+  border-radius: 7px;
+}

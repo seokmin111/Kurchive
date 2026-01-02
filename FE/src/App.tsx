@@ -13,18 +13,9 @@ import MyPage from "./tsx/mypage_2.0/page.tsx"
 import MyInfoEdit from "./tsx/myInfoEdit_2.1/page.tsx"
 import Login from "./tsx/loginpage/page.tsx"
 import QuitPage from "./tsx/quitpage_2.3/page.tsx";
-
-<<<<<<< HEAD
 import MainPage from "./MainPage.tsx";
-=======
-import RecipeEditPage from "./tsx/recipeadding_osm/page.tsx";
-import RestaurantFormPage from "./tsx/restaurant_archive_osm/page.tsx";
-import RestaurantSearchPage from "./tsx/restaurant_search/page.tsx";
-import SearchPage from "./tsx/restaurant_search_process/page.tsx";
-import RecipeSearchPage from "./tsx/recipe_search/page.tsx";
-import MyActivityPage from "./tsx/myactivity_pg/page.tsx";
-import QuitPage from "./tsx/quitpage_pg/page.tsx";
->>>>>>> b557ffdaecb5c92107c8227ed1763aaecb84715f
+import SignIn from "./tsx/signin_1.2/page.tsx"
+import RestaurantSpecific from "./tsx/restaurantSpecific_4.31/page.tsx";
 
 export default function App() {
   return (
@@ -40,22 +31,23 @@ export default function App() {
         <Route path="/restaurant" element={<RestaurantPage/>} />
         <Route path="/restaurant/archive" element={<RestaurantArchivePage></RestaurantArchivePage>}></Route>
         <Route path="/restaurant/search" element={<SearchPage></SearchPage>}></Route>
+        <Route path="/restaurant/specific" element={<RestaurantSpecific></RestaurantSpecific>}></Route>
+        
 
         {/*레시피 관련 라우팅*/}
         <Route path="/recipe/archive" element={<RecipeArchivePage/>}/>
         <Route path="/recipe" element={<RecipeSearchPage></RecipeSearchPage>}></Route>
         
         
-
-
         {/*마이페이지 관련 라우팅*/}
         <Route path="/mypage" element={<MyPage></MyPage>}></Route>
         <Route path="/myactivity" element={<MyActivityPage />} />
         <Route path="/quitpage" element={<QuitPage />} />
         <Route path="/infoedit" element={<MyInfoEdit></MyInfoEdit>}></Route>
 
-        {/*로그인*/}
+        {/*로그인 및 회원가입*/}
         <Route path="/login" element={<Login></Login>}></Route>
+        <Route path="/signin" element={<SignIn></SignIn>}></Route>
 
         {/*디버깅용*/}
         <Route path="*" element={<div style={{fontSize: 50, color: 'red'}}>경로 없음 (404)</div>} />
