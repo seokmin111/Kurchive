@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "http://152.69.228.114:8000/api",
+  baseURL: "http://146.56.117.219:8000/api",
   withCredentials: false, // 쿠키 안 쓰면 false가 안전
   timeout: 10000,         // 멈춘 것처럼 보이는 거 방지
 });

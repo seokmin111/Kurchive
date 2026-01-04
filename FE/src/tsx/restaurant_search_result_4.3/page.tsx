@@ -95,7 +95,17 @@ export default function RestaurantSearchResultsPage() {
 
       <div className={styles.list}>
         {items.map((r) => (
-          <div key={r.id} className={styles.card}>
+          <div
+            key={r.id}
+            className={styles.card}
+            onClick={() => navigate(`/restaurant/detail/${r.id}`)} // ✅ 추가
+            style={{ cursor: "pointer" }} // ✅ 선택(UX)
+            role="button"                 // ✅ 선택(접근성)
+            tabIndex={0}                  // ✅ 선택(키보드)
+            onKeyDown={(e) => {           // ✅ 선택(Enter로 이동)
+              if (e.key === "Enter") navigate(`/restaurant/detail/${r.id}`);
+            }}
+          >
             <div className={styles.cardLeft}>
               <div className={styles.name}>{r.name}</div>
               <div className={styles.sub}>{r.address || "주소 정보 없음"}</div>
@@ -106,9 +116,7 @@ export default function RestaurantSearchResultsPage() {
                 {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
               </div>
 
-              {r.summary ? (
-                <div className={styles.sub}>{r.summary}</div>
-              ) : null}
+              {r.summary ? <div className={styles.sub}>{r.summary}</div> : null}
             </div>
 
             <div className={styles.cardRight}>
@@ -117,6 +125,7 @@ export default function RestaurantSearchResultsPage() {
           </div>
         ))}
       </div>
+
     </main>
   );
 }

@@ -8,3 +8,8 @@
   background-color: white;
   border-top: 1px solid transparent;
 }
+:global(html),
+:global(body) {
+  overflow: visible !important; /* 또는 auto */
+  height: auto !important; /* 100%로 고정된 높이를 풀어줍니다 */
+}

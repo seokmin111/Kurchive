@@ -1,3 +1,4 @@
+//App.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // RecipeEditPage 연결 → 파일 출처 명시
