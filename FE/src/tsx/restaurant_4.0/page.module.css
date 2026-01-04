@@ -302,7 +302,7 @@
 
 }
 
-.recipe_container {
+.restaurant_container {
     display: grid;
     grid-template-columns: repeat(5, 200px);
     grid-template-rows: repeat(2, 100px);
@@ -323,7 +323,7 @@
 
 }
 
-.recipe_item {
+.restaurant_item {
     flex: 0 0 auto;        /* 아이템 크기 고정 (늘어나지 않게) */
     width: 200px;
     height: 100px;
@@ -336,23 +336,23 @@
     justify-content: center;
 }
 
-.recipe_contentCarrier{
+.restaurant_contentCarrier{
     margin-left: 15px;
 }
 
-.recipe_descriptionContainer{
+.restaurant_descriptionContainer{
     display: flex;
     align-items: center;
 }
 
-.recipe_text{
+.restaurant_text{
     font-family: var(--font-pretendard), sans-serif;
     color: #8B0029;
     font-size: 8px;
     margin-bottom: 10px;
 }
 
-.recipe_title{
+.restaurant_title{
     font-family: var(--font-pretendard), sans-serif;
     font-weight: 800;
     color: #8B0029;
@@ -363,7 +363,7 @@
 
 
 
-.recipe_icon{
+.restaurant_icon{
     width: 30px;
     height: 30px;
     background-color: #8B0029;
@@ -371,13 +371,13 @@
     margin-right: 10px;
 }
 
-.recipe_reviewer{
+.restaurant_reviewer{
     font-family: var(--font-pretendard), sans-serif;
     font-size: 15px;
     color: rgb(141, 141, 141);
 }
 
-.recipe_date{
+.restaurant_date{
     font-family: var(--font-pretendard), sans-serif;
     font-weight: 100;
     font-size: 12px;

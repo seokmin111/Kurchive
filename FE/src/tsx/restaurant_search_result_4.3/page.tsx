@@ -1,124 +1,122 @@
-"use client"; // 1. 클라이언트 컴포넌트
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation'; // 2. 훅 import
-import axios from 'axios';
-import qs from 'qs'; // npm install qs 필요 (배열 처리를 위해 권장)
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import client from "../../api/client";
+import styles from "./page.module.css"; 
 
-// 타입 정의 (그대로 유지)
-interface Restaurant {
+type Restaurant = {
   id: number;
   name: string;
-  address: string;
-  region_id: number;
-  thumbnail_url: string;
-  // ... (나머지 필드)
-}
+  address?: string | null;
+  rating?: number | null;
+  summary?: string | null;
+  price_min?: number | null;
+  price_max?: number | null;
+  thumbnail_url?: string | null;
+};
 
+export default function RestaurantSearchResultsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-export default function SearchResultsPage() { 
-  
-  const searchParams = useSearchParams(); 
+  const params = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search]
+  );
 
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]); //받아올 레스토랑 데이터 저장
-  const [loading, setLoading] = useState(true); // 로딩 상태 추가
+  const q = (params.get("q") || "").trim();
+  const region_id = (params.get("region_id") || "").trim();
+  const tag_ids = (params.get("tag_ids") || "").trim();
+  const price_min = (params.get("price_min") || "").trim();
+  const price_max = (params.get("price_max") || "").trim();
+
+  const [items, setItems] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
 
   useEffect(() => {
-    if (!searchParams) return;
+    const fetchResults = async () => {
+      setLoading(true);
+      setErrMsg("");
 
-    // 1. 빈 객체로 시작
-    const params: any = {};
-
-    // 2. 지역 ID: 배열이 비어있지 않을 때만 추가
-    const regions = searchParams.getAll('region_id');
-    if (regions.length > 0) {
-        params.region_id = regions;
-    }
-
-    // 3. 태그 ID: 배열이 비어있지 않을 때만 추가
-    const tags = searchParams.getAll('tag_ids'); 
-    if (tags.length > 0) {
-        params.tag_ids = tags;
-    }
-
-    // 4. 가격: 값이 존재하고 '0'이 아닐 때만 추가 (필요에 따라 조건 조절)
-    const minPrice = searchParams.get('price_min');
-    if (minPrice && minPrice !== '0') {
-        params.price_min = minPrice;
-    }
-
-    const maxPrice = searchParams.get('price_max');
-    if (maxPrice && maxPrice !== '0') {
-        params.price_max = maxPrice;
-    }
-
-    const query = searchParams.get("q");
-    if (query?.length != 0){
-        params.q = query
-    }
-
-    if ("q" in params){
-        axios.get("http://152.69.228.114:8000/api/restaurants/search",{
-            headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNSIsImlhdCI6MTc2MzcyNzk0MywiZXhwIjoxNzYzNzMxNTQzLCJzY29wZSI6InVzZXIifQ.0zHPTwC_JgkxyktfkDSOGWHe3F1vT_JT-L8Ar1xfk98` }, // (필요시 주석 해제)
-            params: params
-        })
-        .then((res) => {
-        console.log("✅ 받아온 데이터:", res.data);
-        setRestaurants(res.data);
-    })
-        .catch((err) => {
-        console.error("❌ API 에러:", err);
-    })
-        .finally(() => {
-        setLoading(false);
-    });
-    }
-
-    else{
-    axios.get(`http://152.69.228.114:8000/api/restaurants`, {
-        headers: {Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNSIsImlhdCI6MTc2MzcyNzk0MywiZXhwIjoxNzYzNzMxNTQzLCJzY29wZSI6InVzZXIifQ.0zHPTwC_JgkxyktfkDSOGWHe3F1vT_JT-L8Ar1xfk98` }, // (필요시 주석 해제)
-        params: params,
-        
-        // 6. (중요) 배열 파라미터 직렬화 (FastAPI 호환용)
-        // qs 라이브러리가 없다면 이 부분 지우고 테스트 해보세요.
-        paramsSerializer: (p) => {
-            return qs.stringify(p, { arrayFormat: 'repeat' }) 
+      try {
+        if (q) {
+          const res = await client.get("/restaurants/search", {
+            params: { q },
+          });
+          setItems(Array.isArray(res.data) ? res.data : []);
+          return;
         }
-    })
-    .then((res) => {
-        console.log("✅ 받아온 데이터:", res.data);
-        setRestaurants(res.data);
-    })
-    .catch((err) => {
-        console.error("❌ API 에러:", err);
-    })
-    .finally(() => {
-        setLoading(false);
-    });
 
-  }}, [searchParams]); // 7. URL이 바뀔 때마다 재실행
+        const res = await client.get("/restaurants", {
+          params: {
+            ...(region_id ? { region_id } : {}),
+            ...(tag_ids ? { tag_ids } : {}),
+            ...(price_min ? { price_min } : {}),
+            ...(price_max ? { price_max } : {}),
+          },
+        });
+
+        setItems(Array.isArray(res.data) ? res.data : []);
+      } catch (err: any) {
+        if (err?.response?.status === 401) {
+          setItems([]);
+          setErrMsg("로그인이 만료되었습니다. 다시 로그인해주시기 바랍니다!");
+          return;
+        }
+        console.error(err);
+        setItems([]);
+        setErrMsg(
+          "검색 결과를 불러오지 못했습니다. 네트워크/서버 상태를 확인해주세요."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [q, region_id, tag_ids, price_min, price_max]);
 
   return (
-    <main style={{ padding: '20px' }}>
-      <h1>검색 결과</h1>
-      
-      {loading ? (
-          <div>로딩 중...</div>
-      ) : (
-          <div style={{ display: 'grid', gap: '10px' }}>
-            {restaurants.length > 0 ? (
-                restaurants.map((r) => (
-                    <div key={r.id} style={{ border: '1px solid #ccc', padding: '10px' }}>
-                        <img src={r.thumbnail_url}/>
-                        <h3>{r.name}</h3>
-                        <p>주소: {r.address}</p>
-                    </div>
-                ))
-            ) : (
-                <div>검색 결과가 없습니다. (조건을 확인해주세요)</div>
-            )}
-          </div>
+    <main className={styles.container}>
+      <div className={styles.header}>
+        <span className={styles.back} onClick={() => navigate(-1)}>
+          ←
+        </span>
+        <span className={styles.searchTitle}>검색 결과</span>
+      </div>
+
+      {loading && <p>로딩중...</p>}
+      {!loading && errMsg && <p className={styles.empty}>{errMsg}</p>}
+      {!loading && !errMsg && items.length === 0 && (
+        <p className={styles.empty}>검색 결과가 없습니다</p>
       )}
+
+      <div className={styles.list}>
+        {items.map((r) => (
+          <div key={r.id} className={styles.card}>
+            <div className={styles.cardLeft}>
+              <div className={styles.name}>{r.name}</div>
+              <div className={styles.sub}>{r.address || "주소 정보 없음"}</div>
+
+              <div className={styles.ratingRow}>
+                ⭐ {r.rating ?? 0}
+                {" · "}
+                {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
+              </div>
+
+              {r.summary ? (
+                <div className={styles.sub}>{r.summary}</div>
+              ) : null}
+            </div>
+
+            <div className={styles.cardRight}>
+              <span className={styles.cardRightText}>음식 사진</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }

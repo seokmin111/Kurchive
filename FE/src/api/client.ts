@@ -1,9 +1,9 @@
-// src/api/client.ts
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "http://152.69.228.114:8000/api", // FastAPI 주소
-  withCredentials: true,            // 로그인/쿠키 필요하면 활성화
+  baseURL: "http://152.69.228.114:8000/api",
+  withCredentials: false, // 쿠키 안 쓰면 false가 안전
+  timeout: 10000,         // 멈춘 것처럼 보이는 거 방지
 });
 
 export default client;
@@ -18,12 +18,21 @@ client.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err?.response?.status;
-    if (status === 401 || status === 403) {
+    const url = err?.config?.url || "";
+
+    // 로그인/회원가입 관련 요청에서는 강제 리다이렉트 금지
+    const isAuthRequest =
+      url.includes("/login") ||
+      url.includes("/signup") ||
+      url.includes("/validate_code") ||
+      url.includes("/check_nickname") ||
+      url.includes("/signup/check_id");
+
+    if ((status === 401 || status === 403) && !isAuthRequest) {
       localStorage.removeItem("access_token");
       window.location.href = "/login";
     }
+
     return Promise.reject(err);
   }
 );
-
-

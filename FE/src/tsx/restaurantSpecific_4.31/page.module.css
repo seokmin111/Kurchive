@@ -1,8 +1,16 @@
-.main{
+.main {
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    /* ⬇️ 앱 형태 유지를 위한 핵심 설정 ⬇️ */
+    width: 100%;           /* 기본은 100% */
+    max-width: 480px;      /* 최대 너비를 보통 430px~480px 사이로 제한 */
+    margin: 0 auto;        /* 화면 가운데 정렬 */
+    min-height: 100dvh;    /* 최소 높이를 화면 높이에 맞춤 */
+    background-color: white; /* 데스크톱 배경과 구분하기 위해 설정 */
+    box-shadow: 0 0 20px rgba(0,0,0,0.05); /* 데스크톱에서 앱처럼 보이게 하는 효과 */
 }
 
 .navbar{

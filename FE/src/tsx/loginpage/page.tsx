@@ -1,58 +1,72 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
-import logo from "../../assets/logo.png";
-import { login } from "../../api/auth";
+import client from "../../api/client"; // 
 
-export default function LoginPage() {
+interface FormData {
+  id: string;
+  password: string;
+}
+
+export default function LoginPage() { 
   const navigate = useNavigate();
-  const location = useLocation();
 
+  const [formData, setFormData] = useState<FormData>({
+    id: "",
+    password: "",
+  });
 
-  const [id, setId] = useState("");
-  const [pw, setPw] = useState("");
-  const [loading, setLoading] = useState(false);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const onSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
-      const res = await login(id, pw);
+      // 백엔드 스펙 맞추기: ID/PW (대문자)
+      const res = await client.post("/login", {
+        ID: formData.id,
+        PW: formData.password,
+      });
 
-      // 백엔드가 access_token을 줌
-      localStorage.setItem("access_token", res.access_token);
+      const token = res.data?.access_token;
+      if (!token) throw new Error("access_token 없음");
 
-      // (선택) 로그인 성공 후 이동
-      const from = (location.state as any)?.from || "/";
-      navigate(from, { replace: true });
+      // 프로젝트 전체에서 이 키로 통일(인터셉터가 이거 읽음)
+      localStorage.setItem("access_token", token);
 
+      alert("로그인 성공!");
+      navigate("/main"); 
     } catch (err: any) {
-      // 백엔드가 400이면 "아이디 또는 비밀번호" 메시지 나옴.
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "로그인에 실패했습니다.";
-      alert(msg);
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+
+      // 422면 “요청 형식 틀림” (대부분 키 불일치)
+      if (status === 422) {
+        alert("로그인 요청 형식이 잘못됐어(422). ID/PW 키 확인해줘.");
+      } else if (status === 401) {
+        alert("아이디/비밀번호가 틀렸습니다.");
+      } else {
+        alert(detail || "로그인 실패");
+      }
+
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div className={style.container}>
       <header className={style.header}>베너 이미지</header>
-
       <main className={style.main}>
         <div className={style.logoGroup}>
-          <img className={style.logo} src={logo} alt="logo" />
+          <img className={style.logo} src="/curson_logo.png" alt="logo" />
           <div className={style.brandName}>커카이브</div>
           <div className={style.pageTitle}>로그인 페이지</div>
         </div>
 
-        <form className={style.loginForm} onSubmit={onSubmit}>
+        <form className={style.loginForm} onSubmit={handleSubmit}>
           <div className={style.inputGroup}>
             <label htmlFor="id">ID</label>
             <input
@@ -61,8 +75,8 @@ export default function LoginPage() {
               name="id"
               placeholder="Value"
               required
-              value={id}
-              onChange={(e) => setId(e.target.value)}
+              value={formData.id}
+              onChange={handleChange}
             />
           </div>
 
@@ -74,13 +88,13 @@ export default function LoginPage() {
               name="password"
               placeholder="Value"
               required
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
             />
           </div>
 
-          <button type="submit" className={style.loginButton} disabled={loading}>
-            {loading ? "로그인 중..." : "로그인"}
+          <button type="submit" className={style.loginButton}>
+            로그인
           </button>
         </form>
 
@@ -95,12 +109,12 @@ export default function LoginPage() {
         <button
           type="button"
           className={style.signupButton}
-          onClick={() => navigate("/signup")} // 회원가입 라우트로 수정 가능
+          onClick={() => navigate("/signup")}
         >
           회원가입
         </button>
       </footer>
+
     </div>
   );
 }
-
