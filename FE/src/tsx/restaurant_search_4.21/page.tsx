@@ -17,6 +17,8 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 const API_BASE = "http://152.69.228.114:8000/api";
 
+import client from "../../api/client";
+
 export default function SearchPage() {
   const navigate = useNavigate();
 
@@ -40,10 +42,9 @@ export default function SearchPage() {
       try {
         const token = localStorage.getItem("access_token");
 
-        const res = await axios.get(`${API_BASE}/restaurants/search`, {
-          params: { q: query },
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
+        const res = await client.get(`/restaurants/search`, {
+        params: { q: query },
+      });
 
         // res.data = [{id,name,...}, ...]
         setSuggestions(Array.isArray(res.data) ? res.data : []);
@@ -384,9 +385,7 @@ function Region({ handleAddItem }: HandleSellectedTagsType) {
 
   const handleGetUpperRegions = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${API_BASE}/regions`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await client.get(`/regions`);
     setUpperRegions(res.data);
   };
 
@@ -443,9 +442,8 @@ function SpecificRegion({ regionName, handleAddItem, upperRegions }: SpecificReg
 
   const getRegion = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${API_BASE}/regions`, {
+    const res = await client.get("/regions", {
       params: { parent_id: smallRegionID },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     setSmallRegions(res.data);
   };
@@ -486,20 +484,17 @@ function Culture({ handleAddItem }: ModalType) {
 
   const getBigCultureTags = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${API_BASE}/tags`, {
-      params: { category_id: 1 },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await client.get(`/tags`, { params: { category_id: 1 } });
+
     setBigCultureTags(res.data);
   };
 
   const getSmallCultureTags = async () => {
     if (!sellectedBigTag) return;
     const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${API_BASE}/tags`, {
-      params: { category_id: 1, parent_id: sellectedBigTag },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    });
+    const res = await client.get("/tags", {
+      params: {category_id: 1,parent_id: sellectedBigTag,
+      },});
     setSmallCultureTags(res.data);
   };
 
@@ -750,9 +745,8 @@ function Atmosphere({ handleAddItem }: HandleSellectedTagsType) {
 
   const getAtmoTags = async () => {
     const token = localStorage.getItem("access_token");
-    const res = await axios.get(`${API_BASE}/tags`, {
+    const res = await client.get("/tags", {
       params: { category_id: 2 },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
     setAtmoList(res.data);
   };
