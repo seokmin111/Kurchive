@@ -1,0 +1,17 @@
+# 의존성 모듈 (절대 올리면 안 됨)
+node_modules/
+
+# 환경 변수 (비밀 정보 포함)
+.env
+.env.local
+.env.*.local
+
+# 빌드 결과물
+dist/
+build/
+.vite/
+
+# 로그 등
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
