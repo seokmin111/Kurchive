@@ -64,6 +64,28 @@ async def get_current_executive_user(current_user: User = Depends(get_current_us
     return current_user
 '''
 
+MAP_LINK_PREFIXES = (
+    "https://map.kakao.com", # 됨
+    # https://map.kakao.com/?map_type=TYPE_MAP&itemId=17067705&urlLevel=3&urlX=513558&urlY=1038202
+    "https://kko.to", # 안됨
+    # https://kko.to/4ceAbRJOxC 
+    "https://kko.kakao.com", # 됨
+    # https://kko.kakao.com/4ceAbRJOxC 
+    "https://place.map.kakao.com", # 안됨 
+    # https://place.map.kakao.com/17067705
+    "https://naver.me", # 안됨 
+    # https://naver.me/FuVEJDp0
+    "https://map.naver.com", # 안됨 
+    # https://map.naver.com/p/entry/place/35228977?lng=127.0601916&lat=37.2372403&placePath=/home?from=map&fromPanelNum=1&additionalHeight=76&timestamp=202601091547&locale=ko&svcName=map_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh
+    "https://m.place.naver.com", # 안됨 
+    # https://m.place.naver.com/restaurant/35228977/home
+    "https://maps.app.goo.gl", # 됨 
+    # https://maps.app.goo.gl/4szoJcJkuczmMfyZ9
+    "https://www.google.com/maps" # 됨
+    # https://www.google.com/maps/place/%EC%97%B0%ED%99%94%EB%8B%B4/data=!4m6!3m5!1s0x357b44948a07c205:0x18c2058f8d95c4de!8m2!3d37.2466899!4d127.0587767!16s%2Fg%2F1td7fn8y?entry=ttu&g_ep=EgoyMDI2MDEwNi4wIKXMDSoASAFQAw%3D%3D
+
+)
+
 router = APIRouter()
 
 # ---------------------------
@@ -86,20 +108,10 @@ class RestaurantCreate(BaseModel):
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
 
-        # URL 기본 형식만 확인
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (http/https)")
-
-        # 지도 링크 여부만 기록해두기
-        cls.is_map_link = (
-            v.startswith("https://map.kakao.com")
-            or v.startswith("https://kko.kakao.com")
-            or v.startswith("https://maps.app.goo.gl")
-            or v.startswith("https://www.google.com/maps")
-        )
+        
         return v
-
-
 
     @validator("name", "summary", "description")
     def not_empty(cls, v):
@@ -244,7 +256,7 @@ async def create_restaurant(
    # 1) 지도 링크인 경우에만 주소/위경도 추출
     address, lat, lon = None, None, None
     try:
-        if getattr(payload.__class__, "is_map_link", False):
+        if payload.location_link.startswith(MAP_LINK_PREFIXES):
             loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
             if loc:
                 address = loc.get("road_address") or loc.get("address")
@@ -674,7 +686,7 @@ async def update_restaurant(
     # 주소/좌표 재계산 25.11.21 수정
     address, lat, lon = None, None, None
     try:
-        if getattr(payload.__class__, "is_map_link", False):
+        if payload.location_link.startswith(MAP_LINK_PREFIXES):
             loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
             if loc:
                 address = loc.get("road_address") or loc.get("address")
