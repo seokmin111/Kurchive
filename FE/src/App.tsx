@@ -11,6 +11,7 @@ import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
 import SearchPage from "./tsx/restaurant_search_4.21/page";
 import RestaurantSearchResultsPage from "./tsx/restaurant_search_result_4.3/page";
 import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page"; 
+import MapPage from "./tsx/restaurantmap_4.32/page"; 
 
 import RecipeSearchPage from "./tsx/recipe_3.0/page";
 import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
@@ -42,6 +43,7 @@ export default function App() {
       <Route
         path="/restaurant/search/results"
         element={<RestaurantSearchResultsPage />} />
+      <Route path="/restaurant/map" element={<MapPage />} />
 
       {/* 식당 상세(4.31) */}
       <Route path="/restaurant/detail/:restaurantId" element={<RestaurantDetailPage />}/>

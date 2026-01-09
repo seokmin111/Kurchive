@@ -1,33 +1,340 @@
+/* mapContainer: 전체 화면 */
 .mapContainer {
-  position: relative; /* 자식 요소를 absolute로 배치할 수 있게 */
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f5f5f5; /* 지도 로딩 전 배경색 */
 }
+
+/* 상단 필터 버튼 바 */
 .topBar {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  width: 100%;
   display: flex;
-  flex-direction: row;
-  height: 60px;
+  justify-content: center;
+  gap: 8px;
+  z-index: 100;
+  padding: 0 10px;
+  overflow-x: auto; /* 화면 작을 때 스크롤 */
+  -ms-overflow-style: none; /* 스크롤바 숨김 */
+  scrollbar-width: none;
 }
+.topBar::-webkit-scrollbar {
+  display: none;
+}
+
 .button {
-  flex: 1;
-  display: flex;
-  border-radius: 9999px; /* 완전 둥근 pill */
-  align-items: center; /* 수직 가운데 정렬 */
-  justify-content: center; /* 수평 가운데 정렬 */
-  margin: 8px 16px;
-  font-weight: bold;
-  background-color: #f3f3f3;
+  flex-shrink: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  cursor: pointer;
+  white-space: nowrap;
 }
+
+.button:active {
+  background-color: #f0f0f0;
+}
+
+/* ✅ 뒤로가기 버튼 (좌하단 고정) */
 .backButton {
   position: absolute;
-  bottom: 120px; /* 지도 아래쪽 여백 */
-  left: 110px; /* 왼쪽 여백 */
-  background-color: #f8f1ed;
+  bottom: 40px !important; /* 강제 적용 */
+  left: 20px !important;   /* 강제 적용 */
+  top: auto !important;    /* 상단 좌표 초기화 */
+  
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  font-size: 28px;
-  color: #a01b3f;
+  width: 60px;
+  height: 60px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   z-index: 100;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); /* 그림자 추가 */
+}
+
+/* ========================================= */
+/*  모달 및 필터 스타일 */
+/* ========================================= */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  background-color: white;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modalTitle {
+  font-family: 'SlowGothic', sans-serif;
+  font-size: 18px;
+  color: #8B0029;
+  margin: 0;
+  font-weight: bold;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.modalFooter {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.applyBtn {
+  flex: 1;
+  background-color: #8B0029;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.resetBtn {
+  flex: 0.4;
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* 태그 공통 */
+.tagGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.tagItem {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s;
+}
+
+.tagItem.selected {
+  background-color: #8B0029;
+  color: white;
+  border-color: #8B0029;
+}
+
+/* 지역 */
+.regionGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.regionItem {
+  text-align: center;
+  padding: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.regionItem.active {
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 700;
+  background-color: #fff0f5;
+}
+
+.subRegionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 15px;
+}
+
+/* 음식 */
+.foodCatGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tagItem.active {
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 700;
+}
+
+/* 가격 슬라이더 */
+.Price__container {
+    width: 100%;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Price__rangeGraphic {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    margin-bottom: 20px;
+}
+
+.Price__track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: #d3d9de;
+    border-radius: 2px;
+    transform: translateY(-50%);
+}
+
+.Price__rangeFill {
+    position: absolute;
+    top: 50%;
+    height: 4px;
+    background-color: #8B0029;
+    border-radius: 2px;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+.Price__range, .Price__range2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    pointer-events: none;
+    -webkit-appearance: none;
+    background: none;
+    z-index: 3;
+    margin: 0;
+}
+
+.Price__range::-webkit-slider-thumb,
+.Price__range2::-webkit-slider-thumb {
+    pointer-events: auto;
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border: 3px solid #8B0029;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: 8px; 
+}
+
+.Price__range2::-webkit-slider-thumb {
+    background: #8B0029;
+    z-index: 10;
+}
+
+.Price__ticksLine {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    margin-bottom: 30px;
+}
+
+.Price__tickMajorWrap {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Price__tickBar {
+    width: 1px;
+    height: 5px;
+    background-color: #999;
+}
+
+.Price__tickLabel {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.Price__inputs {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.Price__input {
+    width: 100px;
+    padding: 8px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background-color: #f5f5f5;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
 }
