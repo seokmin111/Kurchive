@@ -27,18 +27,17 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
+  // 0. 지도 스크립트 로드
   useEffect(() => {
     const clientId = import.meta.env.VITE_NAVER_CLIENT_ID;
     if (!clientId) {
-      console.error("네이버 맵 Client ID가 없습니다. FE/.env 파일을 확인해주세요.");
+      console.error("VITE_NAVER_CLIENT_ID 없음");
       return;
     }
-
     if (window.naver && window.naver.maps) {
       setIsMapLoaded(true);
       return;
     }
-
     const script = document.createElement("script");
     script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}`;
     script.async = true;
@@ -46,7 +45,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
     document.head.appendChild(script);
   }, []);
 
-  // 내 위치
+  // 1. 내 위치
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -62,8 +61,9 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
     }
   }, []);
 
-  // 데이터가져오기
+  // 2. 데이터 가져오기
   useEffect(() => {
+    // ID 배열이 비어있으면 데이터 초기화
     if (!restaurantIds || restaurantIds.length === 0) {
       setRestaurants([]);
       return;
@@ -86,7 +86,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
     fetchMapData();
   }, [restaurantIds]);
 
-  // 지도 그리기
+  // 3. 지도 그리기
   useEffect(() => {
     if (!isMapLoaded || !mapRef.current || !window.naver) return;
 
@@ -106,9 +106,8 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
       zoom: 15,
     });
 
+    // 마커 추가 로직...
     const markers: any[] = [];
-
-    // 식당 마커
     restaurants.forEach((r) => {
       if (r.latitude && r.longitude) {
         const marker = new window.naver.maps.Marker({
@@ -120,29 +119,59 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
       }
     });
 
-    // 내 위치 마커
     if (userLocation) {
-      new window.naver.maps.Marker({
-        position: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
-        map: map,
-        zIndex: 100,
-        icon: {
-          content: `<div style="width:14px;height:14px;background:#8B0029;border:2px solid white;border-radius:50%;"></div>`,
-          anchor: new window.naver.maps.Point(7, 7),
-        },
-      });
+        new window.naver.maps.Marker({
+            position: new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude),
+            map: map,
+            icon: {
+                content: `<div style="width:14px;height:14px;background:#8B0029;border:2px solid white;border-radius:50%;"></div>`,
+                anchor: new window.naver.maps.Point(7, 7),
+            },
+        });
     }
 
     if (markers.length > 1) {
-      const bounds = new window.naver.maps.LatLngBounds();
-      markers.forEach((m) => bounds.extend(m.getPosition()));
-      if (userLocation) bounds.extend(new window.naver.maps.LatLng(userLocation.latitude, userLocation.longitude));
-      map.fitBounds(bounds, { margin: 50 });
+        const bounds = new window.naver.maps.LatLngBounds();
+        markers.forEach((m) => bounds.extend(m.getPosition()));
+        map.fitBounds(bounds, { margin: 50 });
     }
+
   }, [isMapLoaded, restaurants, userLocation]);
 
-  if (!isMapLoaded) return <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%'}}>지도 스크립트 로딩 중...</div>;
-  if (isLoading) return <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%'}}>식당 정보 로딩 중...</div>;
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {/* 지도 영역 */}
+      <div ref={mapRef} style={{ width: "100%", height: "100%", backgroundColor: "#eee" }} />
 
-  return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
+      {/* ✅ Debug Overlay (지도 로딩 실패 시 데이터 확인용) */}
+      <div style={{
+        position: "absolute",
+        top: "80px",
+        left: "10px",
+        width: "300px",
+        maxHeight: "60vh",
+        overflowY: "auto",
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        border: "2px solid red",
+        padding: "10px",
+        zIndex: 1000,
+        fontSize: "12px",
+        borderRadius: "8px"
+      }}>
+        <h3 style={{marginTop:0, color:"red"}}>🛠 DEBUG MODE</h3>
+        <p><strong>내 위치:</strong> {userLocation ? `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}` : "수집 중..."}</p>
+        <p><strong>불러온 식당 수:</strong> {restaurants.length}개</p>
+        <hr/>
+        <ul style={{paddingLeft:"20px", margin:0}}>
+          {restaurants.map(r => (
+            <li key={r.id} style={{marginBottom:"4px"}}>
+              <strong>[{r.id}] {r.name}</strong><br/>
+              {r.summary || "설명 없음"}
+            </li>
+          ))}
+        </ul>
+        {restaurants.length === 0 && <p style={{color:"#999"}}>표시할 데이터가 없습니다.</p>}
+      </div>
+    </div>
+  );
 }

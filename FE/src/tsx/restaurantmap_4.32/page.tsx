@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import NaverMap from "./components/Navermap";
 import style from "./page.module.css";
 import client from "../../api/client";
-import { listRestaurants, getRegions, getTags } from "../../api/restaurant";
+import { listRestaurants } from "../../api/restaurant";
 
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
@@ -28,6 +28,7 @@ export default function MapPage() {
   const [selectedAtmosphereIds, setSelectedAtmosphereIds] = useState<number[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number } | null>(null);
 
+  // 1. 초기 데이터 로드 수정
   useEffect(() => {
     const idsString = searchParams.get("ids");
     if (idsString) {
@@ -37,7 +38,13 @@ export default function MapPage() {
         .filter((num) => !isNaN(num));
       setRestaurantIds(idsArray);
     } else {
-      setRestaurantIds([]);
+      // ids가 없으면 전체 식당 로드 (테스트용)
+      client.get("/restaurants")
+        .then((res) => {
+          const allIds = res.data.map((r: any) => r.id);
+          setRestaurantIds(allIds);
+        })
+        .catch((e) => console.error("전체 목록 로드 실패", e));
     }
   }, [searchParams]);
 
@@ -55,12 +62,9 @@ export default function MapPage() {
 
       const allTagIds = [...newFoodIds, ...newAtmoIds];
 
-      // 검색 파라미터 구성
       const params: any = {};
       
       if (newRegionId) params.region_id = newRegionId;
-      
-      // 배열을 쉼표로 구분된 문자열로 변환하여 전송
       if (allTagIds.length > 0) {
         params.tag_ids = allTagIds.join(",");
       }
@@ -72,7 +76,6 @@ export default function MapPage() {
 
       console.log("검색 요청 Params:", params);
       
-      // listRestaurants 함수 대신 client 직접 호출로 변경하여 파라미터 제어 확실하게 함
       const res = await client.get("/restaurants", { params });
       const results = res.data;
 
@@ -104,7 +107,7 @@ export default function MapPage() {
 
       <button className={style.backButton} onClick={() => navigate(-1)}>
         <img
-          src="../../public/backstep_button.svg.png"
+          src="/images/backstep_button.svg.png"
           alt="Back"
           style={{ width: "100%", height: "100%", objectFit: "contain" }}
         />
@@ -127,6 +130,8 @@ export default function MapPage() {
   );
 }
 
+// ... FilterModal 이하 코드는 기존과 동일 ...
+// (FilterModal, RegionContent, FoodContent, AtmosphereContent, PriceContent 코드는 변경 없음)
 interface FilterModalProps {
   type: FilterType;
   onClose: () => void;
@@ -350,7 +355,6 @@ function PriceContent({ selected, onChange }: { selected: { min: number; max: nu
   const maxPos = valueToPos(maxVal);
   const minPct = (minPos / POS_MAX) * 100;
   const maxPct = (maxPos / POS_MAX) * 100;
-  const tickLeftPct = (v: number) => (valueToPos(v) / POS_MAX) * 100;
   const fmt = (n: number) => n.toLocaleString();
 
   return (
