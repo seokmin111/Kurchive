@@ -33,16 +33,34 @@
     font-weight: 600 !important;
 }
 
+.suggestion_list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;             /* 300px 고정 제거 */
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
 
-.search_container {
-    display: flex;              /* 가로 정렬 */
-    align-items: center;    /* 세로 중앙 */
-    width: 300px;               /* 전체 컨테이너 너비 */
-    border-radius: 30px;
-    overflow: hidden;           /* 둥근 모서리에 버튼 잘림 방지 */
-    background-color: #F2ECE5;
-    margin: 10px auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+
+  z-index: 99999;         
 }
+
+.suggestion_empty{
+  padding: 10px 14px;
+  font-size: 13px;
+  color: rgba(139,0,41,0.6);
+  cursor: default;
+}
+
+
+.suggestion_list{
+  z-index: 9999;
+}
+
 
 .search_btn {
     width: 40px;
@@ -286,31 +304,27 @@
 }
 
 .recipe_container {
-    display: grid;
-    grid-template-columns: repeat(5, 200px);
-    grid-template-rows: repeat(2, 100px);
-    row-gap: 80px;
-    column-gap: 25px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    margin: 0;               /* 화면 끝까지 */
-    width: 100%;             /* 화면 전체 가로 폭 */
-    z-index: 10;
-    border-top-left-radius: 30px;  
-    border-top-right-radius: 30px;
-    background-color: white;
-    padding: 50px 20px 90px;      /* 좌우 여백도 충분히 줌 */
-    box-sizing: border-box; 
-    position: fixed;  /* 화면에 고정 */
-    bottom: 0;
+  width: min(92vw, 980px);
+  margin: 18px auto 120px; /* 아래 footer 공간 고려 */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  box-sizing: border-box;
 
+  /* 고정 제거 */
+  position: static;
+  overflow: visible;
 }
+
 
 .recipe_item {
     flex: 0 0 auto;        /* 아이템 크기 고정 (늘어나지 않게) */
     width: 200px;
     height: 100px;
-    background: white;
+    background: #ffffff;
     border-color: #8B0029 !important;
     border-radius: 12px;
     border: solid 1.5px;
@@ -366,3 +380,39 @@
     font-size: 12px;
     color: rgb(141, 141, 141);
 }
+/* 3.2 연관검색어 패널 */
+/* ===== 자동완성 리스트 (식당 버전 느낌) ===== */
+.suggestion_list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;              /* ✅ 300px 고정 X, 검색창 폭 따라감 */
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+
+  z-index: 9999;
+}
+
+.suggestion_list li {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #8B0029;
+}
+
+.suggestion_list li:hover {
+  background: #F2ECE5;
+}
+
+.suggestion_empty{
+  padding: 10px 14px;
+  font-size: 13px;
+  color: rgba(139,0,41,0.6);
+  cursor: default;
+}
+
