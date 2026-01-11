@@ -28,6 +28,10 @@
 /* =========================
    Header
 ========================= */
+.header {
+  position: relative;
+}
+
 .title {
   font-family: "SlowGothic", sans-serif;
   color: #8b0029;
@@ -43,6 +47,22 @@
   font-weight: 600;
 }
 
+.back_btn {
+  position: absolute;
+  left: 12px;
+  top: 4px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  color: #8b0029;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.back_btn::first-line {
+  font-size: 45px;
+}
+
 /* =========================
    Search
 ========================= */
@@ -52,7 +72,7 @@
   width: 300px;
   border-radius: 30px;
   background-color: #f2ece5;
-  margin: 10px auto;
+  margin: 20px auto 12px;
 }
 
 .search_btn {
@@ -81,80 +101,14 @@
 }
 
 /* =========================
-   Buttons
+   Results
 ========================= */
-.button_wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  margin: 20px 0 50px;
-}
-.ivory_btn {
-  font-family: "SlowGothic", sans-serif;
-
-  /* 빨간 버튼과 완전히 동일 */
-  width: 240px;
-  padding: 20px 0 25px;
-  border-radius: 18px;
-  border: 0;
-
-  font-size: 18px;
-  background-color: #f2ece5;
-  color: #8b0029;
-
-  cursor: pointer;
-  text-align: center;
-
-  /* 밑줄/링크 스타일 제거 */
-  text-decoration: none;
-  white-space: nowrap;
-
-  /* 위치 */
-  display: block;
-  margin: 100px auto 0;
-}
-
-
-.red_btn {
-  font-family: "SlowGothic", sans-serif;
-  width: 240px;
-  padding: 20px 25px 25px;
-  border-radius: 18px;
-  border: none;
-  font-size: 18px;
-  background-color: #8b0029;
-  color: #f2ece5;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.back_btn {
-  position: absolute;
-  right: 50%;
-  transform: translateX(-60px);
-  background: none;
-  border: none;
-  font-size: 10px;
-  color: #8b0029;
-  line-height: 1.2;
-  cursor: pointer;
-}
-
-.back_btn::first-line {
-  font-size: 45px;
-}
-
-/* =========================
-   Recipe Container (하단 패널)
-========================= */
-.recipe_container {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-
+.result_container {
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 12px 110px;
+  box-sizing: border-box;
 
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -163,34 +117,19 @@
   column-gap: 25px;
   row-gap: 80px;
 
-  padding: 50px 10px 90px;
-  box-sizing: border-box;
-
-  /* 🔥 핵심: 패널이 footer를 덮지 않게 투명 */
-  background: transparent;
-
+  /* 검색 결과 스크롤 */
   overflow-x: hidden;
   overflow-y: auto;
-
-  z-index: 10;
-
-  /* 🔥 핵심: ::before z-index가 안정적으로 먹게 */
-  isolation: isolate;
 }
 
-.recipe_container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-
-  background: #ffffff;
-  border-top-left-radius: 30px;
-  border-top-right-radius: 30px;
-
-  z-index: -1;
-  pointer-events: none;
+.msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #8b0029;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  padding: 20px 0;
 }
-
 
 /* =========================
    Recipe Card
@@ -261,7 +200,6 @@
   margin-top: 2px;
 }
 
-
 .recipe_icon {
   width: 28px;
   height: 28px;
@@ -274,8 +212,6 @@
   display: flex;
   flex-direction: column;
 }
-
-
 
 /* =========================
    Footer Gradient
@@ -298,29 +234,23 @@
   z-index: 0;
 }
 
-
 /* =========================
-   Mobile (2 x 4)
+   Mobile (2 columns)
 ========================= */
 @media (max-width: 600px) {
-  .recipe_container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: 120px;
-    row-gap: 30px;
-    column-gap: 15px;
-  }
-
-
   .search_container {
     width: 85vw;
   }
 
-  .red_btn {
-    width: 45vw;
-    font-size: 14px;
-  }
-
   .back_btn::first-line {
     font-size: 30px;
+  }
+
+  .result_container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 120px;
+    row-gap: 30px;
+    column-gap: 15px;
+    padding-bottom: 110px;
   }
 }

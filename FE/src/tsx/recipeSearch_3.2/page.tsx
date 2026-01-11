@@ -1,25 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./page.module.css";
-import client from "../../api/client";
+
+import { searchRecipes } from "../../api/recipe";
 
 type Recipe = {
   id: number;
   title: string;
   base_serving: number;
   uploader_id: number;
-  created_at: string; // FastAPI datetime -> ISO string
+  created_at: string;
   thumbnail_url?: string | null;
 };
 
-export default function RecipeMainPage() {
-  const navigate = useNavigate();
 
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+export default function RecipeSearchPage() {
+  const navigate = useNavigate();
+  const [sp, setSp] = useSearchParams();
+
+  const [q, setQ] = useState(sp.get("q") ?? "");
+  const [items, setItems] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
+
+  const trimmed = useMemo(() => q.trim(), [q]);
 
   const formatDate = (iso?: string) => {
     if (!iso) return "";
@@ -31,41 +37,60 @@ export default function RecipeMainPage() {
     return `${y}.${m}.${day}`;
   };
 
-  const getRecipes = async () => {
+  const runSearch = async (keyword: string) => {
     setLoading(true);
     setErrMsg("");
     try {
-      const res = await client.get<Recipe[]>("/recipe/list");
-      const list = Array.isArray(res.data) ? res.data : [];
+      const data = await searchRecipes(keyword);
+      const list = Array.isArray(data) ? (data as Recipe[]) : [];
 
-      // 식당 메인처럼 최신 8개만
-      const recent8 = [...list]
-        .sort((a, b) => (b.id ?? 0) - (a.id ?? 0))
-        .slice(0, 8);
-
-      setRecipes(recent8);
+      // 최신 우선
+      const sorted = [...list].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+      setItems(sorted);
     } catch (e: any) {
       console.error(e);
       if (e?.response?.status === 401) setErrMsg("로그인이 필요합니다. 다시 로그인해줘!");
-      else setErrMsg("레시피 목록을 불러오지 못했어.");
-      setRecipes([]);
+      else setErrMsg("검색 결과를 불러오지 못했어.");
+      setItems([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const onSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+
+    const keyword = trimmed;
+    if (!keyword) {
+      setErrMsg("레시피 이름을 입력해주세요");
+      setItems([]);
+      setSp({}, { replace: true });
+      return;
+    }
+
+    // URL 공유/뒤로가기용 반영
+    setSp({ q: keyword }, { replace: true });
+    await runSearch(keyword);
+  };
+
+  // /recipe/search?q=xxx 로 직접 들어온 경우 자동 검색
   useEffect(() => {
-    getRecipes();
+    const urlQ = sp.get("q");
+    if (urlQ && urlQ.trim()) {
+      setQ(urlQ);
+      runSearch(urlQ.trim());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <main className={styles.nomrg}>
-      {/* 헤더 (식당 메인처럼) */}
+      {/* 헤더 */}
       <div className={styles.header}>
-        <Link to="/main">
+        <Link to="/recipe">
           <button className={styles.back_btn}>
             &lt;<br />
-            메인화면으로 <br /> 돌아가기
+            레시피 메인으로 <br /> 돌아가기
           </button>
         </Link>
 
@@ -74,39 +99,35 @@ export default function RecipeMainPage() {
           커카이브
         </h1>
         <p className={styles.sub_title} style={{ display: "inline" }}>
-          우리만의 미식 지도
+          레시피 검색
         </p>
       </div>
 
-      {/* 검색창 제거 / 아이보리 버튼만 */}
-      <Link
-        to="/recipe/search"
-        style={{ textDecoration: "none" }}
-      >
-        <button className={styles.ivory_btn}>
-          레시피 검색하기
-        </button>
-      </Link>
+      {/* 검색바 */}
+      <form className={styles.search_container} onSubmit={onSubmit}>
+        <input
+          className={styles.input_box}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="레시피 이름을 입력해주세요."
+          autoFocus
+        />
+        <button className={styles.search_btn} type="submit" aria-label="search" />
+      </form>
 
+      {/* 결과 리스트 */}
+      <div className={styles.result_container}>
+        {loading && <div className={styles.msg}>로딩중...</div>}
 
-      {/* ✅ 식당처럼: 그 아래 빨간 아카이빙 버튼 */}
-      <div className={styles.button_wrapper}>
-        <Link to="/recipe/edit">
-          <button className={styles.red_btn}>레시피 아카이빙</button>
-        </Link>
-      </div>
+        {!loading && errMsg && <div className={styles.msg}>{errMsg}</div>}
 
-      {/* 하단 패널 (카드) */}
-      <div className={styles.recipe_container}>
-        {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
-        {!loading && errMsg && <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>}
-        {!loading && !errMsg && recipes.length === 0 && (
-          <div style={{ gridColumn: "1 / -1" }}>등록된 레시피가 없어!</div>
+        {!loading && !errMsg && trimmed && items.length === 0 && (
+          <div className={styles.msg}>검색 결과가 없습니다.</div>
         )}
 
         {!loading &&
           !errMsg &&
-          recipes.map((r) => (
+          items.map((r) => (
             <div
               key={r.id}
               className={styles.recipe_item}
@@ -138,7 +159,7 @@ export default function RecipeMainPage() {
           ))}
       </div>
 
-      <div className={styles.footer}></div>
+      <div className={styles.footer} />
     </main>
   );
 }
