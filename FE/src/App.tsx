@@ -12,8 +12,12 @@ import SearchPage from "./tsx/restaurant_search_4.21/page";
 import RestaurantSearchResultsPage from "./tsx/restaurant_search_result_4.3/page";
 import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page"; 
 
-import RecipeSearchPage from "./tsx/recipe_3.0/page";
+import RecipeMainPage from "./tsx/recipe_3.0/page"; 
+import RecipeSearchPage from "./tsx/recipeSearch_3.2/page";
 import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
+import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
+
+
 
 import MyPage from "./tsx/mypage_2.0/page";
 import MyActivityPage from "./tsx/myactivity_2.2/page";
@@ -49,8 +53,11 @@ export default function App() {
       <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
 
       {/* 레시피 */}
-      <Route path="/recipe" element={<RecipeSearchPage />} />
+      <Route path="/recipe" element={<RecipeMainPage />} />
+      <Route path="/recipe/search" element={<RecipeSearchPage />} />
       <Route path="/recipe/archive" element={<RecipeArchivePage />} />
+      <Route path="/recipe/search/results" element={<RecipeSearchResultsPage />} />
+ 
 
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyPage />} />

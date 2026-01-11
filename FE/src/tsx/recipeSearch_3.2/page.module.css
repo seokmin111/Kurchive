@@ -1,0 +1,256 @@
+/* =========================
+   Fonts
+========================= */
+@font-face {
+  font-family: "SlowGothic";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* =========================
+   Base
+========================= */
+.nomrg {
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================
+   Header
+========================= */
+.header {
+  position: relative;
+}
+
+.title {
+  font-family: "SlowGothic", sans-serif;
+  color: #8b0029;
+  font-size: 30px;
+  font-weight: 500;
+  margin: 0 3px 0 12px;
+}
+
+.sub_title {
+  font-family: "Pretendard", sans-serif;
+  color: #8b0029;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.back_btn {
+  position: absolute;
+  left: 12px;
+  top: 4px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  color: #8b0029;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.back_btn::first-line {
+  font-size: 45px;
+}
+
+/* =========================
+   Search
+========================= */
+.search_container {
+  display: flex;
+  align-items: center;
+  width: 300px;
+  border-radius: 30px;
+  background-color: #f2ece5;
+  margin: 20px auto 12px;
+}
+
+.search_btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: url("/images/search-icon.png") center / 30px no-repeat;
+  background-color: #f2ece5;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.input_box {
+  flex: 1;
+  border: none;
+  padding-left: 20px;
+  font-size: 14px;
+  background: transparent;
+  color: #8b0029;
+  outline: none;
+}
+
+.input_box::placeholder {
+  color: #8b0029;
+  opacity: 0.8;
+}
+
+/* =========================
+   Results
+========================= */
+.result_container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 12px 110px;
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 120px;
+
+  column-gap: 25px;
+  row-gap: 80px;
+
+  /* 검색 결과 스크롤 */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #8b0029;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+/* =========================
+   Recipe Card
+========================= */
+.recipe_item {
+  display: flex;
+  flex-direction: column;
+  height: 120px;
+  padding: 12px 14px;
+
+  background: white;
+  border: 1.5px solid #8b0029;
+  border-radius: 12px;
+
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.recipe_descriptionContainer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.recipe_title {
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #8b0029;
+
+  margin: 0 0 4px 0;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.recipe_text {
+  font-family: "Pretendard", sans-serif;
+  font-size: 9px;
+  line-height: 1.2;
+  color: #8b0029;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipe_reviewer {
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  color: rgb(141, 141, 141);
+  white-space: nowrap;
+}
+
+.recipe_date {
+  font-size: 11px;
+  color: rgb(141, 141, 141);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  margin-top: 2px;
+}
+
+.recipe_icon {
+  width: 28px;
+  height: 28px;
+  background-color: #f2ece5;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.recipe_underContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   Footer Gradient
+========================= */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh;
+
+  background: linear-gradient(
+    to top,
+    rgba(218, 176, 155, 0.3) 90%,
+    rgba(242, 236, 229, 0.2) 98%,
+    rgba(139, 0, 41, 0) 100%
+  );
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =========================
+   Mobile (2 columns)
+========================= */
+@media (max-width: 600px) {
+  .search_container {
+    width: 85vw;
+  }
+
+  .back_btn::first-line {
+    font-size: 30px;
+  }
+
+  .result_container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 120px;
+    row-gap: 30px;
+    column-gap: 15px;
+    padding-bottom: 110px;
+  }
+}
