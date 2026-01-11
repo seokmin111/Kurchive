@@ -12,6 +12,7 @@
     font-display: swap;
 }
 
+
 .nav_carrier{
     display: flex;
     justify-content: center;
@@ -49,14 +50,14 @@
 .tagSearchContainer {
     /* 애니메이션 속성 (유지) */
     position: fixed;
-    top: 800px; /* 또는 이전의 100vh */
+    top: 900px; /* 또는 이전의 100vh */
     left: 0;
     transition: all 1s;
 
     /* .tagSearch에서 가져온 Flexbox 스타일 (추가) */
     display: flex;
     flex-direction: column;
-    height: 95vh; /* 80vh 또는 90vh 등 패널의 전체 높이 */
+    height: 100vh; /* 80vh 또는 90vh 등 패널의 전체 높이 */
     width: 100%;
 
     /* (기존) */
@@ -189,7 +190,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 560px;
+    height: 700px;
     padding: 0;
 }
 
@@ -242,7 +243,7 @@
     padding: 10px;
     border: 2px solid rgb(177, 177, 177);
     border-radius: 30px;
-    margin-bottom: 30px;
+    margin-bottom: 100px;
 }
 
 .specificRegions div{
@@ -431,12 +432,20 @@
 }
 
 .Price__container{
-    height: 560px;
+    height: 700px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
+}
+
+.Price__title{
+  position: absolute;
+  right: 10px;
+  top: 0;
+  font-weight: 600;
+  color: #9D9D9D;
 }
 
 .Price__contents{
@@ -639,8 +648,17 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 560px;
+    height: 700px;
     display: flex;
+    position: relative;
+}
+
+.atmo__title{
+  position: absolute;
+  right: 10px;
+  top: 0;
+  font-weight: 600;
+  color: #9D9D9D;
 }
 
 .atmo__container{
@@ -758,3 +776,32 @@
   cursor: pointer;
 }
 
+/* --- 공통 타이틀 스타일 --- */
+.section_title {
+  position: absolute;
+  right: 15px;      /* 오른쪽 끝에서 15px 띄움 */
+  top: 10px;           /* 가장 상단 */
+  font-weight: 600;
+  color: #9D9D9D;
+  font-size: 14px;
+  z-index: 1;       /* 다른 요소보다 위에 보이게 함 */
+}
+
+/* 각 컨테이너들이 타이틀의 기준이 되도록 position: relative 확인/추가 */
+.tagSearch__body, 
+.Food__container, 
+.Price__container, 
+.atmo__carrier {
+    position: relative; /* 타이틀 배치를 위한 기준점 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 700px; /* 모든 섹션 높이 통일 */
+    padding-top: 40px; /* 타이틀과 겹치지 않게 상단 여백 추가 */
+}
+
+/* 기존 중복되거나 다른 이름의 타이틀 스타일은 제거하거나 위 클래스로 통합하세요 */
+.Price__title, .atmo__title {
+  display: none; /* 아래 JSX 수정에서 section_title로 교체할 것이므로 숨김 */
+}

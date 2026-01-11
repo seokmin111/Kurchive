@@ -113,7 +113,7 @@ export default function RestaurantSearchResultsPage() {
               <div className={styles.ratingRow}>
                 ⭐ {r.rating ?? 0}
                 {" · "}
-                {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
+                {`${r.price_min}원` ?? "-"} ~ {`${r.price_max}원` ?? "-"}
               </div>
 
               {r.summary ? <div className={styles.sub}>{r.summary}</div> : null}
