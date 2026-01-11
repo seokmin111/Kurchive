@@ -2,25 +2,27 @@ import axios from "axios";
 
 const client = axios.create({
   baseURL: "http://146.56.117.219:8000/api",
-  withCredentials: false, // 쿠키 안 쓰면 false가 안전
-  timeout: 10000,         // 멈춘 것처럼 보이는 거 방지
+  withCredentials: false,
+  timeout: 10000,
 });
 
-export default client;
-
+// 요청 인터셉터: 토큰 자동 첨부
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
+// 응답 인터셉터: 401/403이면 로그인으로
 client.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err?.response?.status;
     const url = err?.config?.url || "";
 
-    // 로그인/회원가입 관련 요청에서는 강제 리다이렉트 금지
     const isAuthRequest =
       url.includes("/login") ||
       url.includes("/signup") ||
@@ -36,3 +38,5 @@ client.interceptors.response.use(
     return Promise.reject(err);
   }
 );
+
+export default client;

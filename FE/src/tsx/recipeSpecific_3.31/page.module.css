@@ -167,3 +167,69 @@
   color: #8B0029; /* 포인트 컬러 */
   font-weight: 700;
 }
+
+
+/* 클릭 가능한 요소 */
+.clickable {
+  cursor: pointer;
+}
+
+/* 기존 클래스에 바로 붙여도 됨 */
+.modifyBtn {
+  cursor: pointer;
+}
+
+.recipeDelete {
+  cursor: pointer;
+}
+
+.backstep {
+  cursor: pointer;
+}
+
+.backstep { cursor: pointer; }
+.modifyBtn { cursor: pointer; }
+.recipeDelete { cursor: pointer; }
+
+
+.ingredientHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.applyUnitBtn {
+  border: 1px solid #8B0028;
+  background-color: #fff;
+  color: #8B0028;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.applyUnitBtn:hover {
+  background-color: #8B0028;
+  color: #fff;
+}
+
+.applyUnitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* cursor pointer */
+.backstep {
+  cursor: pointer;
+}
+
+.modifyBtn {
+  cursor: pointer;
+}
+
+.recipeDelete {
+  cursor: pointer;
+}
