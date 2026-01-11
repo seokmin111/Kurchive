@@ -15,13 +15,10 @@ import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page";
 import RecipeMainPage from "./tsx/recipe_3.0/page"; 
 import RecipeSearchPage from "./tsx/recipeSearch_3.2/page";
 import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
-<<<<<<< HEAD
-import RecipeSpecific from "./tsx/recipeSpecific_3.31/page"
-=======
+
+import RecipeSpecific from "./tsx/recipeSpecific_3.31/page";
 import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
-
->>>>>>> 4cf160ae6e107f93808da8c45400632f501acffc
 
 import MyPage from "./tsx/mypage_2.0/page";
 import MyActivityPage from "./tsx/myactivity_2.2/page";
@@ -60,8 +57,8 @@ export default function App() {
       <Route path="/recipe" element={<RecipeMainPage />} />
       <Route path="/recipe/search" element={<RecipeSearchPage />} />
       <Route path="/recipe/archive" element={<RecipeArchivePage />} />
-      <Route path="/recipe/specific" element={<RecipeSpecific></RecipeSpecific>}></Route>
-
+      <Route path="/recipe/:recipeId" element={<RecipeSpecific />} />
+      
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/myactivity" element={<MyActivityPage />} />
