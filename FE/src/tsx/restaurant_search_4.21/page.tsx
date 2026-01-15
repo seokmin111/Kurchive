@@ -191,11 +191,11 @@ function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps
     if (activeTag === "지역") {
       content.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     } else if (activeTag === "음식 종류") {
-      content.scrollTo({ top: 540, left: 0, behavior: "smooth" });
+      content.scrollTo({ top: 740, left: 0, behavior: "smooth" });
     } else if (activeTag === "가격") {
-      content.scrollTo({ top: 1070, left: 0, behavior: "smooth" });
+      content.scrollTo({ top: 1480, left: 0, behavior: "smooth" });
     } else if (activeTag === "분위기") {
-      content.scrollTo({ top: 1630, left: 0, behavior: "smooth" });
+      content.scrollTo({ top: 2220, left: 0, behavior: "smooth" });
     }
   };
 
@@ -285,14 +285,14 @@ function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps
 
   return (
     <div className="tagSearch">
-      <div className={styles.tagSearch__chevron}>
+      {/*<div className={styles.tagSearch__chevron}>
         <div>
           <FontAwesomeIcon icon={faChevronUp} />
         </div>
         <div>
           <FontAwesomeIcon icon={faChevronUp} />
         </div>
-      </div>
+      </div>*/}
 
       <div className={`${styles.tagSearchContainer} ${isTagSearchOpen ? styles.show : ""}`}>
         <h6
@@ -395,6 +395,7 @@ function Region({ handleAddItem }: HandleSellectedTagsType) {
 
   return (
     <div className={styles.tagSearch__body}>
+      <div className={styles.section_title}>지역</div>
       <div className={styles.tagSearch__regions}>
         {upperRegions.length !== 0
           ? upperRegions.map((item) => {
@@ -508,6 +509,7 @@ function Culture({ handleAddItem }: ModalType) {
 
   return (
     <div className={styles.Food__container}>
+      <div className={styles.section_title}>음식 종류</div>
       <img className={styles.Food__mapImg} src="../images/지도.png" />
       <div className={styles.Food__tagContainer}>
         {bigCultureTags.map((item) => {
@@ -650,6 +652,7 @@ function Price({ handleAddItem }: PriceLimitType) {
 
   return (
     <div className={styles.Price__container}>
+      <div className={styles.section_title}>가격</div>
       <div className={styles.Price__contents}>
         <div className={styles.Price__rangeGraphic}>
           {/* 바닥 트랙 */}
@@ -757,6 +760,7 @@ function Atmosphere({ handleAddItem }: HandleSellectedTagsType) {
 
   return (
     <div className={styles.atmo__carrier}>
+      <div className={styles.section_title}>분위기</div>
       <div className={styles.atmo__container}>
         {atmoList.map((item) => {
           return (

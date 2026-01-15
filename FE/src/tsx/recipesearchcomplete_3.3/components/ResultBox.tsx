@@ -1,6 +1,6 @@
 import { link } from "fs";
 import style from "./ResultBox.module.css";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 interface Step {
   step_order: number;
@@ -32,7 +32,7 @@ export default function ResultBox({
   thumbnail_url,
 }: ResultBoxProps) {
   return (
-    <Link href={`/recipe/${id}`} className={style.link}>
+    <Link to={`/recipe/${id}`} className={style.link}>
       <div className={style.box}>
         <article className={style.restaurant}>
           <header className={style.inform}>

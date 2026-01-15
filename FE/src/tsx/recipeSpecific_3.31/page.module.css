@@ -1,0 +1,235 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 480px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto; /* 중앙 정렬 */
+  overflow-y: auto;
+}
+
+.banner{
+  width: 100%;
+  height: 150px;
+  background-color: #8B0028;
+  color: white;
+  text-align: center;
+}
+
+.banner{
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.backstep{
+  width: 20px;
+  margin-right: 200px;
+  margin-bottom: 100px;
+}
+
+.modifyBtn{
+  text-decoration: none;
+  border: none;
+  padding: 10px;
+  margin-bottom: 100px;
+  border-radius: 10px;
+  color: #8B0028;
+  font-weight: 600;
+}
+
+.foodTitle{
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8B0028;
+}
+
+.foodDescription{
+  width: 60%;
+  height: 50px;
+  background-color: #F2ECE5;
+  align-content: center;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.portionBody{
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.portionBody div{
+  margin-right: 20px;
+}
+
+.portionBody button{
+  text-decoration: none;
+  border: none;
+  padding: 7px;
+  background-color: #F2ECE5;
+  border-radius: 5px;
+}
+
+.ingredientTitle{
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8B0028;
+}
+
+.line{
+  height: 1px;
+  width: 90%;
+  background-color: black;
+  margin: 5px 0px;
+}
+
+.recipeTitle{
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8B0028;
+}
+
+.recipeBody{
+  display: flex;
+  flex-direction: column;
+}
+
+.recipeItem{
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.recipeDelete{
+  border: none;
+  background-color: white;
+  text-decoration: underline;
+  font-weight: 600;
+  margin: 50px 0px;
+}
+
+.recipeBody{
+  display: flex;
+}
+
+.photoBox{
+  width: 110px;
+  height: 110px;
+  border: 1px dotted black;
+  border-radius: 10px;
+  background-color: #F2ECE5;
+  position: relative;
+}
+
+.textBox{
+  margin-left: 10px;
+  width: 270px;
+  height: 110px;
+  border: 1px dotted black;
+  border-radius: 10px;
+}
+
+.number{
+  width: 25px;
+  height: 25px;
+  background-color: #8B0028;
+  border-radius: 50%;
+  color: white;
+  font-weight: 500;
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  display: grid;
+  align-content: center;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse; /* 테두리 사이 간격 제거 (필수) */
+  margin: 20px 0;
+}
+
+.table th, .table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: center; /* 아까 배운 좌정렬! */
+}
+
+.table th {
+  background-color: #f8f9fa;
+  color: #8B0029; /* 포인트 컬러 */
+  font-weight: 700;
+}
+
+
+/* 클릭 가능한 요소 */
+.clickable {
+  cursor: pointer;
+}
+
+/* 기존 클래스에 바로 붙여도 됨 */
+.modifyBtn {
+  cursor: pointer;
+}
+
+.recipeDelete {
+  cursor: pointer;
+}
+
+.backstep {
+  cursor: pointer;
+}
+
+.backstep { cursor: pointer; }
+.modifyBtn { cursor: pointer; }
+.recipeDelete { cursor: pointer; }
+
+
+.ingredientHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.applyUnitBtn {
+  border: 1px solid #8B0028;
+  background-color: #fff;
+  color: #8B0028;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.applyUnitBtn:hover {
+  background-color: #8B0028;
+  color: #fff;
+}
+
+.applyUnitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* cursor pointer */
+.backstep {
+  cursor: pointer;
+}
+
+.modifyBtn {
+  cursor: pointer;
+}
+
+.recipeDelete {
+  cursor: pointer;
+}

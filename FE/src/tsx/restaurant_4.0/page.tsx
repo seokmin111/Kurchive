@@ -16,6 +16,7 @@ type Restaurant = {
   price_min?: number | null;
   price_max?: number | null;
   thumbnail_url?: string | null;
+  created_at?: number;
 };
 
 export default function RestaurantSearchPage() {
@@ -23,6 +24,14 @@ export default function RestaurantSearchPage() {
   const short = (s?: string | null, n = 24) =>
     (s ?? "").length > n ? (s ?? "").slice(0, n) + "…" : (s ?? "");
 
+  const formatDate = (ts?: number) => {
+    if (!ts) return "";
+    const d = new Date(ts * 1000); // 초 → ms
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}.${m}.${day}`;
+  };
 
 
   const [items, setItems] = useState<Restaurant[]>([]);
@@ -125,13 +134,24 @@ export default function RestaurantSearchPage() {
                   )}
 
                   <div className={styles.restaurant_underContainer}>
-                    <div className={styles.restaurant_reviewer}>
-                      ⭐ {r.rating ?? 0} · {r.price_min ?? "-"} ~ {r.price_max ?? "-"}
-                    </div>
-                    <div className={styles.restaurant_date}>
-                      {r.address ?? "주소 정보 없음"}
-                    </div>
+                  {/* ⭐ 별점 */}
+                  <div className={styles.restaurant_reviewer}>
+                    ⭐ {r.rating ?? 0}
                   </div>
+
+                  {/* 📅 업로드 날짜 */}
+                  {r.created_at && (
+                    <div className={styles.restaurant_date}>
+                      {formatDate(r.created_at)}
+                    </div>
+                  )}
+
+                  {/* 📍 주소 (맨 아래) */}
+                  <div className={styles.restaurant_address}>
+                    {r.address ?? "주소 정보 없음"}
+                  </div>
+                </div>
+
                 </div>
               </div>
             </div>
