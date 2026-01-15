@@ -41,7 +41,7 @@ from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
 
-# ✅ 주소 추출 모듈 임포트
+# 주소 추출 모듈 임포트
 from BE.AddressLatLong import extract_location_from_link
 from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
@@ -71,12 +71,11 @@ class RestaurantCreate(BaseModel):
     price_max: int
     tag_ids: List[int]
 
-    # ✅ [수정] 복잡한 필터링 로직 제거하고 단순화 (공백 제거 포함)
     @validator("location_link")
     def validate_location_link(cls, v: str):
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
-        v = v.strip() # 공백 제거
+        v = v.strip() # 공백제거
         # 최소한의 URL 형식만 체크 (http로 시작하는지)
         if not re.match(r"^https?://", v):
             raise ValueError("location_link must be a valid URL (start with http/https)")
@@ -150,7 +149,7 @@ class ImageOut(BaseModel):
 # API 엔드포인트
 # ---------------------------
 
-# 1. 태그 조회
+# 태그 조회
 @router.get("/tags")
 async def get_tags(
     category_id: Optional[int] = Query(None, alias="category_id"),
@@ -181,19 +180,18 @@ async def get_regions(parent_id: Optional[int] = None, db: AsyncSession = Depend
     return [{"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth} for r in regions]
 
 
-# 3. 식당 아카이빙 (수정됨)
+# 식당 아카이빙
 @router.post("/restaurants", response_model=CreateRestaurantResponse)
 async def create_restaurant(
     payload: RestaurantCreate,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    # ✅ [수정] 조건문 없이 무조건 추출 시도
     address, lat, lon = None, None, None
     print(f"[API] 주소 추출 시도: {payload.location_link}") # 디버깅 로그
 
     try:
-        # AddressLatLong.py의 로직을 그대로 실행
+
         loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
         if loc:
             address = loc.get("road_address") or loc.get("address")
@@ -251,7 +249,7 @@ async def create_restaurant(
         }
     }
     
-# 5. 식당 이름 검색 (기존 유지)
+# 식당 이름 검색
 @router.get("/restaurants/search")
 async def search_restaurants_by_name(
     q: str,
@@ -285,7 +283,7 @@ async def search_restaurants_by_name(
         })
     return out
 
-# 4. 식당 상세 조회 (기존 유지)
+# 식당 상세 조회
 @router.get("/restaurants/{restaurant_id}")
 async def get_restaurant(
     restaurant_id: int,
@@ -344,7 +342,7 @@ async def get_restaurant(
     }
 
 
-# 5-1. 식당 목록 조회 (기존 유지)
+# 식당 목록 조회
 @router.get("/restaurants")
 async def list_restaurants(
     region_id: Optional[int] = None,
@@ -414,7 +412,7 @@ async def list_restaurants(
     return results
 
 
-# 5-2. 현위치/임의좌표 근접 검색 (기존 유지)
+# 현위치/임의좌표 근접 검색
 @router.get("/restaurants/nearby")
 async def list_restaurants_nearby(
     lat: float,
@@ -486,7 +484,7 @@ async def list_restaurants_nearby(
     results.sort(key=lambda x: x["distance_km"])
     return results[:max(1, min(limit, 500))]
 
-# 5-3. 뷰포트 검색 (기존 유지)
+# 뷰포트 검색
 @router.get("/restaurants/viewport")
 async def list_restaurants_in_viewport(
     min_lat: float,
@@ -556,7 +554,7 @@ async def list_restaurants_in_viewport(
     results.sort(key=lambda x: (-x["rating"], x["id"]))
     return results[:max(1, min(limit, 500))]
 
-# 6. 식당 정보 수정 (수정됨)
+# 식당 정보 수정
 @router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
 async def update_restaurant(
     restaurant_id: int,
@@ -574,7 +572,6 @@ async def update_restaurant(
     if not (is_uploader or is_admin):
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     
-    # ✅ [수정] 조건문 없이 URL 변경 혹은 좌표 없을 시 무조건 재추출
     address, lat, lon = restaurant.address, restaurant.latitude, restaurant.longitude
     if payload.location_link != restaurant.location_link or not (lat and lon):
         try:
@@ -646,7 +643,7 @@ async def update_restaurant(
         "images": images
     }
 
-# 7. 식당 삭제(Delete)
+# 식당 삭제(Delete)
 @router.delete("/restaurants/{restaurant_id}")
 async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user_from_token)):
     restaurant = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
@@ -668,7 +665,7 @@ async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_a
     return {"message": "Restaurant deleted", "id": restaurant_id}
 
 
-# 8. 태그 검색 자동완성
+# 태그 검색 자동완성
 @router.get("/tags/search")
 async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
     result = await db.execute(
