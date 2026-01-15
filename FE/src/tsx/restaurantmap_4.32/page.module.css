@@ -271,13 +271,6 @@
 }
 
 /* 태그 공통 */
-.tagGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
-
 .tagItem {
   padding: 8px 16px;
   border: 1px solid #ddd;
@@ -294,14 +287,15 @@
   border-color: #8B0029;
 }
 
-/* 지역 */
-.regionGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 15px;
+/* 내부에 선택된 항목이 있을 때 강조  */
+.tagItem.hasSelection {
+  background-color: #ffe6eb;
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 600;
 }
 
+/* 지역 */
 .regionItem {
   text-align: center;
   padding: 8px 0;
@@ -309,13 +303,27 @@
   border-radius: 8px;
   font-size: 12px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .regionItem.active {
   border-color: #8B0029;
   color: #8B0029;
   font-weight: 700;
-  background-color: #fff0f5;
+  background-color: #fff0f5; /* 현재 보고 있는 탭 */
+}
+
+/* 선택된 지역이 포함된 대분류 강조 */
+.regionItem.hasSelection {
+  background-color: #8B0029;
+  color: white !important; /* 텍스트 흰색으로 강조 */
+  border-color: #8B0029;
+}
+
+/* a보고 있는데 선택도 된 경우 */
+.regionItem.active.hasSelection {
+   background-color: #8B0029;
+   color: white !important;
 }
 
 .subRegionGrid {

@@ -198,33 +198,63 @@ function FilterModal({ type, onClose, onApply, currentValues }: FilterModalProps
 
 
 function RegionContent({ selected, onChange }: { selected: number | null, onChange: (id: number | null) => void }) {
-  const [regions, setRegions] = useState<any[]>([]);
-  const [subRegions, setSubRegions] = useState<any[]>([]);
-  const [parentName, setParentName] = useState<string>("");
+  const [allRegions, setAllRegions] = useState<any[]>([]); // 전체 지역 데이터
+  const [regions, setRegions] = useState<any[]>([]);       // 대분류(시/도)
+  const [subRegions, setSubRegions] = useState<any[]>([]); // 소분류(구/군)
+  const [activeParentId, setActiveParentId] = useState<number | null>(null);
 
+  // 전체 지역 데이터 로드 (flatten=true)
   useEffect(() => {
-    client.get("/regions").then(res => {
-        const parents = res.data.filter((r: any) => r.parent_id === null && !r.name.endsWith("전체"));
-        setRegions(parents);
+    client.get("/regions", { params: { flatten: true } }).then(res => {
+        const data = res.data;
+        setAllRegions(data);
+        
+        // 대분류 필터링 (parent_id 없는 것)
+        const roots = data.filter((r: any) => r.parent_id === null && !r.name.endsWith("전체"));
+        setRegions(roots);
     }).catch(err => console.error("Region Load Error:", err));
   }, []);
 
-  const handleParentClick = async (r: any) => {
-    setParentName(r.name);
-    try {
-        const res = await client.get("/regions", { params: { parent_id: r.id } });
-        setSubRegions(res.data);
-    } catch (e) { console.error(e); }
+  // 대분류 클릭 시 소분류 세팅
+  const handleParentClick = (parentId: number) => {
+    setActiveParentId(parentId);
+    const subs = allRegions.filter((r: any) => r.parent_id === parentId);
+    setSubRegions(subs);
+  };
+
+  // 해당 대분류가 선택되었거나, 그 하위 지역이 선택되었는지 확인
+  const isParentSelected = (parentId: number) => {
+    // 선택된 ID가 자기 자신(대분류)인 경우 (현재 로직상 지역은 단일 선택이므로 드물지만 확장성 고려)
+    if (selected === parentId) return true;
+    
+    // 선택된 ID가 이 대분류의 자식인 경우
+    const child = allRegions.find(r => r.id === selected);
+    if (child && child.parent_id === parentId) return true;
+
+    return false;
   };
 
   return (
     <div>
       <div className={style.regionGrid}>
-        {regions.map((r) => (
-          <div key={r.id} className={`${style.regionItem} ${parentName === r.name ? style.active : ""}`} onClick={() => handleParentClick(r)}>
-            {r.name}
-          </div>
-        ))}
+        {regions.map((r) => {
+          const isSelected = isParentSelected(r.id);
+          const isActive = activeParentId === r.id;
+
+          return (
+            <div 
+              key={r.id} 
+              className={`
+                ${style.regionItem} 
+                ${isActive ? style.active : ""} 
+                ${isSelected ? style.hasSelection : ""} 
+              `} 
+              onClick={() => handleParentClick(r.id)}
+            >
+              {r.name}
+            </div>
+          );
+        })}
       </div>
       {subRegions.length > 0 && (
         <div className={style.subRegionGrid}>
@@ -240,21 +270,27 @@ function RegionContent({ selected, onChange }: { selected: number | null, onChan
 }
 
 function FoodContent({ selected, onChange }: { selected: number[], onChange: (ids: number[]) => void }) {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [foods, setFoods] = useState<any[]>([]);
+  const [allTags, setAllTags] = useState<any[]>([]); // 전체 태그
+  const [categories, setCategories] = useState<any[]>([]); // 대분류
+  const [foods, setFoods] = useState<any[]>([]); // 소분류
   const [activeCatId, setActiveCatId] = useState<number | null>(null);
 
+  // 전체 태그 로드
   useEffect(() => {
-    client.get("/tags", { params: { category_id: 1 } }).then(res => {
-        const roots = res.data.filter((t: any) => !t.parent_id);
+    client.get("/tags", { params: { category_id: 1, flatten: true } }).then(res => {
+        const data = res.data;
+        setAllTags(data);
+        
+        // 대분류 필터링
+        const roots = data.filter((t: any) => !t.parent_id);
         setCategories(roots);
     }).catch(console.error);
   }, []);
 
-  const handleCatClick = async (id: number) => {
+  const handleCatClick = (id: number) => {
     setActiveCatId(id);
-    const res = await client.get("/tags", { params: { parent_id: id } });
-    setFoods(res.data);
+    const subs = allTags.filter((t: any) => t.parent_id === id);
+    setFoods(subs);
   };
 
   const toggleId = (id: number) => {
@@ -262,25 +298,45 @@ function FoodContent({ selected, onChange }: { selected: number[], onChange: (id
     else onChange([...selected, id]);
   };
 
-  // 현재 활성화된 카테고리의 이름 찾기
   const activeCatName = categories.find(c => c.id === activeCatId)?.name;
+
+  // 해당 카테고리가 선택되었거나, 하위 태그가 하나라도 선택되었는지 확인
+  const isCategorySelected = (catId: number) => {
+    // 1. 대분류 자체(전체)가 선택된 경우
+    if (selected.includes(catId)) return true;
+    
+    // 2. 자식 태그 중 하나라도 선택된 경우
+    const hasChildSelected = allTags.some(t => t.parent_id === catId && selected.includes(t.id));
+    return hasChildSelected;
+  };
 
   return (
     <div>
       <div className={style.foodCatGrid}>
-        {categories.map((c) => (
-          <div key={c.id} className={`${style.tagItem} ${activeCatId === c.id ? style.active : ""}`} 
-             style={activeCatId === c.id ? {borderColor: '#8B0029', color:'#8B0029', fontWeight:'bold'} : {}}
-             onClick={() => handleCatClick(c.id)}>
-            {c.name}
-          </div>
-        ))}
+        {categories.map((c) => {
+            const isSelected = isCategorySelected(c.id);
+            const isActive = activeCatId === c.id;
+
+            return (
+              <div 
+                key={c.id} 
+                className={`
+                    ${style.tagItem} 
+                    ${isActive ? style.active : ""}
+                    ${isSelected ? style.hasSelection : ""}
+                `} 
+                // 활성화상태일 때만 텍스트 스타일 적용, 선택된 상태면 배경색 변경 
+                style={isActive ? {borderColor: '#8B0029', color:'#8B0029', fontWeight:'bold'} : {}}
+                onClick={() => handleCatClick(c.id)}
+              >
+                {c.name}
+              </div>
+            );
+        })}
       </div>
       
-      {/* 소분류 태그 리스트 영역 */}
       {(foods.length > 0 || activeCatId) && (
         <div className={style.subRegionGrid}>
-          {/* 대분류만 선택해도 검색 가능하게  */}
           {activeCatId && (
               <div 
                 className={`${style.tagItem} ${selected.includes(activeCatId) ? style.selected : ""}`} 
@@ -301,6 +357,7 @@ function FoodContent({ selected, onChange }: { selected: number[], onChange: (id
     </div>
   );
 }
+
 
 function AtmosphereContent({ selected, onChange }: { selected: number[], onChange: (ids: number[]) => void }) {
   const [tags, setTags] = useState<any[]>([]);
