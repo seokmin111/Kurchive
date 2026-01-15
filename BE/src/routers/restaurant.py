@@ -381,9 +381,12 @@ async def list_restaurants(
 
         if requested_ids:
             current = {t["id"] for t in tag_list}
+            if requested_ids.isdisjoint(current):
+                continue # OR로 수정 
+            '''
             if not requested_ids.issubset(current):
                 continue
-
+            '''
         img_row = await db.execute(
             select(RestaurantImage)
             .where(RestaurantImage.restaurant_id == r.id)
@@ -456,8 +459,10 @@ async def list_restaurants_nearby(
 
             if requested_ids:
                 current = {t["id"] for t in tag_list}
-                if not requested_ids.issubset(current):
-                    continue
+                if requested_ids.isdisjoint(current):
+                    continue # OR로 수정 
+                '''if not requested_ids.issubset(current):
+                    continue'''
 
             img_row = await db.execute(
                 select(RestaurantImage)
@@ -536,8 +541,11 @@ async def list_restaurants_in_viewport(
 
         if requested:
             current = {t["id"] for t in tag_list}
-            if not requested.issubset(current):
+            if requested.isdisjoint(current):
                 continue
+            # OR로 수정 
+            '''if not requested.issubset(current):
+                continue'''
 
         results.append({
             "id": r.id,

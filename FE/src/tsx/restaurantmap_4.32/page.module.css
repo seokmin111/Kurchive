@@ -44,7 +44,7 @@
   background-color: #f0f0f0;
 }
 
-/* ✅ 뒤로가기 버튼 (좌하단 고정) */
+/* 뒤로가기 버튼 (좌하단 고정) */
 .backButton {
   position: absolute;
   bottom: 40px !important; /* 강제 적용 */
@@ -65,7 +65,125 @@
 }
 
 /* ========================================= */
-/*  모달 및 필터 스타일 */
+/*  지도 컨트롤 (커스텀 줌, 내위치)         */
+/* ========================================= */
+.mapControls {
+  position: absolute;
+  top: 100px;
+  right: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.controlBtn {
+  width: 44px;
+  height: 44px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #555;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: background-color 0.2s;
+}
+
+.controlBtn:active {
+  background-color: #f0f0f0;
+}
+
+/* ========================================= */
+/*  정보창 - 하단 카드형        */
+/* ========================================= */
+.infoWindow {
+  position: absolute;
+  bottom: 120px; /* 뒤로가기 버튼 위쪽 */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  cursor: pointer; /* 클릭 시 이동 */
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.infoContent {
+  display: flex;
+  gap: 15px;
+}
+
+.infoThumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #eee;
+  flex-shrink: 0;
+}
+
+.infoText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.infoName {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.infoMeta {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.infoDesc {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.infoClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  padding: 5px;
+}
+
+/* ========================================= */
+/*  모달 및 필터 스타일                       */
 /* ========================================= */
 
 .modalOverlay {
@@ -337,4 +455,136 @@
     font-size: 14px;
     font-weight: bold;
     color: #555;
+}
+
+/* ========================================= */
+/*  지도 마커 스타일                             */
+/* ========================================= */
+.markerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px; 
+  cursor: pointer;
+}
+
+.markerPin {
+  z-index: 10;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  transition: transform 0.2s;
+}
+
+.markerContainer:hover .markerPin {
+  transform: scale(1.1);
+}
+
+.markerLabel {
+  margin-top: 4px;
+  background-color: white;
+  border: 1px solid #8B0029;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* ========================================= */
+/*  정보창 태그 스타일                      */
+/* ========================================= */
+.tagContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.tagBadge {
+  font-size: 10px;
+  color: #8B0029;
+  background-color: #fff0f5;
+  border: 1px solid #ffccd5;
+  border-radius: 4px;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+.infoWindow {
+  position: absolute;
+  bottom: 120px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  cursor: pointer;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.infoContent {
+  display: flex;
+  gap: 15px;
+}
+
+.infoThumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #eee;
+  flex-shrink: 0;
+}
+
+.infoText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.infoName {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.infoMeta {
+  font-size: 13px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.infoClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  padding: 5px;
 }

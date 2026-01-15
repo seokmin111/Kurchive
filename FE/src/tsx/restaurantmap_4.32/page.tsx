@@ -28,7 +28,7 @@ export default function MapPage() {
   const [selectedAtmosphereIds, setSelectedAtmosphereIds] = useState<number[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: number; max: number } | null>(null);
 
-  // 1. 초기 데이터 로드 수정
+  // 초기 데이터 로드
   useEffect(() => {
     const idsString = searchParams.get("ids");
     if (idsString) {
@@ -38,7 +38,7 @@ export default function MapPage() {
         .filter((num) => !isNaN(num));
       setRestaurantIds(idsArray);
     } else {
-      // ids가 없으면 전체 식당 로드 (테스트용)
+      // ids가 없으면 전체 식당 로드
       client.get("/restaurants")
         .then((res) => {
           const allIds = res.data.map((r: any) => r.id);
@@ -103,11 +103,12 @@ export default function MapPage() {
         <span className={style.button} onClick={() => setActiveModal("atmosphere")}>분위기</span>
       </div>
 
+      {/* NaverMap 컴포넌트에 현재 로드된 식당 ID 목록 전달 */}
       <NaverMap restaurantIds={restaurantIds} />
 
       <button className={style.backButton} onClick={() => navigate(-1)}>
         <img
-          src="/images/backstep_button.svg.png"
+          src="/../public/backstep_button.svg.png"
           alt="Back"
           style={{ width: "100%", height: "100%", objectFit: "contain" }}
         />
@@ -130,8 +131,6 @@ export default function MapPage() {
   );
 }
 
-// ... FilterModal 이하 코드는 기존과 동일 ...
-// (FilterModal, RegionContent, FoodContent, AtmosphereContent, PriceContent 코드는 변경 없음)
 interface FilterModalProps {
   type: FilterType;
   onClose: () => void;
@@ -196,6 +195,7 @@ function FilterModal({ type, onClose, onApply, currentValues }: FilterModalProps
     </div>
   );
 }
+
 
 function RegionContent({ selected, onChange }: { selected: number | null, onChange: (id: number | null) => void }) {
   const [regions, setRegions] = useState<any[]>([]);
@@ -262,6 +262,9 @@ function FoodContent({ selected, onChange }: { selected: number[], onChange: (id
     else onChange([...selected, id]);
   };
 
+  // 현재 활성화된 카테고리의 이름 찾기
+  const activeCatName = categories.find(c => c.id === activeCatId)?.name;
+
   return (
     <div>
       <div className={style.foodCatGrid}>
@@ -273,8 +276,21 @@ function FoodContent({ selected, onChange }: { selected: number[], onChange: (id
           </div>
         ))}
       </div>
-      {foods.length > 0 && (
+      
+      {/* 소분류 태그 리스트 영역 */}
+      {(foods.length > 0 || activeCatId) && (
         <div className={style.subRegionGrid}>
+          {/* 대분류만 선택해도 검색 가능하게  */}
+          {activeCatId && (
+              <div 
+                className={`${style.tagItem} ${selected.includes(activeCatId) ? style.selected : ""}`} 
+                onClick={() => toggleId(activeCatId)}
+                style={{ fontWeight: 'bold', backgroundColor: selected.includes(activeCatId) ? '#8B0029' : '#fff0f5', borderColor: '#8B0029' }}
+              >
+                #{activeCatName} 전체
+              </div>
+          )}
+
           {foods.map((f) => (
             <div key={f.id} className={`${style.tagItem} ${selected.includes(f.id) ? style.selected : ""}`} onClick={() => toggleId(f.id)}>
               {f.name}
@@ -309,6 +325,7 @@ function AtmosphereContent({ selected, onChange }: { selected: number[], onChang
   );
 }
 
+
 function PriceContent({ selected, onChange }: { selected: { min: number; max: number } | null, onChange: (val: { min: number; max: number }) => void }) {
   const PRICE_MIN = 1000;
   const PRICE_MAX = 500000;
@@ -333,6 +350,11 @@ function PriceContent({ selected, onChange }: { selected: { min: number; max: nu
     const v = Math.min(PRICE_MAX, Math.max(PRICE_MIN, value));
     const t = (Math.log(v) - LOG_MIN) / (LOG_MAX - LOG_MIN);
     return Math.round(POS_MIN + t * (POS_MAX - POS_MIN));
+  };
+
+  const tickLeftPct = (value: number) => {
+    const pos = valueToPos(value);
+    return (pos / POS_MAX) * 100;
   };
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
