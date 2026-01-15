@@ -203,7 +203,7 @@ async def create_restaurant(
         if loc:
             address = loc.get("road_address") or loc.get("address")
             lat, lon = loc.get("lat"), loc.get("lng")
-            print(f"✅ 주소 추출 성공: {address} ({lat}, {lon})")
+            print(f" 주소 추출 성공: {address} ({lat}, {lon})")
         else:
             print("⚠️ 주소 추출 실패 (결과 없음)")
     except Exception as e:
@@ -348,6 +348,25 @@ async def get_restaurant(
         "images": image_list
     }
 
+# 헬퍼 함수: 요청된 태그 ID들을 각각 [본인 + 자식들]의 집합(Set) 리스트로 변환
+async def _build_tag_requirements(db: AsyncSession, tag_ids_str: str) -> List[set]:
+    try:
+        req_ids = list(map(int, tag_ids_str.split(",")))
+    except ValueError:
+        return []
+
+    requirements = []
+    for rid in req_ids:
+        # 해당 태그의 자식 태그들 조회
+        stmt = select(Tag.id).where(Tag.parent_id == rid)
+        result = await db.execute(stmt)
+        child_ids = result.scalars().all()
+        
+        # {본인 ID, 자식 ID 1, 자식 ID 2 ...} 집합 생성
+        expanded_set = {rid} | set(child_ids)
+        requirements.append(expanded_set)
+    
+    return requirements
 
 # 식당 목록 조회
 @router.get("/restaurants")
@@ -361,17 +380,12 @@ async def list_restaurants(
 ):
     stmt = select(Restaurant)
     
-    # 지역 필터링: 선택된 지역이 부모 지역일 경우 자식 지역까지 포함하여 검색
+    # 지역 필터링 (부모 지역 선택 시 자식 포함)
     if region_id is not None:
-        # 1. 해당 region_id의 자식 지역 ID들을 조회
         sub_regions_stmt = select(Region.id).where(Region.parent_id == region_id)
         sub_regions_result = await db.execute(sub_regions_stmt)
         child_ids = sub_regions_result.scalars().all()
-        
-        # 2. 본인(region_id) + 자식들(child_ids) 리스트 생성
         target_ids = [region_id] + list(child_ids)
-        
-        # 3. IN 연산자로 필터링
         stmt = stmt.where(Restaurant.location_tag_id.in_(target_ids))
 
     if price_min is not None:
@@ -382,14 +396,12 @@ async def list_restaurants(
     result = await db.execute(stmt)
     restaurants = result.scalars().all()
 
-    results = []
-    requested_ids: Optional[set[int]] = None
+    #   태그 검색 조건 준비 (계층 구조 반영 + AND 로직)
+    tag_requirements = []
     if tag_ids:
-        try:
-            requested_ids = set(map(int, tag_ids.split(",")))
-        except ValueError:
-            requested_ids = None
+        tag_requirements = await _build_tag_requirements(db, tag_ids)
 
+    results = []
     for r in restaurants:
         trows = await db.execute(
             select(Tag.id, Tag.name)
@@ -397,23 +409,22 @@ async def list_restaurants(
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
+        current_tag_ids = {t["id"] for t in tag_list}
 
-        if requested_ids:
-            current = {t["id"] for t in tag_list}
-            if not requested_ids.issubset(current):
+        #   태그 필터링 로직
+        # tag_requirements는 [{한식그룹}, {매운맛그룹}] 형태
+        # 식당의 태그가 '한식그룹'과도 겹쳐야 하고(AND), '매운맛그룹'과도 겹쳐야 함
+        if tag_requirements:
+            is_match = True
+            for req_set in tag_requirements:
+                # isdisjoint가 True면 겹치는 게 없다는 뜻 -> 조건 불만족
+                if req_set.isdisjoint(current_tag_ids):
+                    is_match = False
+                    break
+            
+            if not is_match:
                 continue
-            '''
-            # 이전 OR 로직 (주석 처리 또는 삭제)
-            if requested_ids.isdisjoint(current):
-                continue 
-            '''
 
-        img_row = await db.execute(
-            select(RestaurantImage)
-            .where(RestaurantImage.restaurant_id == r.id)
-            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
-            .limit(1)
-        )
         img_row = await db.execute(
             select(RestaurantImage)
             .where(RestaurantImage.restaurant_id == r.id)
@@ -466,12 +477,10 @@ async def list_restaurants_nearby(
 
     candidates = (await db.execute(stmt.limit(5000))).scalars().all()
 
-    requested_ids: Optional[set[int]] = None
+    #   태그 조건 준비
+    tag_requirements = []
     if tag_ids:
-        try:
-            requested_ids = set(map(int, tag_ids.split(",")))
-        except ValueError:
-            requested_ids = None
+        tag_requirements = await _build_tag_requirements(db, tag_ids)
 
     results = []
     for r in candidates:
@@ -483,10 +492,16 @@ async def list_restaurants_nearby(
                 .where(RestaurantTag.restaurant_id == r.id)
             )
             tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
+            current_tag_ids = {t["id"] for t in tag_list}
 
-            if requested_ids:
-                current = {t["id"] for t in tag_list}
-                if not requested_ids.issubset(current):
+            #   태그 필터링
+            if tag_requirements:
+                is_match = True
+                for req_set in tag_requirements:
+                    if req_set.isdisjoint(current_tag_ids):
+                        is_match = False
+                        break
+                if not is_match:
                     continue
 
             img_row = await db.execute(
@@ -513,7 +528,6 @@ async def list_restaurants_nearby(
 
     results.sort(key=lambda x: x["distance_km"])
     return results[:max(1, min(limit, 500))]
-
 
 # 뷰포트 검색
 @router.get("/restaurants/viewport")
@@ -549,12 +563,10 @@ async def list_restaurants_in_viewport(
 
     candidates = (await db.execute(stmt.limit(5000))).scalars().all()
 
-    requested: Optional[set[int]] = None
+    #   태그 조건 준비
+    tag_requirements = []
     if tag_ids:
-        try:
-            requested = set(map(int, tag_ids.split(",")))
-        except ValueError:
-            requested = None
+        tag_requirements = await _build_tag_requirements(db, tag_ids)
 
     results = []
     for r in candidates:
@@ -564,10 +576,16 @@ async def list_restaurants_in_viewport(
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
+        current_tag_ids = {t["id"] for t in tag_list}
 
-        if requested:
-            current = {t["id"] for t in tag_list}
-            if not requested.issubset(current):
+        #   태그 필터링
+        if tag_requirements:
+            is_match = True
+            for req_set in tag_requirements:
+                if req_set.isdisjoint(current_tag_ids):
+                    is_match = False
+                    break
+            if not is_match:
                 continue
 
         results.append({
@@ -610,9 +628,9 @@ async def update_restaurant(
             if loc:
                 address = loc.get("road_address") or loc.get("address")
                 lat, lon = loc.get("lat"), loc.get("lng")
-                print(f"✅ (Update) 주소 재추출 성공: {address}")
+                print(f" (Update) 주소 재추출 성공: {address}")
         except Exception as e:
-            print(f"❌ (Update) 주소 추출 에러: {e}")
+            print(f" (Update) 주소 추출 에러: {e}")
 
     # 필드 반영
     restaurant.name = payload.name
@@ -709,7 +727,7 @@ async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
 # 이미지
 # ============================
 from typing import List as TList
-from BE.src.utils.image_upload import save_image, delete_image_oci  # ✅ 추가
+from BE.src.utils.image_upload import save_image, delete_image_oci  #  추가
 
 @router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
 async def upload_restaurant_images(
@@ -791,7 +809,7 @@ async def delete_restaurant_image(
         raise HTTPException(status_code=404, detail="Image not found")
 
     try:
-        delete_image_oci(img.image_url)   # ✅ 로컬 삭제 → OCI 삭제
+        delete_image_oci(img.image_url)   #  로컬 삭제 → OCI 삭제
     except Exception as e:
         print(f"[이미지 삭제 실패] {e}")
 
