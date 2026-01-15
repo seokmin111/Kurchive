@@ -47,9 +47,9 @@
 /* 뒤로가기 버튼 (좌하단 고정) */
 .backButton {
   position: absolute;
-  bottom: 40px !important; /* 강제 적용 */
-  left: 20px !important;   /* 강제 적용 */
-  top: auto !important;    /* 상단 좌표 초기화 */
+  bottom: 40px !important;
+  left: 20px !important;
+  top: auto !important;
   
   background: none;
   border: none;
@@ -61,12 +61,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); /* 그림자 추가 */
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
 }
 
-/* ========================================= */
-/*  지도 컨트롤 (커스텀 줌, 내위치)         */
-/* ========================================= */
+/* 지도 컨트롤 (커스텀 줌, 내위치) */
 .mapControls {
   position: absolute;
   top: 100px;
@@ -97,12 +95,46 @@
   background-color: #f0f0f0;
 }
 
-/* ========================================= */
-/*  정보창 - 하단 카드형        */
-/* ========================================= */
+/* 지도 마커 스타일 (커스텀 HTML 마커) */
+.markerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px; 
+  cursor: pointer;
+}
+
+.markerPin {
+  z-index: 10;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  transition: transform 0.2s;
+}
+
+.markerContainer:hover .markerPin {
+  transform: scale(1.1);
+}
+
+.markerLabel {
+  margin-top: 4px;
+  background-color: white;
+  border: 1px solid #8B0029;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* 정보창 (하단 카드형) */
 .infoWindow {
   position: absolute;
-  bottom: 120px; /* 뒤로가기 버튼 위쪽 */
+  bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
   width: 90%;
@@ -116,7 +148,7 @@
   flex-direction: column;
   gap: 10px;
   animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  cursor: pointer; /* 클릭 시 이동 */
+  cursor: pointer;
 }
 
 @keyframes slideUp {
@@ -159,15 +191,7 @@
 .infoMeta {
   font-size: 13px;
   color: #666;
-  margin-bottom: 2px;
-}
-
-.infoDesc {
-  font-size: 12px;
-  color: #888;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
 .infoClose {
@@ -182,8 +206,25 @@
   padding: 5px;
 }
 
+.tagContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.tagBadge {
+  font-size: 10px;
+  color: #8B0029;
+  background-color: #fff0f5;
+  border: 1px solid #ffccd5;
+  border-radius: 4px;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
 /* ========================================= */
-/*  모달 및 필터 스타일                       */
+/*  모달 및 필터 스타일 */
 /* ========================================= */
 
 .modalOverlay {
@@ -270,7 +311,15 @@
   cursor: pointer;
 }
 
-/* 태그 공통 */
+/*  태그 아이템 공통 (음식, 분위기, 위치 모두 사용) */
+.tagGrid, .foodCatGrid, .regionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
 .tagItem {
   padding: 8px 16px;
   border: 1px solid #ddd;
@@ -279,6 +328,7 @@
   cursor: pointer;
   background: white;
   transition: all 0.2s;
+  flex-shrink: 0; /* 찌그러짐 방지 */
 }
 
 .tagItem.selected {
@@ -287,7 +337,7 @@
   border-color: #8B0029;
 }
 
-/* 내부에 선택된 항목이 있을 때 강조  */
+/*  대분류 버튼 강조 (하위 항목 선택 시) */
 .tagItem.hasSelection {
   background-color: #ffe6eb;
   border-color: #8B0029;
@@ -295,59 +345,53 @@
   font-weight: 600;
 }
 
-/* 지역 */
+.tagItem.active {
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 700;
+}
+
+/*  지역 아이템 스타일 (Grid -> Flex 버튼형으로 변경) */
 .regionItem {
-  text-align: center;
-  padding: 8px 0;
+  padding: 8px 16px; /* 버튼처럼 가로 패딩 확보 */
   border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 20px; /* 둥글게 */
+  font-size: 13px;
   cursor: pointer;
+  background: white;
   transition: all 0.2s;
+  flex-shrink: 0; /* 자동 줄바꿈 되도록 */
 }
 
 .regionItem.active {
   border-color: #8B0029;
   color: #8B0029;
   font-weight: 700;
-  background-color: #fff0f5; /* 현재 보고 있는 탭 */
+  background-color: #fff0f5; /* 현재 보고 있는 탭 배경 */
 }
 
-/* 선택된 지역이 포함된 대분류 강조 */
 .regionItem.hasSelection {
   background-color: #8B0029;
-  color: white !important; /* 텍스트 흰색으로 강조 */
+  color: white !important;
   border-color: #8B0029;
 }
 
-/* a보고 있는데 선택도 된 경우 */
+/* Active이면서 동시에 Selection이 있는 경우 */
 .regionItem.active.hasSelection {
    background-color: #8B0029;
    color: white !important;
 }
 
+/* 소분류 컨테이너 */
 .subRegionGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 15px;
-}
-
-/* 음식 */
-.foodCatGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  margin-bottom: 20px;
-}
-
-.tagItem.active {
-  border-color: #8B0029;
-  color: #8B0029;
-  font-weight: 700;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 10px;
 }
 
 /* 가격 슬라이더 */
@@ -463,136 +507,4 @@
     font-size: 14px;
     font-weight: bold;
     color: #555;
-}
-
-/* ========================================= */
-/*  지도 마커 스타일                             */
-/* ========================================= */
-.markerContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100px; 
-  cursor: pointer;
-}
-
-.markerPin {
-  z-index: 10;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
-  transition: transform 0.2s;
-}
-
-.markerContainer:hover .markerPin {
-  transform: scale(1.1);
-}
-
-.markerLabel {
-  margin-top: 4px;
-  background-color: white;
-  border: 1px solid #8B0029;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 11px;
-  font-weight: bold;
-  color: #333;
-  white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-}
-
-/* ========================================= */
-/*  정보창 태그 스타일                      */
-/* ========================================= */
-.tagContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 4px 0;
-}
-
-.tagBadge {
-  font-size: 10px;
-  color: #8B0029;
-  background-color: #fff0f5;
-  border: 1px solid #ffccd5;
-  border-radius: 4px;
-  padding: 2px 4px;
-  white-space: nowrap;
-}
-
-.infoWindow {
-  position: absolute;
-  bottom: 120px; 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 400px;
-  background-color: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  z-index: 150;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  cursor: pointer;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translate(-50%, 20px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-.infoContent {
-  display: flex;
-  gap: 15px;
-}
-
-.infoThumb {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  object-fit: cover;
-  background-color: #eee;
-  flex-shrink: 0;
-}
-
-.infoText {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.infoName {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin: 0 0 4px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.infoMeta {
-  font-size: 13px;
-  color: #666;
-  margin-top: 2px;
-}
-
-.infoClose {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 16px;
-  color: #999;
-  cursor: pointer;
-  padding: 5px;
 }

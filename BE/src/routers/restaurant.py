@@ -360,8 +360,20 @@ async def list_restaurants(
     current_user: User = Depends(get_current_user_from_token)
 ):
     stmt = select(Restaurant)
+    
+    # 지역 필터링: 선택된 지역이 부모 지역일 경우 자식 지역까지 포함하여 검색
     if region_id is not None:
-        stmt = stmt.where(Restaurant.location_tag_id == region_id)
+        # 1. 해당 region_id의 자식 지역 ID들을 조회
+        sub_regions_stmt = select(Region.id).where(Region.parent_id == region_id)
+        sub_regions_result = await db.execute(sub_regions_stmt)
+        child_ids = sub_regions_result.scalars().all()
+        
+        # 2. 본인(region_id) + 자식들(child_ids) 리스트 생성
+        target_ids = [region_id] + list(child_ids)
+        
+        # 3. IN 연산자로 필터링
+        stmt = stmt.where(Restaurant.location_tag_id.in_(target_ids))
+
     if price_min is not None:
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
@@ -388,12 +400,20 @@ async def list_restaurants(
 
         if requested_ids:
             current = {t["id"] for t in tag_list}
-            if requested_ids.isdisjoint(current):
-                continue # OR로 수정 
-            '''
             if not requested_ids.issubset(current):
                 continue
             '''
+            # 이전 OR 로직 (주석 처리 또는 삭제)
+            if requested_ids.isdisjoint(current):
+                continue 
+            '''
+
+        img_row = await db.execute(
+            select(RestaurantImage)
+            .where(RestaurantImage.restaurant_id == r.id)
+            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
+            .limit(1)
+        )
         img_row = await db.execute(
             select(RestaurantImage)
             .where(RestaurantImage.restaurant_id == r.id)
@@ -466,10 +486,8 @@ async def list_restaurants_nearby(
 
             if requested_ids:
                 current = {t["id"] for t in tag_list}
-                if requested_ids.isdisjoint(current):
-                    continue # OR로 수정 
-                '''if not requested_ids.issubset(current):
-                    continue'''
+                if not requested_ids.issubset(current):
+                    continue
 
             img_row = await db.execute(
                 select(RestaurantImage)
@@ -495,6 +513,7 @@ async def list_restaurants_nearby(
 
     results.sort(key=lambda x: x["distance_km"])
     return results[:max(1, min(limit, 500))]
+
 
 # 뷰포트 검색
 @router.get("/restaurants/viewport")
@@ -548,11 +567,8 @@ async def list_restaurants_in_viewport(
 
         if requested:
             current = {t["id"] for t in tag_list}
-            if requested.isdisjoint(current):
+            if not requested.issubset(current):
                 continue
-            # OR로 수정 
-            '''if not requested.issubset(current):
-                continue'''
 
         results.append({
             "id": r.id,

@@ -224,15 +224,14 @@ function RegionContent({ selected, onChange }: { selected: number | null, onChan
 
   // 해당 대분류가 선택되었거나, 그 하위 지역이 선택되었는지 확인
   const isParentSelected = (parentId: number) => {
-    // 선택된 ID가 자기 자신(대분류)인 경우 (현재 로직상 지역은 단일 선택이므로 드물지만 확장성 고려)
     if (selected === parentId) return true;
-    
-    // 선택된 ID가 이 대분류의 자식인 경우
     const child = allRegions.find(r => r.id === selected);
     if (child && child.parent_id === parentId) return true;
-
     return false;
   };
+
+  // 현재 활성화된(보고 있는) 대분류의 이름 찾기
+  const activeParentName = regions.find(r => r.id === activeParentId)?.name;
 
   return (
     <div>
@@ -256,8 +255,25 @@ function RegionContent({ selected, onChange }: { selected: number | null, onChan
           );
         })}
       </div>
-      {subRegions.length > 0 && (
+      
+      {/* 소분류 영역 */}
+      {(subRegions.length > 0 || activeParentId) && (
         <div className={style.subRegionGrid}>
+          {/* 지역 대분류 전체 선택 버튼 */}
+          {activeParentId && (
+              <div 
+                className={`${style.tagItem} ${selected === activeParentId ? style.selected : ""}`} 
+                onClick={() => onChange(activeParentId)} // 대분류 ID를 그대로 선택
+                style={{ 
+                    fontWeight: 'bold', 
+                    backgroundColor: selected === activeParentId ? '#8B0029' : '#fff0f5', 
+                    borderColor: '#8B0029' 
+                }}
+              >
+                #{activeParentName} 전체
+              </div>
+          )}
+
           {subRegions.map((sub: any) => (
             <div key={sub.id} className={`${style.tagItem} ${selected === sub.id ? style.selected : ""}`} onClick={() => onChange(selected === sub.id ? null : sub.id)}>
               {sub.name}
