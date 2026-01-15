@@ -154,27 +154,34 @@ class ImageOut(BaseModel):
 async def get_tags(
     category_id: Optional[int] = Query(None, alias="category_id"),
     parent_id: Optional[int] = Query(None, alias="parent_id"),
+    flatten: bool = Query(False, description="True일 경우 계층 무시하고 전체 조회"),
     db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Tag)
     if category_id is not None:
         stmt = stmt.where(Tag.category_id == category_id)
-    if parent_id is None:
-        stmt = stmt.where(Tag.parent_id.is_(None))
-    else:
-        stmt = stmt.where(Tag.parent_id == parent_id)
+    if not flatten:
+        if parent_id is None:
+            stmt = stmt.where(Tag.parent_id.is_(None))
+        else:
+            stmt = stmt.where(Tag.parent_id == parent_id)
 
     result = await db.execute(stmt)
     tags = result.scalars().all()
     return [{"id": t.id, "name": t.name, "slug": t.slug, "parent_id": t.parent_id, "category_id": t.category_id, "is_selectable": t.is_selectable, "featured_rank": t.featured_rank} for t in tags]
 
 @router.get("/regions")
-async def get_regions(parent_id: Optional[int] = None, db: AsyncSession = Depends(get_async_db)):
+async def get_regions(
+    parent_id: Optional[int] = None, 
+    flatten: bool = Query(False),
+    db: AsyncSession = Depends(get_async_db)):
     stmt = select(Region)
-    if parent_id is None:
-        stmt = stmt.where(Region.parent_id.is_(None))
-    else:
-        stmt = stmt.where(Region.parent_id == parent_id)
+    if not flatten:
+        if parent_id is None:
+            stmt = stmt.where(Region.parent_id.is_(None))
+        else:
+            stmt = stmt.where(Region.parent_id == parent_id)
+            
     result = await db.execute(stmt)
     regions = result.scalars().all()
     return [{"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth} for r in regions]
