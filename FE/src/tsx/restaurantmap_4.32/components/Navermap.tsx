@@ -27,7 +27,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // 0. 지도 스크립트 로드
+  // 지도 스크립트 로드
   useEffect(() => {
     const clientId = import.meta.env.VITE_NAVER_CLIENT_ID;
     if (!clientId) {
@@ -51,7 +51,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
     document.head.appendChild(script);
   }, []);
 
-  // 1. 내 위치
+  // 내 위치
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -67,7 +67,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
     }
   }, []);
 
-  // 2. 데이터 가져오기
+  // 데이터 가져오기
   useEffect(() => {
     if (!restaurantIds || restaurantIds.length === 0) {
       setRestaurants([]);
@@ -91,9 +91,8 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
     fetchMapData();
   }, [restaurantIds]);
 
-  // 3. 지도 그리기 (예외 처리 강화)
+  // 지도 그리기
   useEffect(() => {
-    // 필수 조건 체크
     if (!isMapLoaded || !mapRef.current) return;
 
     // 네이버 객체 유효성 체크 (인증 실패 시 window.naver.maps가 null일 수 있음)
@@ -160,7 +159,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
       {/* 지도 영역 (로딩 실패 시 회색 배경) */}
       <div ref={mapRef} style={{ width: "100%", height: "100%", backgroundColor: "#eee" }} />
 
-      {/* ✅ Debug Overlay: 지도가 안 떠도 데이터는 여기서 확인 가능 */}
+      {/* Debug Overlay: 지도가 안 떠도 데이터는 여기서 확인 가능 */}
       <div style={{
         position: "absolute",
         top: "80px",
