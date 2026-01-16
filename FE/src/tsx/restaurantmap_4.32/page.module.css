@@ -1,33 +1,510 @@
+/* mapContainer: 전체 화면 */
 .mapContainer {
-  position: relative; /* 자식 요소를 absolute로 배치할 수 있게 */
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f5f5f5; /* 지도 로딩 전 배경색 */
 }
+
+/* 상단 필터 버튼 바 */
 .topBar {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  width: 100%;
   display: flex;
-  flex-direction: row;
-  height: 60px;
+  justify-content: center;
+  gap: 8px;
+  z-index: 100;
+  padding: 0 10px;
+  overflow-x: auto; /* 화면 작을 때 스크롤 */
+  -ms-overflow-style: none; /* 스크롤바 숨김 */
+  scrollbar-width: none;
 }
+.topBar::-webkit-scrollbar {
+  display: none;
+}
+
 .button {
-  flex: 1;
-  display: flex;
-  border-radius: 9999px; /* 완전 둥근 pill */
-  align-items: center; /* 수직 가운데 정렬 */
-  justify-content: center; /* 수평 가운데 정렬 */
-  margin: 8px 16px;
-  font-weight: bold;
-  background-color: #f3f3f3;
+  flex-shrink: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  cursor: pointer;
+  white-space: nowrap;
 }
+
+.button:active {
+  background-color: #f0f0f0;
+}
+
+/* 뒤로가기 버튼 (좌하단 고정) */
 .backButton {
   position: absolute;
-  bottom: 120px; /* 지도 아래쪽 여백 */
-  left: 110px; /* 왼쪽 여백 */
-  background-color: #f8f1ed;
+  bottom: 40px !important;
+  left: 20px !important;
+  top: auto !important;
+  
+  background: none;
   border: none;
-  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  z-index: 100;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+}
+
+/* 지도 컨트롤 (커스텀 줌, 내위치) */
+.mapControls {
+  position: absolute;
+  top: 100px;
+  right: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.controlBtn {
+  width: 44px;
+  height: 44px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #555;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: background-color 0.2s;
+}
+
+.controlBtn:active {
+  background-color: #f0f0f0;
+}
+
+/* 지도 마커 스타일 (커스텀 HTML 마커) */
+.markerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px; 
+  cursor: pointer;
+}
+
+.markerPin {
+  z-index: 10;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  transition: transform 0.2s;
+}
+
+.markerContainer:hover .markerPin {
+  transform: scale(1.1);
+}
+
+.markerLabel {
+  margin-top: 4px;
+  background-color: white;
+  border: 1px solid #8B0029;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* 정보창 (하단 카드형) */
+.infoWindow {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: slideUp 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  cursor: pointer;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.infoContent {
+  display: flex;
+  gap: 15px;
+}
+
+.infoThumb {
   width: 80px;
   height: 80px;
-  font-size: 28px;
-  color: #a01b3f;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #eee;
+  flex-shrink: 0;
+}
+
+.infoText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.infoName {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.infoMeta {
+  font-size: 13px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.infoClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #999;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  padding: 5px;
+}
+
+.tagContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+
+.tagBadge {
+  font-size: 10px;
+  color: #8B0029;
+  background-color: #fff0f5;
+  border: 1px solid #ffccd5;
+  border-radius: 4px;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+/* ========================================= */
+/*  모달 및 필터 스타일 */
+/* ========================================= */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalContent {
+  background-color: white;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.modalTitle {
+  font-family: 'SlowGothic', sans-serif;
+  font-size: 18px;
+  color: #8B0029;
+  margin: 0;
+  font-weight: bold;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.modalFooter {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.applyBtn {
+  flex: 1;
+  background-color: #8B0029;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.resetBtn {
+  flex: 0.4;
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/*  태그 아이템 공통 (음식, 분위기, 위치 모두 사용) */
+.tagGrid, .foodCatGrid, .regionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.tagItem {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s;
+  flex-shrink: 0; /* 찌그러짐 방지 */
+}
+
+.tagItem.selected {
+  background-color: #8B0029;
+  color: white;
+  border-color: #8B0029;
+}
+
+/*  대분류 버튼 강조 (하위 항목 선택 시) */
+.tagItem.hasSelection {
+  background-color: #ffe6eb;
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 600;
+}
+
+.tagItem.active {
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 700;
+}
+
+/*  지역 아이템 스타일 (Grid -> Flex 버튼형으로 변경) */
+.regionItem {
+  padding: 8px 16px; /* 버튼처럼 가로 패딩 확보 */
+  border: 1px solid #ddd;
+  border-radius: 20px; /* 둥글게 */
+  font-size: 13px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s;
+  flex-shrink: 0; /* 자동 줄바꿈 되도록 */
+}
+
+.regionItem.active {
+  border-color: #8B0029;
+  color: #8B0029;
+  font-weight: 700;
+  background-color: #fff0f5; /* 현재 보고 있는 탭 배경 */
+}
+
+.regionItem.hasSelection {
+  background-color: #8B0029;
+  color: white !important;
+  border-color: #8B0029;
+}
+
+/* Active이면서 동시에 Selection이 있는 경우 */
+.regionItem.active.hasSelection {
+   background-color: #8B0029;
+   color: white !important;
+}
+
+/* 소분류 컨테이너 */
+.subRegionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+}
+
+/* 가격 슬라이더 */
+.Price__container {
+    width: 100%;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Price__rangeGraphic {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    margin-bottom: 20px;
+}
+
+.Price__track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: #d3d9de;
+    border-radius: 2px;
+    transform: translateY(-50%);
+}
+
+.Price__rangeFill {
+    position: absolute;
+    top: 50%;
+    height: 4px;
+    background-color: #8B0029;
+    border-radius: 2px;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+.Price__range, .Price__range2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    pointer-events: none;
+    -webkit-appearance: none;
+    background: none;
+    z-index: 3;
+    margin: 0;
+}
+
+.Price__range::-webkit-slider-thumb,
+.Price__range2::-webkit-slider-thumb {
+    pointer-events: auto;
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border: 3px solid #8B0029;
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: 8px; 
+}
+
+.Price__range2::-webkit-slider-thumb {
+    background: #8B0029;
+    z-index: 10;
+}
+
+.Price__ticksLine {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    margin-bottom: 30px;
+}
+
+.Price__tickMajorWrap {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Price__tickBar {
+    width: 1px;
+    height: 5px;
+    background-color: #999;
+}
+
+.Price__tickLabel {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+}
+
+.Price__inputs {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.Price__input {
+    width: 100px;
+    padding: 8px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background-color: #f5f5f5;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
 }

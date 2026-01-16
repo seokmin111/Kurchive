@@ -1,15 +1,37 @@
 # BE/src/routers/restaurant.py
 
+'''
+MAP_LINK_PREFIXES = (
+    "https://map.kakao.com", # 됨
+    # https://map.kakao.com/?map_type=TYPE_MAP&itemId=17067705&urlLevel=3&urlX=513558&urlY=1038202
+    "https://kko.to", # 안됨
+    # https://kko.to/4ceAbRJOxC 
+    "https://kko.kakao.com", # 됨
+    # https://kko.kakao.com/4ceAbRJOxC 
+    "https://place.map.kakao.com", # 안됨 
+    # https://place.map.kakao.com/17067705
+    "https://naver.me", # 안됨 
+    # https://naver.me/FuVEJDp0
+    "https://map.naver.com", # 안됨 
+    # https://map.naver.com/p/entry/place/35228977?lng=127.0601916&lat=37.2372403&placePath=/home?from=map&fromPanelNum=1&additionalHeight=76&timestamp=202601091547&locale=ko&svcName=map_pcv5&entry=plt&searchType=place&c=15.00,0,0,0,dh
+    "https://m.place.naver.com", # 안됨 
+    # https://m.place.naver.com/restaurant/35228977/home
+    "https://maps.app.goo.gl", # 됨 
+    # https://maps.app.goo.gl/4szoJcJkuczmMfyZ9
+    "https://www.google.com/maps", # 됨
+    # https://www.google.com/maps/place/%EC%97%B0%ED%99%94%EB%8B%B4/data=!4m6!3m5!1s0x357b44948a07c205:0x18c2058f8d95c4de!8m2!3d37.2466899!4d127.0587767!16s%2Fg%2F1td7fn8y?entry=ttu&g_ep=EgoyMDI2MDEwNi4wIKXMDSoASAFQAw%3D%3D
+    "https://goo.gl"
+)
+'''
+
 from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator, conint
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-import os, re, time, secrets
-from math import radians, sin, cos, asin, sqrt
-
+import os, re, time
 import anyio
-import aiofiles
+
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,10 +40,11 @@ from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
-from BE.AddressLatLong import extract_location_from_link
 
-from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
-from BE.src.utils.image_upload import save_image_local, save_image_oci
+# 주소 추출 모듈 임포트
+from BE.AddressLatLong import extract_location_from_link
+from BE.src.utils.image_cleanup import cleanup_restaurant_images
+from BE.src.utils.image_upload import save_image, delete_image_oci
 
 # ---------------------------
 # 공통 응답 헬퍼
@@ -31,38 +54,6 @@ def ok(data: Any = None, message: str = "OK", meta: Optional[Dict[str, Any]] = N
     if meta is not None:
         payload["meta"] = meta
     return JSONResponse(content=payload, status_code=status_code)
-
-def fail(message: str, status_code: int = 400, meta: Optional[Dict[str, Any]] = None):
-    payload = {"ok": False, "message": message, "data": None}
-    if meta is not None:
-        payload["meta"] = meta
-    return JSONResponse(content=payload, status_code=status_code)
-
-def _haversine_km(lat1, lon1, lat2, lon2) -> float:
-    """두 좌표(위도/경도) 사이 거리(km)"""
-    if None in (lat1, lon1, lat2, lon2):
-        return 10**9
-    R = 6371.0
-    dlat = radians(lat2 - lat1)
-    dlon = radians(lon2 - lon1)
-    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
-    return 2 * R * asin(sqrt(a))
-
-'''
-async def get_current_executive_user(current_user: User = Depends(get_current_user_from_token)) -> User:
-    """
-    현재 로그인한 유저가 임원(staff) 또는 관리자(admin)인지 확인
-    권한이 없으면 403 Forbidden 에러
-    """
-    # is_privileged = current_user.role == 'staff' or current_user.is_admin
-    is_privileged = current_user.role == 'staff' or current_user.is_admin
-    if not is_privileged:
-        raise HTTPException(
-            status_code=403,
-            detail="Executive or admin access required",
-        )
-    return current_user
-'''
 
 router = APIRouter()
 
@@ -80,26 +71,15 @@ class RestaurantCreate(BaseModel):
     price_max: int
     tag_ids: List[int]
 
-# 2025.11.21 수정 : locatin link 모든 형식 허용으로 수정
     @validator("location_link")
     def validate_location_link(cls, v: str):
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
-
-        # URL 기본 형식만 확인
+        v = v.strip() # 공백제거
+        # 최소한의 URL 형식만 체크 (http로 시작하는지)
         if not re.match(r"^https?://", v):
-            raise ValueError("location_link must be a valid URL (http/https)")
-
-        # 지도 링크 여부만 기록해두기
-        cls.is_map_link = (
-            v.startswith("https://map.kakao.com")
-            or v.startswith("https://kko.kakao.com")
-            or v.startswith("https://maps.app.goo.gl")
-            or v.startswith("https://www.google.com/maps")
-        )
+            raise ValueError("location_link must be a valid URL (start with http/https)")
         return v
-
-
 
     @validator("name", "summary", "description")
     def not_empty(cls, v):
@@ -142,16 +122,6 @@ class CreateRestaurantResponse(BaseModel):
     message: str
     data: RestaurantCreatedData
 
-class RestaurantTagOut(BaseModel):
-    id: int
-    name: str
-
-class RegionOut(BaseModel):
-    id: int
-    name: str
-    parent_id: Optional[int] = None
-    depth: Optional[int] = None
-
 class RestaurantDetailOut(BaseModel):
     id: int
     name: str
@@ -159,8 +129,8 @@ class RestaurantDetailOut(BaseModel):
     location_link: str
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    region: Optional[RegionOut] = None
-    tags: List[RestaurantTagOut]
+    region: Optional[Any] = None 
+    tags: List[Any]
     rating: int
     summary: str
     description: str
@@ -168,8 +138,7 @@ class RestaurantDetailOut(BaseModel):
     price_max: int
     uploaded_by: int
     created_at: float
-
-ALLOWED_IMAGE_CT = {"image/jpeg", "image/png", "image/webp"}
+    images: List[Any]
 
 class ImageOut(BaseModel):
     id: int
@@ -177,83 +146,69 @@ class ImageOut(BaseModel):
     created_at: float
 
 # ---------------------------
-# API 엔드포인트 (비동기)
+# API 엔드포인트
 # ---------------------------
 
-# 1. 태그 조회
-'''parent id가 없으면 자동으로 상위만 반환'''
+# 태그 조회
 @router.get("/tags")
 async def get_tags(
     category_id: Optional[int] = Query(None, alias="category_id"),
     parent_id: Optional[int] = Query(None, alias="parent_id"),
+    flatten: bool = Query(False, description="True일 경우 계층 무시하고 전체 조회"),
     db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Tag)
     if category_id is not None:
         stmt = stmt.where(Tag.category_id == category_id)
-    if parent_id is None:
-        stmt = stmt.where(Tag.parent_id.is_(None))
-    else:
-        stmt = stmt.where(Tag.parent_id == parent_id)
+    if not flatten:
+        if parent_id is None:
+            stmt = stmt.where(Tag.parent_id.is_(None))
+        else:
+            stmt = stmt.where(Tag.parent_id == parent_id)
 
     result = await db.execute(stmt)
     tags = result.scalars().all()
-    return [
-        {
-            "id": t.id,
-            "name": t.name,
-            "slug": t.slug,
-            "parent_id": t.parent_id,
-            "category_id": t.category_id,
-            "is_selectable": t.is_selectable,
-            "featured_rank": t.featured_rank,
-        }
-        for t in tags
-    ]
+    return [{"id": t.id, "name": t.name, "slug": t.slug, "parent_id": t.parent_id, "category_id": t.category_id, "is_selectable": t.is_selectable, "featured_rank": t.featured_rank} for t in tags]
 
-# 1-2. 카테고리 조회
-@router.get("/tag-categories")
-async def get_tag_categories(db: AsyncSession = Depends(get_async_db)):
-    result = await db.execute(select(TagCategory))
-    categories = result.scalars().all()
-    return [{"id": c.id, "name": c.name, "slug": c.slug} for c in categories]
-
-# 2. 지역 조회
-'''parent id가 없으면 자동으로 상위만 반환'''
 @router.get("/regions")
 async def get_regions(
-    parent_id: Optional[int] = None,
-    db: AsyncSession = Depends(get_async_db)
-):
+    parent_id: Optional[int] = None, 
+    flatten: bool = Query(False),
+    db: AsyncSession = Depends(get_async_db)):
     stmt = select(Region)
-    if parent_id is None:
-        stmt = stmt.where(Region.parent_id.is_(None))
-    else:
-        stmt = stmt.where(Region.parent_id == parent_id)
+    if not flatten:
+        if parent_id is None:
+            stmt = stmt.where(Region.parent_id.is_(None))
+        else:
+            stmt = stmt.where(Region.parent_id == parent_id)
+            
     result = await db.execute(stmt)
     regions = result.scalars().all()
     return [{"id": r.id, "name": r.name, "parent_id": r.parent_id, "depth": r.depth} for r in regions]
 
-# 3. 식당 아카이빙
+
+# 식당 아카이빙
 @router.post("/restaurants", response_model=CreateRestaurantResponse)
 async def create_restaurant(
     payload: RestaurantCreate,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-   # 1) 지도 링크인 경우에만 주소/위경도 추출
     address, lat, lon = None, None, None
+    print(f"[API] 주소 추출 시도: {payload.location_link}") # 디버깅 로그
+
     try:
-        if getattr(payload.__class__, "is_map_link", False):
-            loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
-            if loc:
-                address = loc.get("road_address") or loc.get("address")
-                lat, lon = loc.get("lat"), loc.get("lng")
+
+        loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
+        if loc:
+            address = loc.get("road_address") or loc.get("address")
+            lat, lon = loc.get("lat"), loc.get("lng")
+            print(f" 주소 추출 성공: {address} ({lat}, {lon})")
+        else:
+            print("⚠️ 주소 추출 실패 (결과 없음)")
     except Exception as e:
-        print(f"[주소 추출 실패] {e}")
+        print(f"❌ 주소 추출 중 에러 발생: {e}")
 
-
-    # 2) insert
     try:
         restaurant = Restaurant(
             name=payload.name,
@@ -275,18 +230,16 @@ async def create_restaurant(
         await db.refresh(restaurant)
     except Exception as e:
         await db.rollback()
-        return {"ok": False, "message": f"DB insert error: {e}"}
+        return JSONResponse(status_code=400, content={"ok": False, "message": f"DB insert error: {e}"})
 
-    # 3) 태그 매핑
     try:
         for tag_id in payload.tag_ids:
             db.add(RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id))
         await db.commit()
     except Exception as e:
         await db.rollback()
-        return {"ok": False, "message": f"Tag insert error: {e}"}
+        return JSONResponse(status_code=400, content={"ok": False, "message": f"Tag insert error: {e}"})
 
-    # 4) 최종 응답
     return {
         "ok": True,
         "message": "식당 등록 완료",
@@ -303,19 +256,13 @@ async def create_restaurant(
         }
     }
     
-# 5. 식당 이름 검색
-'''원래는 /restaurant/{restaurant_id} 밑에 있었는데 fastapi는 
-정적 경로를 동적 경로보다 먼저 탐색하기 때문에 순서 바꿈.'''
+# 식당 이름 검색
 @router.get("/restaurants/search")
 async def search_restaurants_by_name(
     q: str,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    """
-    식당 이름 일부(q)로 식당을 검색합니다.
-    부분 일치 검색 (LIKE %q%)
-    """
     result = await db.execute(
         select(Restaurant).where(Restaurant.name.like(f"%{q}%")).limit(20)
     )
@@ -323,7 +270,6 @@ async def search_restaurants_by_name(
 
     out = []
     for r in restaurants:
-        # 대표이미지 조회
         img_row = await db.execute(
             select(RestaurantImage)
             .where(RestaurantImage.restaurant_id == r.id)
@@ -344,7 +290,7 @@ async def search_restaurants_by_name(
         })
     return out
 
-# 4. 식당 상세 조회
+# 식당 상세 조회
 @router.get("/restaurants/{restaurant_id}")
 async def get_restaurant(
     restaurant_id: int,
@@ -356,7 +302,6 @@ async def get_restaurant(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    # 태그
     tag_rows = await db.execute(
         select(Tag.id, Tag.name)
         .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
@@ -364,7 +309,6 @@ async def get_restaurant(
     )
     tags = [{"id": t[0], "name": t[1]} for t in tag_rows.all()]
 
-    # 지역
     region_row = await db.execute(
         select(Region.id, Region.name, Region.parent_id, Region.depth)
         .where(Region.id == restaurant.location_tag_id)
@@ -372,7 +316,6 @@ async def get_restaurant(
     rr = region_row.first()
     region_dict = {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]} if rr else None
 
-    # 이미지 (대표 여부 포함)
     imgs_result = await db.execute(
         select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id)
     )
@@ -381,7 +324,7 @@ async def get_restaurant(
             "id": i.id,
             "image_url": i.image_url,
             "created_at": i.created_at,
-            "is_cover": getattr(i, "is_cover", False)   # ✅ 대표 여부 포함
+            "is_cover": getattr(i, "is_cover", False)
         }
         for i in imgs_result.scalars().all()
     ]
@@ -402,16 +345,30 @@ async def get_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
-        "images": image_list    # 모든 이미지 + 대표 여부
+        "images": image_list
     }
 
+# 헬퍼 함수: 요청된 태그 ID들을 각각 [본인 + 자식들]의 집합(Set) 리스트로 변환
+async def _build_tag_requirements(db: AsyncSession, tag_ids_str: str) -> List[set]:
+    try:
+        req_ids = list(map(int, tag_ids_str.split(",")))
+    except ValueError:
+        return []
 
-# 5-1. 식당 목록 조회 (조건부 필터링)
-'''region_id 없으면 지역 필터링 무시
+    requirements = []
+    for rid in req_ids:
+        # 해당 태그의 자식 태그들 조회
+        stmt = select(Tag.id).where(Tag.parent_id == rid)
+        result = await db.execute(stmt)
+        child_ids = result.scalars().all()
+        
+        # {본인 ID, 자식 ID 1, 자식 ID 2 ...} 집합 생성
+        expanded_set = {rid} | set(child_ids)
+        requirements.append(expanded_set)
+    
+    return requirements
 
-price_min 없으면 하한 무시, price_max 없으면 상한 무시
-
-tag_ids 없으면 태그 조건 무시, 있으면 AND 조건으로 모두 포함된 레스토랑만 반환'''
+# 식당 목록 조회
 @router.get("/restaurants")
 async def list_restaurants(
     region_id: Optional[int] = None,
@@ -422,8 +379,15 @@ async def list_restaurants(
     current_user: User = Depends(get_current_user_from_token)
 ):
     stmt = select(Restaurant)
+    
+    # 지역 필터링 (부모 지역 선택 시 자식 포함)
     if region_id is not None:
-        stmt = stmt.where(Restaurant.location_tag_id == region_id)
+        sub_regions_stmt = select(Region.id).where(Region.parent_id == region_id)
+        sub_regions_result = await db.execute(sub_regions_stmt)
+        child_ids = sub_regions_result.scalars().all()
+        target_ids = [region_id] + list(child_ids)
+        stmt = stmt.where(Restaurant.location_tag_id.in_(target_ids))
+
     if price_min is not None:
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
@@ -432,29 +396,35 @@ async def list_restaurants(
     result = await db.execute(stmt)
     restaurants = result.scalars().all()
 
-    results = []
-    requested_ids: Optional[set[int]] = None
+    #   태그 검색 조건 준비 (계층 구조 반영 + AND 로직)
+    tag_requirements = []
     if tag_ids:
-        try:
-            requested_ids = set(map(int, tag_ids.split(",")))
-        except ValueError:
-            requested_ids = None
+        tag_requirements = await _build_tag_requirements(db, tag_ids)
 
+    results = []
     for r in restaurants:
-        # 태그
         trows = await db.execute(
             select(Tag.id, Tag.name)
             .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
+        current_tag_ids = {t["id"] for t in tag_list}
 
-        if requested_ids:
-            current = {t["id"] for t in tag_list}
-            if not requested_ids.issubset(current):
+        #   태그 필터링 로직
+        # tag_requirements는 [{한식그룹}, {매운맛그룹}] 형태
+        # 식당의 태그가 '한식그룹'과도 겹쳐야 하고(AND), '매운맛그룹'과도 겹쳐야 함
+        if tag_requirements:
+            is_match = True
+            for req_set in tag_requirements:
+                # isdisjoint가 True면 겹치는 게 없다는 뜻 -> 조건 불만족
+                if req_set.isdisjoint(current_tag_ids):
+                    is_match = False
+                    break
+            
+            if not is_match:
                 continue
 
-        # 대표이미지 조회 (is_cover 우선, 없으면 첫 번째)
         img_row = await db.execute(
             select(RestaurantImage)
             .where(RestaurantImage.restaurant_id == r.id)
@@ -483,17 +453,7 @@ async def list_restaurants(
     return results
 
 
-# 5-2. 현위치/임의좌표 근접 검색 (지도용)
-"""
-프론트 사용 예시:
-GET /restaurants/nearby?lat=37.5665&lon=126.9780&radius_km=2.5&tag_ids=10,101
-
-- lat, lon: 기준 좌표(현위치 또는 사용자가 입력한 주소의 좌표)
-- radius_km: 반경(km), 기본 2.0
-- tag_ids: "1,2,3" 형태(AND 조건)
-- 가격 필터(price_min/price_max)도 선택 지원
-응답: 지도 마커에 필요한 최소 필드 + distance_km
-"""
+# 현위치/임의좌표 근접 검색
 @router.get("/restaurants/nearby")
 async def list_restaurants_nearby(
     lat: float,
@@ -517,12 +477,10 @@ async def list_restaurants_nearby(
 
     candidates = (await db.execute(stmt.limit(5000))).scalars().all()
 
-    requested_ids: Optional[set[int]] = None
+    #   태그 조건 준비
+    tag_requirements = []
     if tag_ids:
-        try:
-            requested_ids = set(map(int, tag_ids.split(",")))
-        except ValueError:
-            requested_ids = None
+        tag_requirements = await _build_tag_requirements(db, tag_ids)
 
     results = []
     for r in candidates:
@@ -534,13 +492,18 @@ async def list_restaurants_nearby(
                 .where(RestaurantTag.restaurant_id == r.id)
             )
             tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
+            current_tag_ids = {t["id"] for t in tag_list}
 
-            if requested_ids:
-                current = {t["id"] for t in tag_list}
-                if not requested_ids.issubset(current):
+            #   태그 필터링
+            if tag_requirements:
+                is_match = True
+                for req_set in tag_requirements:
+                    if req_set.isdisjoint(current_tag_ids):
+                        is_match = False
+                        break
+                if not is_match:
                     continue
 
-            # 대표이미지 조회
             img_row = await db.execute(
                 select(RestaurantImage)
                 .where(RestaurantImage.restaurant_id == r.id)
@@ -560,29 +523,13 @@ async def list_restaurants_nearby(
                 "price_max": r.price_max,
                 "tags": tag_list,
                 "distance_km": round(d, 3),
-                "thumbnail_url": img.image_url if img else None   # ✅ 대표이미지
+                "thumbnail_url": img.image_url if img else None
             })
 
     results.sort(key=lambda x: x["distance_km"])
     return results[:max(1, min(limit, 500))]
 
-# 5-3. 뷰포트(화면에 보이는 지도 영역) 내 식당 검색
-"""
-프론트 사용 예:
-  const b = map.getBounds();
-  GET /restaurants/viewport
-      ?min_lat=${b.getSouthWest().lat}
-      &min_lon=${b.getSouthWest().lng}
-      &max_lat=${b.getNorthEast().lat}
-      &max_lon=${b.getNorthEast().lng}
-      &tag_ids=10,101
-      &price_min=5000&price_max=20000
-      &limit=200
-
-- tag_ids: "1,2,3" 형태(AND 조건)
-- price_min/price_max: 선택
-- limit: 응답 상한(기본 200)
-"""
+# 뷰포트 검색
 @router.get("/restaurants/viewport")
 async def list_restaurants_in_viewport(
     min_lat: float,
@@ -616,12 +563,10 @@ async def list_restaurants_in_viewport(
 
     candidates = (await db.execute(stmt.limit(5000))).scalars().all()
 
-    requested: Optional[set[int]] = None
+    #   태그 조건 준비
+    tag_requirements = []
     if tag_ids:
-        try:
-            requested = set(map(int, tag_ids.split(",")))
-        except ValueError:
-            requested = None
+        tag_requirements = await _build_tag_requirements(db, tag_ids)
 
     results = []
     for r in candidates:
@@ -631,10 +576,16 @@ async def list_restaurants_in_viewport(
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
+        current_tag_ids = {t["id"] for t in tag_list}
 
-        if requested:
-            current = {t["id"] for t in tag_list}
-            if not requested.issubset(current):
+        #   태그 필터링
+        if tag_requirements:
+            is_match = True
+            for req_set in tag_requirements:
+                if req_set.isdisjoint(current_tag_ids):
+                    is_match = False
+                    break
+            if not is_match:
                 continue
 
         results.append({
@@ -652,7 +603,7 @@ async def list_restaurants_in_viewport(
     results.sort(key=lambda x: (-x["rating"], x["id"]))
     return results[:max(1, min(limit, 500))]
 
-# 6. 식당 정보 수정
+# 식당 정보 수정
 @router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
 async def update_restaurant(
     restaurant_id: int,
@@ -665,23 +616,21 @@ async def update_restaurant(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    # 권한확인 
     is_uploader = restaurant.uploaded_by == current_user.id
     is_admin = current_user.is_admin
     if not (is_uploader or is_admin):
         raise HTTPException(status_code=403, detail="Not authorized to perform this action")
     
-    # 주소/좌표 재계산 25.11.21 수정
-    address, lat, lon = None, None, None
-    try:
-        if getattr(payload.__class__, "is_map_link", False):
+    address, lat, lon = restaurant.address, restaurant.latitude, restaurant.longitude
+    if payload.location_link != restaurant.location_link or not (lat and lon):
+        try:
             loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
             if loc:
                 address = loc.get("road_address") or loc.get("address")
                 lat, lon = loc.get("lat"), loc.get("lng")
-    except Exception as e:
-        print(f"[주소/좌표 추출 실패] {e}")
-
+                print(f" (Update) 주소 재추출 성공: {address}")
+        except Exception as e:
+            print(f" (Update) 주소 추출 에러: {e}")
 
     # 필드 반영
     restaurant.name = payload.name
@@ -721,6 +670,9 @@ async def update_restaurant(
     rr = region_row.first()
     region_dict = {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]} if rr else None
 
+    imgs_result = await db.execute(select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id))
+    images = [{"id": i.id, "image_url": i.image_url, "created_at": i.created_at} for i in imgs_result.scalars().all()]
+
     return {
         "id": restaurant.id,
         "name": restaurant.name,
@@ -737,9 +689,10 @@ async def update_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
+        "images": images
     }
 
-# 7. 식당 삭제(Delete)
+# 식당 삭제(Delete)
 @router.delete("/restaurants/{restaurant_id}")
 async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user_from_token)):
     restaurant = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
@@ -761,7 +714,7 @@ async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_a
     return {"message": "Restaurant deleted", "id": restaurant_id}
 
 
-# 8. 태그 검색 자동완성
+# 태그 검색 자동완성
 @router.get("/tags/search")
 async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
     result = await db.execute(
@@ -774,7 +727,7 @@ async def search_tags(q: str, db: AsyncSession = Depends(get_async_db)):
 # 이미지
 # ============================
 from typing import List as TList
-from BE.src.utils.image_upload import save_image, delete_image_oci  # ✅ 추가
+from BE.src.utils.image_upload import save_image, delete_image_oci  #  추가
 
 @router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
 async def upload_restaurant_images(
@@ -856,7 +809,7 @@ async def delete_restaurant_image(
         raise HTTPException(status_code=404, detail="Image not found")
 
     try:
-        delete_image_oci(img.image_url)   # ✅ 로컬 삭제 → OCI 삭제
+        delete_image_oci(img.image_url)   #  로컬 삭제 → OCI 삭제
     except Exception as e:
         print(f"[이미지 삭제 실패] {e}")
 
@@ -927,35 +880,3 @@ async def patch_restaurant_image(
     await db.commit()
     await db.refresh(img)
     return {"id": img.id, "image_url": img.image_url, "created_at": img.created_at}
-
-"""프론트 호출
-async function updateImageMeta(restaurantId: number, imageId: number, data: {
-  is_cover?: boolean;
-  caption?: string;
-  sort_order?: number;
-}) {
-  const res = await fetch(`/api/restaurants/${restaurantId}/images/${imageId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // 로그인 토큰 필요
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    throw new Error(`이미지 메타 수정 실패: ${res.status}`);
-  }
-
-  return res.json(); // {id, image_url, created_at}
-}
-
-// 대표 이미지로 지정
-await updateImageMeta(3, 42, { is_cover: true });
-
-// 캡션 수정
-await updateImageMeta(3, 42, { caption: "메뉴 사진" });
-
-// 정렬 순서 수정
-await updateImageMeta(3, 42, { sort_order: 2 });
-"""
