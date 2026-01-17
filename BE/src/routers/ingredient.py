@@ -14,7 +14,6 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from models import Ingredient
 
 
 router = APIRouter(prefix="/api/ingredient", tags=["Ingredient"])
