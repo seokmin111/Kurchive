@@ -51,6 +51,8 @@ type IngredientSuggestItem = {
 };
 
 export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
+  const ingNameRefs = useRef<Array<HTMLInputElement | null>>([]);
+
   const { recipeId } = useParams();
   const nav = useNavigate();
 
@@ -170,6 +172,12 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
   // allowedUnits 로드: 현재 재료 기준
   useEffect(() => {
+    const DEFAULT_UNITS: Record<string, string[]> = {
+      mass: ["g", "kg"],
+      volume: ["ml", "L"],
+      count: ["개"],
+      misc: [],
+    };
     const src = ingredientsDraft.length ? ingredientsDraft : recipe?.ingredients ?? [];
     if (!src.length) return;
 
@@ -177,16 +185,19 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
       const map: Record<number, string[]> = {};
       for (const ing of src) {
         try {
-          // 이름이 비어있으면 요청하지 않음(추가한 빈 재료 대비)
           if (!ing.name?.trim()) {
-            map[ing.ingredient_id] = ing.unit_name ? [ing.unit_name] : [];
+            map[ing.ingredient_id] = ing.unit_name ? [ing.unit_name] : DEFAULT_UNITS.mass;
             continue;
           }
+
           const data = await getIngredientUnitsByName(ing.name);
-          map[ing.ingredient_id] = data.units;
+          const units = (data.units ?? []).filter(Boolean);
+
+          // ✅ 비어있으면 기본값
+          map[ing.ingredient_id] = units.length ? units : DEFAULT_UNITS.mass;
         } catch (e) {
-          console.error("unit fetch fail:", ing.name, e);
-          map[ing.ingredient_id] = ing.unit_name ? [ing.unit_name] : [];
+          // ✅ 실패해도 기본값
+          map[ing.ingredient_id] = DEFAULT_UNITS.mass;
         }
       }
       setAllowedUnits(map);
@@ -233,22 +244,31 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     debounceTimersRef.current.set(idx, t);
   };
 
-  const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
-    setIngredientsDraft((prev) =>
-      prev.map((it, i) =>
-        i === idx
-          ? {
-              ...it,
-              ingredient_id: pick.id,
-              name: pick.name,
-            }
-          : it
-      )
-    );
+const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
+  setIngredientsDraft((prev) =>
+    prev.map((it, i) =>
+      i === idx
+        ? {
+            ...it,
+            ingredient_id: pick.id,
+            name: pick.name,
+            // unit_name 비어있으면 임시로 넣어두기(나중에 allowedUnits 로드되면 사용자가 바꿀 수 있음)
+            unit_name: it.unit_name || (allowedUnits[pick.id]?.[0] ?? it.unit_name),
+          }
+        : it
+    )
+  );
 
-    // 선택 즉시 단위 목록 갱신 트리거: useEffect가 name 보고 다시 가져옴
-    setIngSuggestOpen((prev) => ({ ...prev, [idx]: false }));
-  };
+  // 단위 select 값도 같이 맞추기
+  const fallbackUnit = allowedUnits[pick.id]?.[0];
+  if (fallbackUnit) {
+    setUnitSelections((prev) => ({ ...prev, [pick.id]: fallbackUnit }));
+    setUnitDirty(true);
+  }
+
+  setIngSuggestOpen((prev) => ({ ...prev, [idx]: false }));
+};
+
 
   // ============================================================
   // 저장
@@ -404,34 +424,41 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
   const removeIngredient = (idx: number) => {
     setIngredientsDraft((prev) => prev.filter((_, i) => i !== idx));
-    setIngSuggest((prev) => {
-      const n = { ...prev };
-      delete n[idx];
-      return n;
-    });
-    setIngSuggestOpen((prev) => {
-      const n = { ...prev };
-      delete n[idx];
-      return n;
-    });
-    setIngSuggestLoading((prev) => {
-      const n = { ...prev };
-      delete n[idx];
-      return n;
-    });
+
+    // idx 기반 상태는 꼬이기 쉬워서 통째로 초기화가 안전
+    setIngSuggest({});
+    setIngSuggestOpen({});
+    setIngSuggestLoading({});
   };
 
   const addIngredient = () => {
-    setIngredientsDraft((prev) => [
-      ...prev,
-      {
-        ingredient_id: -Date.now(), // 임시 id(음수) → 저장 시 name으로 생성되도록
-        name: "",
-        quantity: 0,
-        unit_name: "",
-      },
-    ]);
-  };
+      const newId = -Date.now();
+
+      setIngredientsDraft((prev) => {
+        const newIdx = prev.length;
+
+        // dropdown 열어두기
+        setIngSuggestOpen((m) => ({ ...m, [newIdx]: true }));
+
+        // 렌더 후 포커스
+        setTimeout(() => {
+          ingNameRefs.current[newIdx]?.focus();
+        }, 0);
+
+        return [
+          ...prev,
+          {
+            ingredient_id: newId,
+            name: "",
+            quantity: 0,
+            unit_name: "",
+          },
+        ];
+      });
+    };
+
+
+
 
   const setStepDescription = (idx: number, desc: string) => {
     setStepsDraft((prev) => prev.map((s, i) => (i === idx ? { ...s, description: desc } : s)));
@@ -609,6 +636,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                   ) : (
                     <>
                       <input
+                        ref={(el) => (ingNameRefs.current[idx] = el)}
                         value={ingredientsDraft[idx]?.name ?? ""}
                         onChange={(e) => onChangeIngredientName(idx, e.target.value)}
                         onFocus={() => setIngSuggestOpen((prev) => ({ ...prev, [idx]: true }))}
