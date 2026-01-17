@@ -1,0 +1,74 @@
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+.container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 812px;
+  width: 375px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  margin: 0 auto; /* 중앙 정렬 */
+}
+
+.memberAdminBtn{
+  background-color: #F2ECE5;
+  border: 1px solid #971D41;
+  border-radius: 10px;
+  width: 70%;
+  height: 150px;
+  margin-bottom: 30px;
+  margin-top: 300px;
+  position: relative;
+  box-shadow: 8px 8px 8px 0px rgba(0, 0, 0, 0.1);
+}
+
+.kurchive{
+  font-family: "SlowGothic", sans-serif;
+  color: #971D41;
+  font-size: 30px;
+  z-index: 5;
+}
+
+.memberAdmin{
+  color: #971D41;
+  z-index: 5;
+}
+
+.logo{
+  width: 150px;
+  position: absolute;
+  z-index: 0;
+  opacity: 0.1;
+  top: 0;
+  left: 53px;
+}
+
+.passwordBtn{
+  background-color: white;
+  width: 70%;
+  height: 50px;
+  border-radius: 7px;
+  border: 1px solid black;
+  margin-bottom: 150px;
+  font-weight: 500;
+  box-shadow: 8px 8px 8px 0px rgba(0, 0, 0, 0.1);
+}
+
+
+.adminChange{
+  background-color: white;
+  width: 70%;
+  height: 50px;
+  border-radius: 7px;
+  border: 1px solid #971D41;
+  color: #971D41;
+  font-weight: 500;
+  box-shadow: 8px 8px 8px 0px rgba(0, 0, 0, 0.1);
+}
+

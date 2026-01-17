@@ -25,14 +25,14 @@ def expand_short_url(short_url: str) -> str:
         return None
 
 # 장소 id 추출
-## 1. 네이버
+## 네이버
 def extract_naver_place_id(full_url: str) -> str | None:
     match = re.search(r'/place/(\d+)', full_url)
     if match:
         return match.group(1)
     return None
 
-## 2. 카카오
+## 카카오
 def extract_kakao_place_id(full_url: str) -> str | None:
     parsed = urlparse(full_url)
     query_params = parse_qs(parsed.query)
@@ -40,7 +40,7 @@ def extract_kakao_place_id(full_url: str) -> str | None:
     return item_id[0] if item_id else None
 
 # 주소 추출
-## 1. 카카오
+## 카카오
 def kakao_keyword_to_address(place_name: str) -> str | None:
     api = "https://dapi.kakao.com/v2/local/search/keyword.json"
     headers = {"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"}
@@ -60,12 +60,12 @@ def kakao_keyword_to_address(place_name: str) -> str | None:
 
 
 def extract_kakao_place_id_from_url(full_url: str) -> str | None:
-    # 1) ?itemId=12345 형태
+    # ?itemId=12345 형태
     parsed = urlparse(full_url)
     item_id = parse_qs(parsed.query).get("itemId")
     if item_id:
         return item_id[0]
-    # 2) /place.map.kakao.com/12345 형태
+    # /place.map.kakao.com/12345 형태
     m = re.search(r'place\.map\.kakao\.com/(?:m/)?(\d+)', full_url)
     return m.group(1) if m else None
 
@@ -109,7 +109,7 @@ def get_kakao_address(url: str) -> str | None:
         return None
 
 
-## 2. 네이버
+## 네이버
 def extract_naver_place_id_from_url(full_url: str) -> str | None:
     m = re.search(r'/place/(\d+)', full_url) or re.search(r'/entry/place/(\d+)', full_url)
     return m.group(1) if m else None
@@ -167,7 +167,7 @@ def get_naver_address(url: str) -> str | None:
 
 #------------------------------------------------------------------------
 
-# 네이버 카카오 통합
+# 네이버& 카카오 
 def get_address(url: str) -> str | None:
     full_url = expand_short_url(url) or url
 
@@ -179,7 +179,7 @@ def get_address(url: str) -> str | None:
         print("네이버")
         return get_naver_address(full_url)
 
-    return None  # 불명 링크
+    return None # 뭔지 모르겠는 링크 
 
 ## ---------------------------------------------------------------
 # 위도경도 추출
@@ -218,9 +218,9 @@ def main():
     print("NAVER_CLIENT_ID:", bool(os.environ.get("NAVER_CLIENT_ID")))
     print("NAVER_CLIENT_SECRET:", bool(os.environ.get("NAVER_CLIENT_SECRET")))
 
-    urls = [
-        "https://naver.me/GubwElwt",             # 네이버 단축링크 예시
-        "https://place.map.kakao.com/26338954",  # 카카오 place 예시 (바꿔도 됨)
+    urls = [ # 예시링크들 
+        "https://naver.me/GubwElwt",       
+        "https://place.map.kakao.com/26338954",  
     ]
 
     for url in urls:

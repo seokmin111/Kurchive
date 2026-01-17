@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import styles from "./page.module.css";
-import client from "../../api/client"; // 네 경로에 맞게 유지/수정
+import client from "../../api/client"; 
 
 type TagGroup = "region" | "food" | "price";
 
@@ -13,12 +13,6 @@ type Region = {
   name: string;
   parent_id?: number | null;
   depth?: number | null;
-};
-
-type TagCategory = {
-  id: number;
-  name: string;
-  slug?: string | null;
 };
 
 type Tag = {
@@ -38,14 +32,14 @@ export default function RestaurantFormPage() {
   const [name, setName] = useState("");
   const [shortReview, setShortReview] = useState("");
   const [mapLink, setMapLink] = useState("");
-  const [rating, setRating] = useState(0); // 0~5, 0.5 step UI
+  const [rating, setRating] = useState(0); 
 
   const [menuInput, setMenuInput] = useState("");
   const [menus, setMenus] = useState<string[]>([]);
   const [detailReview, setDetailReview] = useState("");
 
   // -------------------------
-  // 이미지 (파일 + 프리뷰)
+  // 이미지
   // -------------------------
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [detailImageFile, setDetailImageFile] = useState<File | null>(null);
@@ -65,7 +59,7 @@ export default function RestaurantFormPage() {
   };
 
   // -------------------------
-  // 지역 2단계 (대지역 -> 소지역)
+  // 지역 2단계
   // -------------------------
   const [regionsLv1, setRegionsLv1] = useState<Region[]>([]);
   const [regionsLv2, setRegionsLv2] = useState<Region[]>([]);
@@ -73,10 +67,20 @@ export default function RestaurantFormPage() {
   const [selectedLv2, setSelectedLv2] = useState<number | null>(null);
 
   // -------------------------
-  // 음식 태그 (백엔드 tag_ids)
+  // 음식 태그 2단계 로직
   // -------------------------
-  const [foodTags, setFoodTags] = useState<Tag[]>([]);
+  const [foodParents, setFoodParents] = useState<Tag[]>([]); // 대분류
+  const [selectedFoodParentId, setSelectedFoodParentId] = useState<number | null>(null);
+  const [foodChildren, setFoodChildren] = useState<Tag[]>([]); // 소분류
+  
   const [selectedFoodTagIds, setSelectedFoodTagIds] = useState<number[]>([]);
+
+  // 대분류 변경 시 소분류 선택 초기화
+  const handleFoodParentClick = (parentId: number) => {
+    if (selectedFoodParentId === parentId) return; // 같은거 누르면 무시
+    setSelectedFoodParentId(parentId);
+    setSelectedFoodTagIds([]); // 다른 대분류 선택시 기존에 선택된 태그 해제
+  };
 
   const toggleFoodTagId = (id: number) => {
     setSelectedFoodTagIds((prev) =>
@@ -86,7 +90,7 @@ export default function RestaurantFormPage() {
   const clearFoodTags = () => setSelectedFoodTagIds([]);
 
   // -------------------------
-  // 가격 범위 (태그 아님)
+  // 가격 범위
   // -------------------------
   const [priceMin, setPriceMin] = useState<number | "">("");
   const [priceMax, setPriceMax] = useState<number | "">("");
@@ -97,35 +101,31 @@ export default function RestaurantFormPage() {
   const [activeGroup, setActiveGroup] = useState<TagGroup>("region");
 
   // -------------------------
-  // 로딩/전송 상태
+  // 상태
   // -------------------------
   const [submitting, setSubmitting] = useState(false);
   const [loadingMeta, setLoadingMeta] = useState(false);
 
   // =========================================================
-  // (1) 대지역 로드: GET /regions
+  // (1) 대지역 로드
   // =========================================================
   useEffect(() => {
     const loadLv1 = async () => {
       setLoadingMeta(true);
       try {
         const lv1: Region[] = (await client.get("/regions")).data;
-        const filtered = lv1.filter((r) => !r.name.endsWith("전체")); // "~전체" 숨김
+        const filtered = lv1.filter((r) => !r.name.endsWith("전체"));
         setRegionsLv1(filtered);
         if (filtered.length) setSelectedLv1(filtered[0].id);
       } finally {
         setLoadingMeta(false);
       }
     };
-
-    loadLv1().catch((e) => {
-      console.error(e);
-      alert("대지역 목록 로딩 실패");
-    });
+    loadLv1().catch(console.error);
   }, []);
 
   // =========================================================
-  // (2) 소지역 로드: GET /regions?parent_id=...
+  // (2) 소지역 로드
   // =========================================================
   useEffect(() => {
     const loadLv2 = async () => {
@@ -134,46 +134,55 @@ export default function RestaurantFormPage() {
         await client.get("/regions", { params: { parent_id: selectedLv1 } })
       ).data;
 
-      const filtered = lv2.filter((r) => !r.name.endsWith("전체")); // "~전체" 숨김
+      const filtered = lv2.filter((r) => !r.name.endsWith("전체"));
       setRegionsLv2(filtered);
       setSelectedLv2(filtered.length ? filtered[0].id : null);
     };
-
-    loadLv2().catch((e) => {
-      console.error(e);
-      alert("소지역 목록 로딩 실패");
-    });
+    loadLv2().catch(console.error);
   }, [selectedLv1]);
 
   // =========================================================
-  // (3) 음식 태그 로드: GET /tag-categories -> /tags?category_id=...
+  // (3) 음식 대분류 로드
   // =========================================================
   useEffect(() => {
-    const loadFoodTags = async () => {
-      const cats: TagCategory[] = (await client.get("/tag-categories")).data;
+    const loadFoodParents = async () => {
+      try {
+        const res = await client.get("/tags", { params: { category_id: 1 } });
+        const tags = res.data;
+        const parents = tags.filter((t: Tag) => !t.parent_id);
+        
+        setFoodParents(parents);
+        if (parents.length > 0) {
+          setSelectedFoodParentId(parents[0].id);
+        }
+      } catch (e) {
+        console.error("음식 대분류 로딩 실패", e);
+      }
+    };
+    loadFoodParents();
+  }, []);
 
-      // 음식 카테고리 찾기(슬러그 있으면 slug 우선, 없으면 name으로)
-      const foodCat =
-        cats.find((c) => (c.slug ?? "").toLowerCase().includes("food")) ||
-        cats.find((c) => c.name.includes("음식"));
-
-      if (!foodCat) {
-        // 음식 카테고리가 없다면, 그냥 비워둠
-        setFoodTags([]);
+  // =========================================================
+  // (4) 음식 소분류 로드
+  // =========================================================
+  useEffect(() => {
+    const loadFoodChildren = async () => {
+      if (!selectedFoodParentId) {
+        setFoodChildren([]);
         return;
       }
-
-      const tags: Tag[] = (await client.get("/tags", { params: { category_id: foodCat.id } })).data;
-
-      // selectable=false는 UI에서 제외
-      setFoodTags(tags.filter((t) => t.is_selectable !== false));
+      try {
+        const res = await client.get("/tags", {
+          params: { category_id: 1, parent_id: selectedFoodParentId },
+        });
+        setFoodChildren(res.data);
+      } catch (e) {
+        console.error("음식 소분류 로딩 실패", e);
+      }
     };
+    loadFoodChildren();
+  }, [selectedFoodParentId]);
 
-    loadFoodTags().catch((e) => {
-      console.error(e);
-      alert("음식 태그 로딩 실패");
-    });
-  }, []);
 
   // -------------------------
   // 메뉴 칩
@@ -194,20 +203,19 @@ export default function RestaurantFormPage() {
   };
 
   // -------------------------
-  // rating: 백엔드가 int(0~5)면 반올림해서 보냄
+  // Rating
   // -------------------------
   const ratingInt = useMemo(() => {
-    const r = Math.round(rating); // 0.5 step UI -> 정수로 변환
+    const r = Math.round(rating);
     return Math.max(0, Math.min(5, r));
   }, [rating]);
 
   // -------------------------
-  // submit: POST /restaurants -> (옵션) POST /restaurants/{id}/images
+  // Submit
   // -------------------------
   const handleSubmit = async () => {
     if (submitting) return;
 
-    // 최소 검증(백엔드에서 터지기 전에 프론트에서 막기)
     if (!name.trim()) return alert("식당 이름을 입력해줘.");
     if (!mapLink.trim()) return alert("맵 링크를 입력해줘.");
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 해.");
@@ -219,8 +227,6 @@ export default function RestaurantFormPage() {
 
     try {
       setSubmitting(true);
-
-      // menus는 백엔드 필드가 없을 수 있어서 description에 합침(확정 스펙이면 여기 조정)
       const menuLine = menus.length ? `\n\n추천 메뉴: ${menus.join(", ")}` : "";
       const description = `${detailReview ?? ""}${menuLine}`.trim() || " ";
 
@@ -249,7 +255,7 @@ export default function RestaurantFormPage() {
         return;
       }
 
-      // 이미지 업로드(있을 때만)
+      // 이미지 업로드
       const files: File[] = [];
       if (mainImageFile) files.push(mainImageFile);
       if (detailImageFile) files.push(detailImageFile);
@@ -257,7 +263,6 @@ export default function RestaurantFormPage() {
       if (files.length) {
         const fd = new FormData();
         files.forEach((f) => fd.append("files", f));
-
         await client.post(`/restaurants/${restaurantId}/images`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -266,8 +271,6 @@ export default function RestaurantFormPage() {
       alert("식당 등록 완료!");
       navigate("/restaurant", { replace: true });
 
-      // TODO: 등록 후 이동 라우트가 있으면 여기서 navigate 처리
-      // 예: navigate(`/restaurants/${restaurantId}`);
     } catch (e: any) {
       console.error(e);
       const msg =
@@ -282,13 +285,15 @@ export default function RestaurantFormPage() {
   };
 
   // -------------------------
-  // UI
+  // UI Render
   // -------------------------
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         <header className={styles.header}>
-          <button className={styles.backButton}>〈</button>
+          <button className={styles.backButton} onClick={() => navigate(-1)}>
+            〈
+          </button>
           <button
             className={styles.submitButton}
             onClick={handleSubmit}
@@ -318,11 +323,7 @@ export default function RestaurantFormPage() {
               />
               <label className={styles.photoButton}>
                 {mainImagePreview ? (
-                  <img
-                    src={mainImagePreview}
-                    alt="main"
-                    className={styles.photoPreview}
-                  />
+                  <img src={mainImagePreview} alt="main" className={styles.photoPreview} />
                 ) : (
                   <>
                     사진 추가
@@ -333,9 +334,7 @@ export default function RestaurantFormPage() {
                   type="file"
                   accept="image/*"
                   style={{ display: "none" }}
-                  onChange={(e) =>
-                    handleMainImageChange(e.target.files?.[0] ?? null)
-                  }
+                  onChange={(e) => handleMainImageChange(e.target.files?.[0] ?? null)}
                 />
               </label>
             </div>
@@ -365,11 +364,7 @@ export default function RestaurantFormPage() {
                   <button
                     key={idx}
                     type="button"
-                    className={
-                      active
-                        ? styles.starButtonActive
-                        : styles.starButtonInactive
-                    }
+                    className={active ? styles.starButtonActive : styles.starButtonInactive}
                     onClick={() => setRating(stepValue)}
                   >
                     ★
@@ -392,11 +387,7 @@ export default function RestaurantFormPage() {
                   }
                 }}
               />
-              <button
-                className={styles.menuAddButton}
-                type="button"
-                onClick={handleAddMenu}
-              >
+              <button className={styles.menuAddButton} type="button" onClick={handleAddMenu}>
                 +
               </button>
             </div>
@@ -423,29 +414,21 @@ export default function RestaurantFormPage() {
             <div className={styles.tagTabs}>
               <button
                 type="button"
-                className={
-                  activeGroup === "region"
-                    ? styles.tagTabActive
-                    : styles.tagTab
-                }
+                className={activeGroup === "region" ? styles.tagTabActive : styles.tagTab}
                 onClick={() => setActiveGroup("region")}
               >
                 지역
               </button>
               <button
                 type="button"
-                className={
-                  activeGroup === "food" ? styles.tagTabActive : styles.tagTab
-                }
+                className={activeGroup === "food" ? styles.tagTabActive : styles.tagTab}
                 onClick={() => setActiveGroup("food")}
               >
                 음식 종류
               </button>
               <button
                 type="button"
-                className={
-                  activeGroup === "price" ? styles.tagTabActive : styles.tagTab
-                }
+                className={activeGroup === "price" ? styles.tagTabActive : styles.tagTab}
                 onClick={() => setActiveGroup("price")}
               >
                 가격
@@ -462,9 +445,7 @@ export default function RestaurantFormPage() {
                       <button
                         key={r.id}
                         type="button"
-                        className={
-                          selected ? styles.tagButtonSelected : styles.tagButton
-                        }
+                        className={selected ? styles.tagButtonSelected : styles.tagButton}
                         onClick={() => setSelectedLv1(r.id)}
                         disabled={loadingMeta}
                       >
@@ -481,9 +462,7 @@ export default function RestaurantFormPage() {
                       <button
                         key={r.id}
                         type="button"
-                        className={
-                          selected ? styles.tagButtonSelected : styles.tagButton
-                        }
+                        className={selected ? styles.tagButtonSelected : styles.tagButton}
                         onClick={() => setSelectedLv2(r.id)}
                       >
                         {r.name}
@@ -494,22 +473,20 @@ export default function RestaurantFormPage() {
               </>
             )}
 
-            {/* 음식 태그: tag_ids */}
+            {/* 음식 태그: 2단계 (대분류 -> 소분류) */}
             {activeGroup === "food" && (
               <>
+                {/* 대분류 */}
                 <div className={styles.tagGrid}>
-                  {foodTags.map((t) => {
-                    const selected = selectedFoodTagIds.includes(t.id);
+                  {foodParents.map((t) => {
+                    const selected = selectedFoodParentId === t.id;
                     return (
                       <button
                         key={t.id}
                         type="button"
-                        className={
-                          selected
-                            ? styles.tagButtonSelected
-                            : styles.tagButton
-                        }
-                        onClick={() => toggleFoodTagId(t.id)}
+                        className={selected ? styles.tagButtonSelected : styles.tagButton}
+                        // [수정] 핸들러 변경: 클릭 시 소분류 초기화 로직 포함
+                        onClick={() => handleFoodParentClick(t.id)}
                       >
                         {t.name}
                       </button>
@@ -517,18 +494,38 @@ export default function RestaurantFormPage() {
                   })}
                 </div>
 
+                {/* 소분류 */}
+                <div className={styles.tagGrid} style={{ marginTop: 12, minHeight: 40 }}>
+                  {foodChildren.length === 0 ? (
+                    <span className={styles.smallText} style={{ padding: 4 }}>
+                      상위 종류를 선택해주세요
+                    </span>
+                  ) : (
+                    foodChildren.map((t) => {
+                      const selected = selectedFoodTagIds.includes(t.id);
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          className={selected ? styles.tagButtonSelected : styles.tagButton}
+                          onClick={() => toggleFoodTagId(t.id)}
+                        >
+                          {t.name}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* 선택된 태그 목록 및 삭제 버튼 */}
                 <div className={styles.selectedTagRow}>
-                  <button
-                    type="button"
-                    className={styles.trashButton}
-                    onClick={clearFoodTags}
-                  >
+                  <button type="button" className={styles.trashButton} onClick={clearFoodTags}>
                     전체 삭제
                   </button>
 
                   <div className={styles.selectedChips}>
                     {selectedFoodTagIds.map((id) => {
-                      const t = foodTags.find((x) => x.id === id);
+                      const t = foodChildren.find((x) => x.id === id);
                       return (
                         <button
                           key={id}
@@ -536,7 +533,7 @@ export default function RestaurantFormPage() {
                           className={styles.selectedChip}
                           onClick={() => toggleFoodTagId(id)}
                         >
-                          {t?.name ?? `#${id}`} ×
+                          {t?.name ?? `태그(${id})`} ×
                         </button>
                       );
                     })}
@@ -556,23 +553,17 @@ export default function RestaurantFormPage() {
                   value={priceMin}
                   inputMode="numeric"
                   onChange={(e) =>
-                    setPriceMin(
-                      e.target.value === "" ? "" : Number(e.target.value)
-                    )
+                    setPriceMin(e.target.value === "" ? "" : Number(e.target.value))
                   }
                 />
-
                 <span style={{ margin: "0 8px" }}>~</span>
-
                 <input
                   className={styles.mapInput}
                   placeholder="최대 (예: 20000)"
                   value={priceMax}
                   inputMode="numeric"
                   onChange={(e) =>
-                    setPriceMax(
-                      e.target.value === "" ? "" : Number(e.target.value)
-                    )
+                    setPriceMax(e.target.value === "" ? "" : Number(e.target.value))
                   }
                 />
               </div>
@@ -607,9 +598,7 @@ export default function RestaurantFormPage() {
                   type="file"
                   accept="image/*"
                   style={{ display: "none" }}
-                  onChange={(e) =>
-                    handleDetailImageChange(e.target.files?.[0] ?? null)
-                  }
+                  onChange={(e) => handleDetailImageChange(e.target.files?.[0] ?? null)}
                 />
               </label>
             </div>

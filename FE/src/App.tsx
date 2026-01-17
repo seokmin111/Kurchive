@@ -11,12 +11,12 @@ import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
 import SearchPage from "./tsx/restaurant_search_4.21/page";
 import RestaurantSearchResultsPage from "./tsx/restaurant_search_result_4.3/page";
 import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page"; 
+import MapPage from "./tsx/restaurantmap_4.32/page"; 
 
 import RecipeMainPage from "./tsx/recipe_3.0/page"; 
 import RecipeSearchPage from "./tsx/recipeSearch_3.2/page";
 import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
-
-import RecipeSpecific from "./tsx/recipeSpecific_3.31/page";
+import RecipeSpecific from "./tsx/recipeSpecific_3.31/page"
 import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
 
@@ -24,6 +24,10 @@ import MyPage from "./tsx/mypage_2.0/page";
 import MyActivityPage from "./tsx/myactivity_2.2/page";
 import MyInfoEdit from "./tsx/myInfoEdit_2.1/page";
 import QuitPage from "./tsx/quitpage_2.3/page";
+
+import AdminFirstPage from "./tsx/10.0/page";
+import AdminMainPage from "./tsx/10.1/page";
+import MemberSearchPage from "./tsx/10.2/page";
 
 export default function App() {
   return (
@@ -47,6 +51,7 @@ export default function App() {
       <Route
         path="/restaurant/search/results"
         element={<RestaurantSearchResultsPage />} />
+      <Route path="/restaurant/map" element={<MapPage />} />
 
       {/* 식당 상세(4.31) */}
       <Route path="/restaurant/detail/:restaurantId" element={<RestaurantDetailPage />}/>
@@ -65,6 +70,11 @@ export default function App() {
       <Route path="/myactivity" element={<MyActivityPage />} />
       <Route path="/infoedit" element={<MyInfoEdit />} />
       <Route path="/quitpage" element={<QuitPage />} />
+
+      {/*관리자 페이지*/}
+      <Route path="/admin" element={<AdminFirstPage></AdminFirstPage>}></Route>
+      <Route path="/admin/main" element={<AdminMainPage></AdminMainPage>}></Route>
+      <Route path="/admin/member" element={<MemberSearchPage></MemberSearchPage>}></Route>
 
       {/* 404 */}
       <Route
