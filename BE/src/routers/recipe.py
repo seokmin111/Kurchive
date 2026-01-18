@@ -511,13 +511,20 @@ async def upload_step_images(
     if replace:
         for img in list(step.images):
             try:
-                fp = img.image_url.lstrip("/")
-                if fp.startswith("uploads/") and os.path.exists(fp):
-                    os.remove(fp)
+                url = img.image_url or ""
+                # OCI URL이면 OCI 삭제
+                if "/o/" in url:
+                    delete_image_oci(url)
+                else:
+                    # 로컬 업로드면 로컬 삭제
+                    fp = url.lstrip("/")
+                    if fp.startswith("uploads/") and os.path.exists(fp):
+                        os.remove(fp)
             except Exception as e:
-                print(f"[레시피 이미지 파일 삭제 실패] {e}")
+                logger.warning(f"[레시피 단계 이미지 삭제 실패] {e}")
             await db.delete(img)
         await db.flush()
+
 
     for i, f in enumerate(files):
         _, url_path = await save_image(f, f"recipes/{recipe_id}/steps/{step_order}")

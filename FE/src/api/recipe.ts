@@ -158,18 +158,27 @@ export const uploadStepImages = (
     .then((r) => r.data);
 };
 
+
+
 // 단계별 이미지 교체
-export const replaceStepImages = (
+export async function replaceStepImages(
   recipeId: number,
   stepOrder: number,
   files: File[]
-) => {
-  const formData = new FormData();
-  files.forEach((file) => formData.append("files", file));
+) {
+  const fd = new FormData();
+  for (const f of files) {
+    // ✅ filename 강제 유니크(스토리지/백엔드가 file.filename을 쓰는 경우 대비)
+    fd.append(
+      "files",
+      f,
+      `${Date.now()}_${Math.random().toString(16).slice(2)}_${f.name}`
+    );
+  }
 
-  return client
-    .put(`/recipe/${recipeId}/steps/${stepOrder}/images`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-    .then((r) => r.data);
-};
+  const res = await client.put(`/api/recipe/${recipeId}/steps/${stepOrder}/images`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+

@@ -1,3 +1,6 @@
+import client from "../../api/client";
+
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
@@ -9,6 +12,9 @@ import {
   deleteRecipe,
   scaleRecipe,
   convertRecipeUnits,
+  replaceThumbnail,
+  uploadStepImages,
+  replaceStepImages
 } from "../../api/recipe";
 
 type RecipeDetail = {
@@ -18,10 +24,7 @@ type RecipeDetail = {
   uploader_id: number;
   created_at: string;
   thumbnail_url?: string | null;
-
-  // (BE에 없어도 FE에서 안전하게 다룸: 없으면 그냥 "" 처리)
   description?: string | null;
-
   steps: { step_order: number; description: string; image_urls?: string[] }[];
   ingredients: {
     ingredient_id: number;
@@ -32,7 +35,7 @@ type RecipeDetail = {
 };
 
 type DraftIngredient = {
-  ingredient_id: number;
+  ingredient_id: number; // <0: 임시
   name: string;
   quantity: number;
   unit_name: string;
@@ -51,65 +54,53 @@ type IngredientSuggestItem = {
 };
 
 export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
-  const ingNameRefs = useRef<Array<HTMLInputElement | null>>([]);
+  /* 이미지 */
+  const [saving, setSaving] = useState(false);
 
+  const ingNameRefs = useRef<Array<HTMLInputElement | null>>([]);
   const { recipeId } = useParams();
   const nav = useNavigate();
 
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState("");
-
-  // 편집모드: /edit 라우트면 true
+ /* 편집 모드 */
   const [isEdit, setIsEdit] = useState(mode === "edit");
 
-  // Draft들(저장 payload의 원천)
   const [titleDraft, setTitleDraft] = useState("");
   const [descDraft, setDescDraft] = useState("");
   const [baseServingDraft, setBaseServingDraft] = useState<number>(1);
   const [ingredientsDraft, setIngredientsDraft] = useState<DraftIngredient[]>([]);
   const [stepsDraft, setStepsDraft] = useState<DraftStep[]>([]);
 
-  // 인분 변경 UI (scale API용)
   const [servingsInput, setServingsInput] = useState<number>(2);
 
-  // 단위 선택/허용 단위
   const [unitSelections, setUnitSelections] = useState<Record<number, string>>({});
   const [allowedUnits, setAllowedUnits] = useState<Record<number, string[]>>({});
   const [unitDirty, setUnitDirty] = useState(false);
 
-  // ============================================================
-  // 재료 자동완성(행 인덱스 기준)
-  // ============================================================
+  // 재료 자동완성
   const [ingSuggest, setIngSuggest] = useState<Record<number, IngredientSuggestItem[]>>({});
   const [ingSuggestOpen, setIngSuggestOpen] = useState<Record<number, boolean>>({});
   const [ingSuggestLoading, setIngSuggestLoading] = useState<Record<number, boolean>>({});
   const debounceTimersRef = useRef<Map<number, any>>(new Map());
 
-  // ============================================================
-  // 단계 이미지 URL 추가(행 인덱스 기준)
-  // ============================================================
-  const [stepImageUrlInput, setStepImageUrlInput] = useState<Record<number, string>>({});
+  // 이미지 업로드
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [stepFiles, setStepFiles] = useState<Record<number, File[]>>({}); // key=step_order
 
-  // mode가 바뀌면 편집모드도 동기화
-  useEffect(() => {
-    setIsEdit(mode === "edit");
-  }, [mode]);
+  useEffect(() => setIsEdit(mode === "edit"), [mode]);
 
-  // 보기용 steps 정렬
   const stepsSorted = useMemo(() => {
     return (recipe?.steps ?? []).slice().sort((a, b) => a.step_order - b.step_order);
   }, [recipe]);
 
-  // 화면 렌더링 데이터 소스: edit이면 draft를 보여줌
   const ingredientsView = isEdit ? ingredientsDraft : recipe?.ingredients ?? [];
   const stepsView = isEdit ? stepsDraft : stepsSorted;
 
-  // step_order 1..N 재정렬
   const normalizeSteps = (steps: DraftStep[]) =>
     steps.map((s, i) => ({ ...s, step_order: i + 1 }));
 
-  // 초기 데이터 로드
   useEffect(() => {
     const id = Number(recipeId);
     if (!id || Number.isNaN(id)) {
@@ -126,7 +117,6 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
         const data: RecipeDetail = await getRecipeDetail(id);
         setRecipe(data);
 
-        // draft 초기화
         setTitleDraft(data.title);
         setDescDraft((data.description ?? "").toString());
         setBaseServingDraft(data.base_serving);
@@ -151,16 +141,17 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
             }))
         );
 
-        // 인분 input 기본값
         setServingsInput(data.base_serving);
 
-        // 단위 선택 기본값
         const initUnits: Record<number, string> = {};
         (data.ingredients ?? []).forEach((it) => {
           initUnits[it.ingredient_id] = it.unit_name;
         });
         setUnitSelections(initUnits);
         setUnitDirty(false);
+
+        setThumbnailFile(null);
+        setStepFiles({});
       } catch (e: any) {
         console.error(e);
         setErrMsg(e?.response?.data?.detail ?? e?.message ?? "불러오기 실패");
@@ -170,52 +161,75 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     })();
   }, [recipeId]);
 
-  // allowedUnits 로드: 현재 재료 기준
+  // allowedUnits: 확정된 재료만 조회
   useEffect(() => {
-    const DEFAULT_UNITS: Record<string, string[]> = {
-      mass: ["g", "kg"],
-      volume: ["ml", "L"],
-      count: ["개"],
-      misc: [],
-    };
     const src = ingredientsDraft.length ? ingredientsDraft : recipe?.ingredients ?? [];
     if (!src.length) return;
 
     (async () => {
       const map: Record<number, string[]> = {};
-      for (const ing of src) {
-        try {
-          if (!ing.name?.trim()) {
-            map[ing.ingredient_id] = ing.unit_name ? [ing.unit_name] : DEFAULT_UNITS.mass;
-            continue;
-          }
 
+      for (const ing of src) {
+        if (ing.ingredient_id < 0) {
+          map[ing.ingredient_id] = [];
+          continue;
+        }
+        try {
           const data = await getIngredientUnitsByName(ing.name);
           const units = (data.units ?? []).filter(Boolean);
-
-          // ✅ 비어있으면 기본값
-          map[ing.ingredient_id] = units.length ? units : DEFAULT_UNITS.mass;
-        } catch (e) {
-          // ✅ 실패해도 기본값
-          map[ing.ingredient_id] = DEFAULT_UNITS.mass;
+          map[ing.ingredient_id] = units;
+        } catch {
+          map[ing.ingredient_id] = [];
         }
       }
+
       setAllowedUnits(map);
     })();
   }, [recipe, ingredientsDraft]);
 
+  // 단위 목록 도착 후 unit_name 비어있으면 첫 단위 자동 채움
+  useEffect(() => {
+    if (!isEdit) return;
+
+    setIngredientsDraft((prev) =>
+      prev.map((it) => {
+        if (it.ingredient_id <= 0) return it;
+        if (it.unit_name?.trim()) return it;
+        const first = allowedUnits[it.ingredient_id]?.[0];
+        return first ? { ...it, unit_name: first } : it;
+      })
+    );
+
+    setUnitSelections((prev) => {
+      const next = { ...prev };
+      for (const it of ingredientsDraft) {
+        if (it.ingredient_id <= 0) continue;
+        if (next[it.ingredient_id]) continue;
+        const first = allowedUnits[it.ingredient_id]?.[0];
+        if (first) next[it.ingredient_id] = first;
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedUnits]);
+
   const onClickBack = () => nav(-1);
 
-  // ============================================================
-  // 재료 자동완성 핸들러
-  // ============================================================
+  // 재료 자동완성
   const onChangeIngredientName = (idx: number, v: string) => {
-    setIngredientsDraft((prev) => prev.map((it, i) => (i === idx ? { ...it, name: v } : it)));
+    // 1) name 변경
+    setIngredientsDraft((prev) =>
+      prev.map((it, i) => (i === idx ? { ...it, name: v } : it))
+    );
 
-    // 입력 중에는 ingredient_id를 “선택된 재료”로 확정하지 않음 (기존 id 유지)
-    // 만약 사용자가 기존 재료를 타이핑으로 바꾸면, 저장 시 name 기반으로 생성되게 하고 싶으면
-    // 아래처럼 id를 임시 음수로 바꿔도 됨. (원하면 이 라인 주석 해제)
-    // setIngredientsDraft(prev => prev.map((it,i)=> i===idx ? {...it, ingredient_id: it.ingredient_id>0 ? -Date.now() : it.ingredient_id} : it));
+    // 2) 기존 확정 재료였다면 “미확정”으로 되돌림(단위 잠금)
+    setIngredientsDraft((prev) =>
+      prev.map((it, i) => {
+        if (i !== idx) return it;
+        if (it.ingredient_id > 0) return { ...it, ingredient_id: -Date.now(), unit_name: "" };
+        return it;
+      })
+    );
 
     setIngSuggestOpen((prev) => ({ ...prev, [idx]: true }));
 
@@ -244,37 +258,33 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     debounceTimersRef.current.set(idx, t);
   };
 
-const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
-  setIngredientsDraft((prev) =>
-    prev.map((it, i) =>
-      i === idx
-        ? {
-            ...it,
-            ingredient_id: pick.id,
-            name: pick.name,
-            // unit_name 비어있으면 임시로 넣어두기(나중에 allowedUnits 로드되면 사용자가 바꿀 수 있음)
-            unit_name: it.unit_name || (allowedUnits[pick.id]?.[0] ?? it.unit_name),
-          }
-        : it
-    )
-  );
+  const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
+    setIngredientsDraft((prev) =>
+      prev.map((it, i) =>
+        i === idx ? { ...it, ingredient_id: pick.id, name: pick.name, unit_name: "" } : it
+      )
+    );
+    setIngSuggestOpen((prev) => ({ ...prev, [idx]: false }));
+  };
 
-  // 단위 select 값도 같이 맞추기
-  const fallbackUnit = allowedUnits[pick.id]?.[0];
-  if (fallbackUnit) {
-    setUnitSelections((prev) => ({ ...prev, [pick.id]: fallbackUnit }));
-    setUnitDirty(true);
-  }
+  const hasUnconfirmedIngredient = useMemo(() => {
+    if (!isEdit) return false;
+    return ingredientsDraft.some((x) => (x.name?.trim() ? x.ingredient_id < 0 : false));
+  }, [ingredientsDraft, isEdit]);
 
-  setIngSuggestOpen((prev) => ({ ...prev, [idx]: false }));
-};
-
-
-  // ============================================================
-  // 저장
-  // ============================================================
   const onSave = async () => {
     if (!recipe) return;
+    if (saving) return;
+    setSaving(true);
+
+    if (!titleDraft.trim()) {
+      setErrMsg("제목을 입력해줘.");
+      return;
+    }
+    if (hasUnconfirmedIngredient) {
+      setErrMsg("확정되지 않은 재료가 있어. 드롭다운에서 선택해줘.");
+      return;
+    }
 
     try {
       setErrMsg("");
@@ -282,15 +292,14 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
       const body = {
         title: titleDraft.trim(),
         base_serving: baseServingDraft,
-        description: descDraft, // BE가 아직 없으면 무시될 수 있음
-        ingredients: ingredientsDraft.map((x) => {
-          const isTemp = x.ingredient_id < 0;
-          return {
-            ...(isTemp ? { name: x.name?.trim() } : { ingredient_id: x.ingredient_id }),
+        description: descDraft,
+        ingredients: ingredientsDraft
+          .filter((x) => x.name?.trim())
+          .map((x) => ({
+            ingredient_id: x.ingredient_id,
             quantity: Number(x.quantity),
             unit_name: x.unit_name,
-          };
-        }),
+          })),
         steps: stepsDraft.map((s) => ({
           step_order: s.step_order,
           description: s.description,
@@ -299,20 +308,50 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
       };
 
       const updated: RecipeDetail = await updateRecipe(recipe.id, body);
-      setRecipe(updated);
 
-      // 저장 후 view로 이동 (프로젝트 라우팅이 /recipe 라면 여기 바꿔야 함)
-      nav(`/recipe/${updated.id}`);
+      if (thumbnailFile) {
+        await replaceThumbnail(updated.id, thumbnailFile);
+      }
 
-      // 단위 상태 동기화
-      const newUnits: Record<number, string> = {};
-      (updated.ingredients ?? []).forEach((it) => {
-        newUnits[it.ingredient_id] = it.unit_name;
-      });
-      setUnitSelections(newUnits);
+      for (const s of stepsDraft) {
+        const files = stepFiles[s.step_order];
+        if (files && files.length) {
+          await replaceStepImages(updated.id, s.step_order, files);
+        }
+      }
+
+      const fresh: RecipeDetail = await getRecipeDetail(updated.id);
+      setRecipe(fresh);
+
+      setTitleDraft(fresh.title);
+      setDescDraft((fresh.description ?? "").toString());
+      setBaseServingDraft(fresh.base_serving);
+
+      setIngredientsDraft(
+        (fresh.ingredients ?? []).map((x) => ({
+          ingredient_id: x.ingredient_id,
+          name: x.name,
+          quantity: x.quantity,
+          unit_name: x.unit_name,
+        }))
+      );
+
+      setStepsDraft(
+        (fresh.steps ?? [])
+          .slice()
+          .sort((a, b) => a.step_order - b.step_order)
+          .map((s) => ({
+            step_order: s.step_order,
+            description: s.description,
+            image_urls: s.image_urls ?? [],
+          }))
+      );
+
+      setThumbnailFile(null);
+      setStepFiles({});
       setUnitDirty(false);
 
-      setServingsInput(updated.base_serving);
+      nav(`/recipe/${fresh.id}`);
     } catch (e: any) {
       console.error(e);
       const status = e?.response?.status;
@@ -321,7 +360,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
     }
   };
 
-  // 삭제
   const onDelete = async () => {
     if (!recipe) return;
 
@@ -340,7 +378,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
     }
   };
 
-  // 인분 변경 API
   const onScaleServings = async () => {
     if (!recipe) return;
     const servings = Number(servingsInput);
@@ -354,7 +391,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
       const scaled: RecipeDetail = await scaleRecipe(recipe.id, servings);
       setRecipe(scaled);
 
-      // scale 이후 draft도 같이 갱신
       setBaseServingDraft(scaled.base_serving);
       setIngredientsDraft(
         (scaled.ingredients ?? []).map((x) => ({
@@ -364,19 +400,12 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
           unit_name: x.unit_name,
         }))
       );
-
-      const newUnits: Record<number, string> = { ...unitSelections };
-      (scaled.ingredients ?? []).forEach((it) => {
-        if (!newUnits[it.ingredient_id]) newUnits[it.ingredient_id] = it.unit_name;
-      });
-      setUnitSelections(newUnits);
     } catch (e: any) {
       console.error(e);
       setErrMsg(e?.response?.data?.detail ?? e?.message ?? "인분 변환 실패");
     }
   };
 
-  // 단위 변환 API
   const onConvertUnits = async () => {
     if (!recipe) return;
 
@@ -391,7 +420,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
       const converted: RecipeDetail = await convertRecipeUnits(recipe.id, { units });
       setRecipe(converted);
 
-      // 변환 결과를 draft에 반영 (edit 저장에 반영)
       setIngredientsDraft(
         (converted.ingredients ?? []).map((x) => ({
           ingredient_id: x.ingredient_id,
@@ -413,7 +441,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
     }
   };
 
-  // draft 수정 헬퍼들
   const setIngredientQuantity = (idx: number, quantity: number) => {
     setIngredientsDraft((prev) => prev.map((it, i) => (i === idx ? { ...it, quantity } : it)));
   };
@@ -424,41 +451,21 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
 
   const removeIngredient = (idx: number) => {
     setIngredientsDraft((prev) => prev.filter((_, i) => i !== idx));
-
-    // idx 기반 상태는 꼬이기 쉬워서 통째로 초기화가 안전
     setIngSuggest({});
     setIngSuggestOpen({});
     setIngSuggestLoading({});
   };
 
   const addIngredient = () => {
-      const newId = -Date.now();
+    const newId = -Date.now();
+    setIngredientsDraft((prev) => {
+      const newIdx = prev.length;
+      setIngSuggestOpen((m) => ({ ...m, [newIdx]: true }));
+      setTimeout(() => ingNameRefs.current[newIdx]?.focus(), 0);
 
-      setIngredientsDraft((prev) => {
-        const newIdx = prev.length;
-
-        // dropdown 열어두기
-        setIngSuggestOpen((m) => ({ ...m, [newIdx]: true }));
-
-        // 렌더 후 포커스
-        setTimeout(() => {
-          ingNameRefs.current[newIdx]?.focus();
-        }, 0);
-
-        return [
-          ...prev,
-          {
-            ingredient_id: newId,
-            name: "",
-            quantity: 0,
-            unit_name: "",
-          },
-        ];
-      });
-    };
-
-
-
+      return [...prev, { ingredient_id: newId, name: "", quantity: 0, unit_name: "" }];
+    });
+  };
 
   const setStepDescription = (idx: number, desc: string) => {
     setStepsDraft((prev) => prev.map((s, i) => (i === idx ? { ...s, description: desc } : s)));
@@ -471,37 +478,15 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
   };
 
   const removeStep = (idx: number) => {
+    const removedOrder = stepsDraft[idx]?.step_order;
     setStepsDraft((prev) => normalizeSteps(prev.filter((_, i) => i !== idx)));
-    setStepImageUrlInput((prev) => {
-      const n = { ...prev };
-      delete n[idx];
-      return n;
-    });
-  };
-
-  // 단계 이미지 추가/삭제(URL 기반)
-  const addStepImageUrl = (idx: number) => {
-    const raw = (stepImageUrlInput[idx] ?? "").trim();
-    if (!raw) return;
-
-    setStepsDraft((prev) =>
-      prev.map((s, i) => {
-        if (i !== idx) return s;
-        const next = Array.from(new Set([...(s.image_urls ?? []), raw]));
-        return { ...s, image_urls: next };
-      })
-    );
-
-    setStepImageUrlInput((prev) => ({ ...prev, [idx]: "" }));
-  };
-
-  const removeStepImageUrl = (idx: number, url: string) => {
-    setStepsDraft((prev) =>
-      prev.map((s, i) => {
-        if (i !== idx) return s;
-        return { ...s, image_urls: (s.image_urls ?? []).filter((u) => u !== url) };
-      })
-    );
+    if (removedOrder) {
+      setStepFiles((prev) => {
+        const n = { ...prev };
+        delete n[removedOrder];
+        return n;
+      });
+    }
   };
 
   if (loading) return <div className={style.container}>로딩중...</div>;
@@ -511,7 +496,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
   return (
     <div className={style.container}>
       <div className={style.banner}>
-        {/* 뒤로가기 */}
         <img
           src="/backstep_white_background.png"
           className={style.backstep}
@@ -519,21 +503,11 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
           onClick={onClickBack}
         />
 
-        {/* 수정/저장 */}
         {!isEdit ? (
           <button className={style.modifyBtn} onClick={() => nav(`/recipe/${recipeId}/edit`)}>
             수정하기
           </button>
-        ) : (
-          <div style={{ display: "flex", gap: 8, marginBottom: 100 }}>
-            <button className={style.modifyBtn} onClick={onSave}>
-              저장
-            </button>
-            <button className={style.modifyBtn} onClick={() => nav(`/recipe/${recipe.id}`)}>
-              취소
-            </button>
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* 제목 */}
@@ -543,8 +517,45 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
         <input
           value={titleDraft}
           onChange={(e) => setTitleDraft(e.target.value)}
-          style={{ marginTop: 20, marginBottom: 20, width: "80%" }}
+          style={{ marginTop: 20, marginBottom: 12, width: "80%" }}
         />
+      )}
+
+      {/* 썸네일(편집일 때만 업로드) */}
+      {isEdit && (
+        <div style={{ width: "90%", display: "flex", gap: 14, alignItems: "center" }}>
+          <div style={{ width: 120, fontWeight: 700 }}>썸네일</div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            {recipe.thumbnail_url ? (
+              <img
+                src={recipe.thumbnail_url}
+                alt="thumb"
+                style={{ width: 140, height: 90, objectFit: "cover", borderRadius: 10 }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 140,
+                  height: 90,
+                  borderRadius: 10,
+                  border: "1px dashed #ccc",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                }}
+              >
+                없음
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setThumbnailFile(e.target.files?.[0] ?? null)}
+            />
+            {thumbnailFile && <div style={{ fontSize: 12 }}>{thumbnailFile.name}</div>}
+          </div>
+        </div>
       )}
 
       {/* 음식 설명 */}
@@ -580,7 +591,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
           </div>
         )}
 
-        {/* scale */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <input
             type="number"
@@ -597,12 +607,6 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
       <div className={style.line}></div>
 
       {/* 재료 */}
-      {isEdit && (
-        <button className={style.applyUnitBtn} onClick={addIngredient}>
-          + 재료 추가
-        </button>
-      )}
-
       <div className={style.ingredientBody}>
         <div className={style.ingredientHeader}>
           <div className={style.ingredientTitle}>재료</div>
@@ -628,109 +632,142 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
           </thead>
 
           <tbody>
-            {ingredientsView.map((item, idx) => (
-              <tr key={item.ingredient_id}>
-                <td style={{ position: "relative" }}>
-                  {!isEdit ? (
-                    item.name
-                  ) : (
-                    <>
-                      <input
-                        ref={(el) => (ingNameRefs.current[idx] = el)}
-                        value={ingredientsDraft[idx]?.name ?? ""}
-                        onChange={(e) => onChangeIngredientName(idx, e.target.value)}
-                        onFocus={() => setIngSuggestOpen((prev) => ({ ...prev, [idx]: true }))}
-                        onBlur={() => {
-                          // 클릭 선택을 위해 약간 늦게 닫음
-                          setTimeout(() => {
-                            setIngSuggestOpen((prev) => ({ ...prev, [idx]: false }));
-                          }, 120);
-                        }}
-                        style={{ width: 120 }}
-                      />
+            {ingredientsView.map((item, idx) => {
+              const isConfirmed = item.ingredient_id > 0;
+              const units = allowedUnits[item.ingredient_id] ?? [];
+              const unitValue =
+                unitSelections[item.ingredient_id] ??
+                (isEdit ? ingredientsDraft[idx]?.unit_name : item.unit_name) ??
+                item.unit_name;
 
-                      {ingSuggestOpen[idx] &&
-                      ((ingSuggest[idx]?.length ?? 0) > 0 || ingSuggestLoading[idx]) ? (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "100%",
-                            left: 0,
-                            zIndex: 50,
-                            width: 180,
-                            background: "white",
-                            border: "1px solid #ddd",
-                            borderRadius: 6,
-                            maxHeight: 180,
-                            overflowY: "auto",
+              return (
+                <tr key={item.ingredient_id}>
+                  <td style={{ position: "relative" }}>
+                    {!isEdit ? (
+                      item.name
+                    ) : (
+                      <>
+                        <input
+                          ref={(el) => (ingNameRefs.current[idx] = el)}
+                          value={ingredientsDraft[idx]?.name ?? ""}
+                          onChange={(e) => onChangeIngredientName(idx, e.target.value)}
+                          onFocus={() => setIngSuggestOpen((prev) => ({ ...prev, [idx]: true }))}
+                          onBlur={() => {
+                            setTimeout(() => {
+                              setIngSuggestOpen((prev) => ({ ...prev, [idx]: false }));
+                            }, 120);
                           }}
-                        >
-                          {ingSuggestLoading[idx] ? (
-                            <div style={{ padding: 8 }}>검색중...</div>
-                          ) : (
-                            (ingSuggest[idx] ?? []).map((it) => (
-                              <div
-                                key={it.id}
-                                onMouseDown={(e) => e.preventDefault()} // blur 방지
-                                onClick={() => onPickIngredient(idx, it)}
-                                style={{ padding: 8, cursor: "pointer" }}
-                              >
-                                {it.name}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </td>
+                          style={{ width: 160 }}
+                        />
 
-                <td>
-                  {!isEdit ? (
-                    item.quantity
-                  ) : (
-                    <input
-                      type="number"
-                      value={ingredientsDraft[idx]?.quantity ?? 0}
-                      onChange={(e) => setIngredientQuantity(idx, Number(e.target.value))}
-                      style={{ width: 70 }}
-                    />
-                  )}
-                </td>
-
-                <td>
-                  <select
-                    value={
-                      unitSelections[item.ingredient_id] ??
-                      (isEdit ? ingredientsDraft[idx]?.unit_name : item.unit_name) ??
-                      item.unit_name
-                    }
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setUnitSelections((prev) => ({ ...prev, [item.ingredient_id]: v }));
-                      setUnitDirty(true);
-                      if (isEdit) setIngredientUnit(idx, v);
-                    }}
-                  >
-                    {(allowedUnits[item.ingredient_id] ?? (item.unit_name ? [item.unit_name] : []))
-                      .filter(Boolean)
-                      .map((unit) => (
-                        <option key={unit} value={unit}>
-                          {unit}
-                        </option>
-                      ))}
-                  </select>
-                </td>
-
-                {isEdit && (
-                  <td>
-                    <button onClick={() => removeIngredient(idx)}>삭제</button>
+                        {ingSuggestOpen[idx] &&
+                        ((ingSuggest[idx]?.length ?? 0) > 0 || ingSuggestLoading[idx]) ? (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "100%",
+                              left: 0,
+                              zIndex: 50,
+                              width: 200,
+                              background: "white",
+                              border: "1px solid #ddd",
+                              borderRadius: 10,
+                              maxHeight: 180,
+                              overflowY: "auto",
+                            }}
+                          >
+                            {ingSuggestLoading[idx] ? (
+                              <div style={{ padding: 10 }}>검색중...</div>
+                            ) : (
+                              (ingSuggest[idx] ?? []).map((it) => (
+                                <div
+                                  key={it.id}
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => onPickIngredient(idx, it)}
+                                  style={{ padding: 10, cursor: "pointer" }}
+                                >
+                                  {it.name}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </td>
-                )}
-              </tr>
-            ))}
+
+                  <td>
+                    {!isEdit ? (
+                      item.quantity
+                    ) : (
+                      <input
+                          type="number"
+                          value={ingredientsDraft[idx]?.quantity ?? 0}
+                          onChange={(e) =>
+                            setIngredientQuantity(idx, Number(e.target.value))
+                          }
+                          onBlur={(e) => {
+                            const v = Number(e.target.value);
+                            // NaN 방지 + 앞자리 0 정리
+                            setIngredientQuantity(idx, Number.isNaN(v) ? 0 : v);
+                          }}
+                          min={0}
+                          style={{ width: 64 }}
+                        />
+
+                    )}
+                  </td>
+
+                  <td>
+                    <select
+                      value={unitValue ?? ""}
+                      disabled={!isConfirmed || units.length === 0}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setUnitSelections((prev) => ({ ...prev, [item.ingredient_id]: v }));
+                        setUnitDirty(true);
+                        if (isEdit) setIngredientUnit(idx, v);
+                      }}
+                      style={{ width: 90 }}
+                      title={!isConfirmed ? "재료를 먼저 선택해줘" : undefined}
+                    >
+                      {!isConfirmed ? (
+                        <option value="">선택 후 단위</option>
+                      ) : units.length ? (
+                        units.map((unit) => (
+                          <option key={unit} value={unit}>
+                            {unit}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">단위 없음</option>
+                      )}
+                    </select>
+                  </td>
+
+                  {isEdit && (
+                    <td>
+                      <button onClick={() => removeIngredient(idx)}>삭제</button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
+
+        {isEdit && (
+          <button className={style.addRowBtn} onClick={addIngredient} type="button">
+            <span className={style.addRowPlus}>+</span>
+            재료 추가하기
+          </button>
+        )}
+
+        {isEdit && hasUnconfirmedIngredient && (
+          <div style={{ marginTop: 10, fontSize: 13 }}>
+            확정되지 않은 재료가 있습니다. 드롭다운에서 선택해야 저장됩니다.
+          </div>
+        )}
       </div>
 
       <div className={style.line}></div>
@@ -738,101 +775,142 @@ const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
 
       {/* 레시피 단계 */}
       <div className={style.recipeTitle}>레시피</div>
-      {isEdit && (
-        <button className={style.applyUnitBtn} onClick={addStep}>
-          + 단계 추가
-        </button>
-      )}
 
       <div className={style.recipeBody}>
-        {stepsView.map((s: any, idx) => (
-          <div className={style.recipeItem} key={s.step_order}>
-            <div className={style.photoBox}>
-              <div className={style.number}>{s.step_order}</div>
+        {stepsView.map((s: any, idx) => {
+          const order = s.step_order as number;
+          const picked = stepFiles[order] ?? [];
 
-              {/* 이미지 영역 */}
-              {!isEdit ? (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: 8 }}>
-                  {(s.image_urls ?? []).map((url: string) => (
-                    <img
-                      key={url}
-                      src={url}
-                      alt="step"
-                      style={{
-                        width: 90,
-                        height: 90,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div style={{ width: "100%", padding: 8 }}>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {(stepsDraft[idx]?.image_urls ?? []).map((url) => (
-                      <div key={url} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        <img
-                          src={url}
-                          alt="step"
-                          style={{
-                            width: 90,
-                            height: 90,
-                            objectFit: "cover",
-                            borderRadius: 8,
-                          }}
-                        />
-                        <button
-                          onClick={() => removeStepImageUrl(idx, url)}
-                          style={{ fontSize: 12 }}
-                        >
-                          제거
-                        </button>
-                      </div>
+          return (
+            <div className={style.recipeItem} key={order}>
+              <div className={style.photoBox}>
+                <div className={style.number}>{order}</div>
+
+                {!isEdit ? (
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: 8 }}>
+                    {(s.image_urls ?? []).map((url: string) => (
+                      <img
+                        key={url}
+                        src={url}
+                        alt="step"
+                        style={{ width: 90, height: 90, objectFit: "cover", borderRadius: 8 }}
+                      />
                     ))}
                   </div>
+                ) : (
+                  <div className={style.stepImageArea}>
+                    {/* 1. 방금 선택한 파일 미리보기 (최우선) */}
+                    {picked.length > 0 ? (
+                      <img
+                        src={URL.createObjectURL(picked[0])}
+                        alt="preview"
+                        className={style.stepThumb}
+                      />
+                    ) : stepsDraft[idx]?.image_urls?.[0] ? (
+                      /* 2️. 서버에 이미 있는 이미지 */
+                      <img
+                        src={stepsDraft[idx].image_urls[0]}
+                        alt="step"
+                        className={style.stepThumb}
+                      />
+                    ) : null}
 
-                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+
                     <input
-                      value={stepImageUrlInput[idx] ?? ""}
-                      onChange={(e) =>
-                        setStepImageUrlInput((prev) => ({ ...prev, [idx]: e.target.value }))
-                      }
-                      placeholder="이미지 URL 붙여넣기"
-                      style={{ flex: 1 }}
+                      id={`step-file-${order}`}
+                      className={style.stepFileInput}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        setStepFiles((prev) => ({ ...prev, [order]: files }));
+                      }}
                     />
-                    <button onClick={() => addStepImageUrl(idx)}>추가</button>
+
+                    <label htmlFor={`step-file-${order}`} className={style.stepImageBtn}>
+                    <span className={style.stepPlus}>+</span>
+                    <span className={style.stepAddText}>이미지 추가</span>
+                  </label>
+
+                    {picked.length > 0 ? (
+                      <div className={style.stepPickedText}>선택됨: {picked.length}개</div>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+
+              {!isEdit ? (
+                <div className={style.textBox}>{s.description}</div>
+              ) : (
+                <div style={{ width: "100%" }}>
+                  <textarea
+                    className={style.textBox}
+                    value={stepsDraft[idx]?.description ?? ""}
+                    onChange={(e) => setStepDescription(idx, e.target.value)}
+                    style={{ width: "100%" }}
+                  />
+                  <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                    <button type="button" className={style.stepDeleteBtn} onClick={() => removeStep(idx)}>
+                      단계 삭제
+                    </button>
                   </div>
                 </div>
               )}
             </div>
+          );
+        })}
 
-            {!isEdit ? (
-              <div className={style.textBox}>{s.description}</div>
-            ) : (
-              <div style={{ width: "100%" }}>
-                <textarea
-                  className={style.textBox}
-                  value={stepsDraft[idx]?.description ?? ""}
-                  onChange={(e) => setStepDescription(idx, e.target.value)}
-                  style={{ width: "100%" }}
-                />
-                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                  <button onClick={() => removeStep(idx)}>단계 삭제</button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+        {/* 단계들 맨 아래에 1번만 */}
+        {isEdit && (
+          <button className={style.addRowBtn} onClick={addStep} type="button">
+            <span className={style.addRowPlus}>+</span>
+            단계 추가하기
+          </button>
+        )}
       </div>
 
+    
       <div className={style.line}></div>
       <div className={style.line}></div>
 
-      {/* 삭제 */}
-      <button className={style.recipeDelete} onClick={onDelete}>
-        레시피 삭제하기
-      </button>
+      {/* 하단 액션바 */}
+      {isEdit && (
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            background: "white",
+            borderTop: "1px solid #eee",
+            padding: "12px 10px",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 10,
+            zIndex: 60,
+          }}
+        >
+          <button className={style.actionBtn} onClick={() => nav(`/recipe/${recipe.id}`)}>
+            취소
+          </button>
+          <button className={style.actionBtn} onClick={onDelete}>
+            삭제
+          </button>
+          <button
+            className={style.actionBtn}
+            onClick={onSave}
+            disabled={saving || hasUnconfirmedIngredient}
+            title={hasUnconfirmedIngredient ? "확정되지 않은 재료가 있어 저장할 수 없음" : undefined}
+          >
+             {saving ? "저장중..." : "저장하기"}
+          </button>
+        </div>
+      )}
+
+      {!isEdit && (
+        <button className={style.recipeDelete} onClick={onDelete}>
+          레시피 삭제하기
+        </button>
+      )}
     </div>
   );
 }
