@@ -17,6 +17,7 @@ type Restaurant = {
   price_max?: number | null;
   thumbnail_url?: string | null;
   created_at?: number;
+  uploaded_by: number;
 };
 
 export default function RestaurantSearchPage() {
@@ -121,38 +122,35 @@ export default function RestaurantSearchPage() {
                 </div>
 
                 <div className={styles.restaurant_descriptionContainer}>
-                  {/* 썸네일 있으면 이미지, 없으면 기존 빨간 원 */}
-                  {r.thumbnail_url ? (
-                    <img
-                      src={r.thumbnail_url}
-                      alt="thumbnail"
-                      className={styles.restaurant_icon}
-                      style={{ objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div className={styles.restaurant_icon}></div>
-                  )}
-
                   <div className={styles.restaurant_underContainer}>
-                  {/* ⭐ 별점 */}
-                  <div className={styles.restaurant_reviewer}>
-                    ⭐ {r.rating ?? 0}
-                  </div>
-
-                  {/* 📅 업로드 날짜 */}
-                  {r.created_at && (
-                    <div className={styles.restaurant_date}>
-                      {formatDate(r.created_at)}
+                    {/* ⭐ 별점 */}
+                    <div className={styles.restaurant_reviewer}>
+                      ⭐ {r.rating ?? 0}
                     </div>
-                  )}
 
-                  {/* 📍 주소 (맨 아래) */}
-                  <div className={styles.restaurant_address}>
-                    {r.address ?? "주소 정보 없음"}
+                    <div className={styles.restaurant_uploader}>
+                    업로더: user_{r.uploaded_by}
                   </div>
-                </div>
+
+
+                    {/* 📍 주소 */}
+                    <div className={styles.restaurant_address}>
+                      {r.address ?? "주소 정보 없음"}
+                    </div>
+                  </div>
+
+                  {/* 썸네일을 마지막으로 */}
+                  {r.thumbnail_url ? (
+                  <img
+                    src={r.thumbnail_url}
+                    alt="thumbnail"
+                    className={styles.restaurant_thumbnail}
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : null}
 
                 </div>
+
               </div>
             </div>
           ))}

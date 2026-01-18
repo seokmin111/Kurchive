@@ -192,6 +192,7 @@
 .restaurant_item {
   height: 100px;
   overflow: hidden;
+  text-align: left;
 }
 
   /* PC에서는 width 안 박는 게 그리드에 좋음 */
@@ -434,9 +435,19 @@
   width : 100%;
 }
 
+.restaurant_uploader {
+  font-family: var(--font-pretendard), sans-serif;
+  font-size: 11px;
+  color: rgb(141, 141, 141);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 .restaurant_icon {
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   border-radius: 8px;        /* 원 → 라운드 사각형 */
   background-color: #F2ECE5;
 
@@ -448,11 +459,9 @@
   line-height: 1;
 
   flex-shrink: 0;            /* 절대 찌그러지지 않음 */
+   margin-left: auto; 
 }
 
-.restaurant_icon::before {
-  content: "🍽️";
-}
 
 .restaurant_reviewer {
   font-family: var(--font-pretendard), sans-serif;
@@ -468,6 +477,7 @@
   min-width: 0;
   flex : 1;
   gap: 2px;
+  text-align : left;
 }
 
 .restaurant_date {
@@ -481,6 +491,15 @@
   margin-top: 2px;          /* ⭐ 별점/날짜와 분리 */
 }
 
+.restaurant_thumbnail {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: #F2ECE5; /* ✅ 썸네일 있을 때만 보이는 살구색 */
+  flex-shrink: 0;
+  margin-left: auto;        /* ✅ 오른쪽 끝 */
+  display: block;
+}
 
 
 .restaurant_address {
@@ -517,4 +536,31 @@
     width: 200px;
     scroll-snap-align: start;
   }
+}
+
+.section_subtitle {
+  font-family: "Pretendard", sans-serif;
+  color: #8B0029;
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 1200px;
+
+  width: 100%;
+  margin: 0 auto;
+
+  padding: 0 10px;
+  box-sizing: border-box;
+
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(60vh + 120px); /* 대충 카드 패널 위로 올라오게 */
+  z-index: 11;
+}
+.restaurant_title,
+.restaurant_text,
+.restaurant_reviewer,
+.restaurant_uploader,
+.restaurant_address {
+  text-align: left;
 }
