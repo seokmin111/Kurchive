@@ -17,6 +17,7 @@ type Restaurant = {
   price_max?: number | null;
   thumbnail_url?: string | null;
   created_at?: number;
+  uploaded_by: number;
 };
 
 export default function RestaurantSearchPage() {
@@ -110,52 +111,43 @@ export default function RestaurantSearchPage() {
             <div
               key={r.id}
               className={styles.restaurant_item}
-              onClick={() => navigate(`/restaurant/search/results?q=${encodeURIComponent(r.name)}`)}
+              onClick={() => navigate(`/restaurant/detail/${r.id}`)}
               style={{ cursor: "pointer" }}
-              title="클릭해서 검색 결과로 이동"
+              title="클릭해서 식당 상세페이지로 이동"
             >
               <div className={styles.restaurant_contentCarrier}>
                 <h4 className={styles.restaurant_title}>{r.name}</h4>
+
                 <div className={styles.restaurant_text}>
-                    {r.summary ? short(r.summary, 24) : "요약 없음"}
+                  {r.summary ? short(r.summary, 24) : "요약 없음"}
                 </div>
 
                 <div className={styles.restaurant_descriptionContainer}>
-                  {/* 썸네일 있으면 이미지, 없으면 기존 빨간 원 */}
+                  <div className={styles.restaurant_underContainer}>
+                    <div className={styles.restaurant_reviewer}>⭐ {r.rating ?? 0}</div>
+
+                    <div className={styles.restaurant_uploader}>
+                      업로더: user_{r.uploaded_by}
+                    </div>
+
+                    <div className={styles.restaurant_address}>
+                      {r.address ?? "주소 정보 없음"}
+                    </div>
+                  </div>
+
                   {r.thumbnail_url ? (
                     <img
                       src={r.thumbnail_url}
                       alt="thumbnail"
-                      className={styles.restaurant_icon}
+                      className={styles.restaurant_thumbnail}
                       style={{ objectFit: "cover" }}
                     />
-                  ) : (
-                    <div className={styles.restaurant_icon}></div>
-                  )}
-
-                  <div className={styles.restaurant_underContainer}>
-                  {/* ⭐ 별점 */}
-                  <div className={styles.restaurant_reviewer}>
-                    ⭐ {r.rating ?? 0}
-                  </div>
-
-                  {/* 📅 업로드 날짜 */}
-                  {r.created_at && (
-                    <div className={styles.restaurant_date}>
-                      {formatDate(r.created_at)}
-                    </div>
-                  )}
-
-                  {/* 📍 주소 (맨 아래) */}
-                  <div className={styles.restaurant_address}>
-                    {r.address ?? "주소 정보 없음"}
-                  </div>
-                </div>
-
+                  ) : null}
                 </div>
               </div>
             </div>
           ))}
+
 
         {!loading && !errMsg && items.length === 0 && (
           <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없어!</div>

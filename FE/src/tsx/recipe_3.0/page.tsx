@@ -118,6 +118,12 @@ export default function RecipeMainPage() {
               <div className={styles.recipe_text}>기준 인분: {r.base_serving}</div>
 
               <div className={styles.recipe_descriptionContainer}>
+                <div className={styles.recipe_descriptionContainer}>
+                <div className={styles.recipe_underContainer}>
+                  <div className={styles.recipe_reviewer}>업로더 ID: {r.uploader_id}</div>
+                  <div className={styles.recipe_date}>{formatDate(r.created_at)}</div>
+                </div>
+
                 {r.thumbnail_url ? (
                   <img
                     src={r.thumbnail_url}
@@ -125,17 +131,13 @@ export default function RecipeMainPage() {
                     className={styles.recipe_icon}
                     style={{ objectFit: "cover" }}
                   />
-                ) : (
-                  <div className={styles.recipe_icon} />
-                )}
+                ) : null}
+              </div>
 
-                <div className={styles.recipe_underContainer}>
-                  <div className={styles.recipe_reviewer}>업로더 ID: {r.uploader_id}</div>
-                  <div className={styles.recipe_date}>{formatDate(r.created_at)}</div>
-                </div>
               </div>
             </div>
           ))}
+
       </div>
 
       <div className={styles.footer}></div>

@@ -315,10 +315,19 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
       for (const s of stepsDraft) {
         const files = stepFiles[s.step_order];
-        if (files && files.length) {
+
+        // 가드
+        if (!files || files.length === 0) continue;
+
+        const hasServerImages = (s.image_urls?.length ?? 0) > 0;
+
+        if (hasServerImages) {
           await replaceStepImages(updated.id, s.step_order, files);
+        } else {
+          await uploadStepImages(updated.id, s.step_order, files);
         }
       }
+
 
       const fresh: RecipeDetail = await getRecipeDetail(updated.id);
       setRecipe(fresh);

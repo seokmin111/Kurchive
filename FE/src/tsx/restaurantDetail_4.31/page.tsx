@@ -19,6 +19,8 @@ type RestaurantDetail = {
   description: string;
   price_min: number;
   price_max: number;
+
+  uploaded_by: number;
   images?: { id: number; image_url: string; created_at: number; is_cover?: boolean }[];
 };
 
@@ -53,6 +55,16 @@ function StarRating({
 }
 
 export default function RestaurantDetailPage() {
+
+  const getMyUserId = () => {
+  const v = localStorage.getItem("user_id"); // 이것만
+  const n = v ? Number(v) : NaN;
+  return !Number.isNaN(n) && n > 0 ? n : null;
+};
+
+  const [isOwner, setIsOwner] = useState(false);
+
+
   const nav = useNavigate();
   const { restaurantId } = useParams();
 
@@ -95,11 +107,24 @@ export default function RestaurantDetailPage() {
     if (!rid || Number.isNaN(rid)) return;
 
     const fetchDetail = async () => {
+      
       setLoading(true);
       setErrMsg("");
       try {
         const res = await client.get<RestaurantDetail>(`/restaurants/${rid}`);
         const data = res.data;
+        
+
+        const me = getMyUserId();
+        const owner = Number(data.uploaded_by);
+        setIsOwner(me !== null && me === owner);
+
+        console.log("[owner-check]", {
+        me: getMyUserId(),
+        uploaded_by: data.uploaded_by,
+        uploaded_by_num: Number(data.uploaded_by),
+      });
+
 
         setName(data.name ?? "");
         setMapUrl(data.location_link ?? "");
@@ -181,6 +206,7 @@ export default function RestaurantDetailPage() {
 
   // --- 이미지 업로드 ---
   const uploadImages = async (files: FileList | null) => {
+    if (!isOwner) return;
     if (!files || files.length === 0) return;
     if (!rid || Number.isNaN(rid)) return;
 
@@ -217,9 +243,10 @@ export default function RestaurantDetailPage() {
   }, [name, mapUrl, summary, description, locationTagId, priceMin, priceMax, tags]);
 
   const onSave = async () => {
+    if (!isOwner) return;
     if (!rid || Number.isNaN(rid)) return;
     if (!canSave) {
-      alert("필수값을 확인해줘 (요약/설명/지역ID/태그/가격범위)");
+      alert("필수값을 확인해주세요. (요약/설명/지역ID/태그/가격범위)");
       return;
     }
 
@@ -385,22 +412,28 @@ export default function RestaurantDetailPage() {
         <section className={styles.photoSection}>
           <div className={styles.photoHeader}>
             <div className={styles.sectionLabel}>사진</div>
-            <button
-              type="button"
-              className={styles.photoAddBtn}
-              onClick={() => fileRef.current?.click()}
-            >
-              + 업로드
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className={styles.hiddenFile}
-              onChange={(e) => uploadImages(e.target.files)}
-            />
+
+            {isOwner && (
+              <>
+                <button
+                  type="button"
+                  className={styles.photoAddBtn}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  + 업로드
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className={styles.hiddenFile}
+                  onChange={(e) => uploadImages(e.target.files)}
+                />
+              </>
+            )}
           </div>
+
 
           <div className={styles.photoRail}>
             {(serverImages?.length ?? 0) === 0 ? (
@@ -464,17 +497,20 @@ export default function RestaurantDetailPage() {
           </div>
         </section>
 
-        {/* 10) 저장 */}
-        <section className={styles.actionRow}>
-          <button
-            type="button"
-            className={`${styles.saveBtn} ${canSave ? styles.saveOn : styles.saveOff}`}
-            onClick={onSave}
-            disabled={!canSave || saving}
-          >
-            {saving ? "저장중..." : "저장"}
-          </button>
-        </section>
+        {/* 10) 저장: 본인 글일 때만 보이게 */}
+          {isOwner && (
+            <section className={styles.actionRow}>
+              <button
+                type="button"
+                className={`${styles.saveBtn} ${canSave ? styles.saveOn : styles.saveOff}`}
+                onClick={onSave}
+                disabled={!canSave || saving}
+              >
+                {saving ? "저장중..." : "저장"}
+              </button>
+            </section>
+          )}
+
       </main>
     </div>
   );

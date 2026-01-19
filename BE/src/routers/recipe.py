@@ -380,15 +380,29 @@ async def update_recipe(
 
     # steps 재구성 (전체 삭제 후 재삽입)
     if data.steps is not None:
+        # ✅ 1) 기존 step 이미지 먼저 삭제 (FK 충돌 방지)
+        for s in list(recipe.steps):
+            for img in list(s.images):
+                try:
+                    delete_image_oci(img.image_url)
+                except Exception as e:
+                    logger.warning(f"단계 이미지 삭제 실패: {e}")
+                await db.delete(img)
+        await db.flush()
+
+        # ✅ 2) step 삭제
         await db.execute(
             RecipeStep.__table__.delete().where(RecipeStep.recipe_id == recipe_id)
         )
+
+        # ✅ 3) step 재삽입
         for step in data.steps:
             db.add(RecipeStep(
                 recipe_id=recipe.id,
                 step_order=step.step_order,
                 description=step.description
             ))
+
 
     await db.commit()
     recipe = await _load_recipe_with_images(db, recipe_id)
