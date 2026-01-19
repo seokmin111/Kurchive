@@ -111,49 +111,43 @@ export default function RestaurantSearchPage() {
             <div
               key={r.id}
               className={styles.restaurant_item}
-              onClick={() => navigate(`/restaurant/search/results?q=${encodeURIComponent(r.name)}`)}
+              onClick={() => navigate(`/restaurant/detail/${r.id}`)}
               style={{ cursor: "pointer" }}
-              title="클릭해서 검색 결과로 이동"
+              title="클릭해서 식당 상세페이지로 이동"
             >
               <div className={styles.restaurant_contentCarrier}>
                 <h4 className={styles.restaurant_title}>{r.name}</h4>
+
                 <div className={styles.restaurant_text}>
-                    {r.summary ? short(r.summary, 24) : "요약 없음"}
+                  {r.summary ? short(r.summary, 24) : "요약 없음"}
                 </div>
 
                 <div className={styles.restaurant_descriptionContainer}>
                   <div className={styles.restaurant_underContainer}>
-                    {/* ⭐ 별점 */}
-                    <div className={styles.restaurant_reviewer}>
-                      ⭐ {r.rating ?? 0}
-                    </div>
+                    <div className={styles.restaurant_reviewer}>⭐ {r.rating ?? 0}</div>
 
                     <div className={styles.restaurant_uploader}>
-                    업로더: user_{r.uploaded_by}
-                  </div>
+                      업로더: user_{r.uploaded_by}
+                    </div>
 
-
-                    {/* 📍 주소 */}
                     <div className={styles.restaurant_address}>
                       {r.address ?? "주소 정보 없음"}
                     </div>
                   </div>
 
-                  {/* 썸네일을 마지막으로 */}
                   {r.thumbnail_url ? (
-                  <img
-                    src={r.thumbnail_url}
-                    alt="thumbnail"
-                    className={styles.restaurant_thumbnail}
-                    style={{ objectFit: "cover" }}
-                  />
-                ) : null}
-
+                    <img
+                      src={r.thumbnail_url}
+                      alt="thumbnail"
+                      className={styles.restaurant_thumbnail}
+                      style={{ objectFit: "cover" }}
+                    />
+                  ) : null}
                 </div>
-
               </div>
             </div>
           ))}
+
 
         {!loading && !errMsg && items.length === 0 && (
           <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없어!</div>
