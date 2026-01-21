@@ -213,7 +213,9 @@
   margin-top: auto;
   display: flex;
   align-items: center;
+  justify-content: space-between; 
   gap: 10px;
+  width: 100%; 
 }
 
 .recipe_title {
@@ -263,11 +265,12 @@
 
 
 .recipe_icon {
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   background-color: #f2ece5;
   border-radius: 8px;
   flex-shrink: 0;
+  margin-left: auto; 
 }
 
 .recipe_underContainer {

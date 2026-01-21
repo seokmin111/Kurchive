@@ -62,9 +62,10 @@ export default function App() {
       {/* 레시피 */}
       <Route path="/recipe" element={<RecipeMainPage />} />
       <Route path="/recipe/search" element={<RecipeSearchPage />} />
-      <Route path="/recipe/archive" element={<RecipeArchivePage />} />
-      <Route path="/recipe/:recipeId" element={<RecipeSpecific />} />
-      
+      <Route path="/recipe/:recipeId" element={<RecipeSpecific mode="view" />} />
+      <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />
+
+
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/myactivity" element={<MyActivityPage />} />

@@ -40,6 +40,21 @@ export type UpdateRecipeBody = {
   steps?: RecipeStepInput[];
 };
 
+export type IngredientUpsert =
+  | { ingredient_id: number; quantity: number; unit_name: string }
+  | { name: string; quantity: number; unit_name: string };
+
+export type RecipeUpdateBody = {
+  title?: string;
+  base_serving?: number;
+  description?: string; // BE에서 아직 무시됨
+  ingredients?: IngredientUpsert[];
+  steps?: {
+    step_order: number;
+    description: string;
+    image_urls?: string[];
+  }[];
+};
 // 단위 변환 요청
 export type ConvertRequestUnitMap = {
   units: { [ingredient_id: number]: string };
@@ -83,8 +98,13 @@ export const createRecipe = (body: CreateRecipeBody) =>
   client.post("/recipe", body).then((r) => r.data);
 
 // 레시피 수정
-export const updateRecipe = (recipeId: number, body: UpdateRecipeBody) =>
-  client.put(`/recipe/${recipeId}`, body).then((r) => r.data);
+export async function updateRecipe(
+  recipeId: number,
+  body: RecipeUpdateBody
+) {
+  const res = await client.put(`/recipe/${recipeId}`, body);
+  return res.data;
+}
 
 // 레시피 삭제
 export const deleteRecipe = (recipeId: number) =>
@@ -138,18 +158,27 @@ export const uploadStepImages = (
     .then((r) => r.data);
 };
 
+
+
 // 단계별 이미지 교체
-export const replaceStepImages = (
+export async function replaceStepImages(
   recipeId: number,
   stepOrder: number,
   files: File[]
-) => {
-  const formData = new FormData();
-  files.forEach((file) => formData.append("files", file));
+) {
+  const fd = new FormData();
+  for (const f of files) {
+    // ✅ filename 강제 유니크(스토리지/백엔드가 file.filename을 쓰는 경우 대비)
+    fd.append(
+      "files",
+      f,
+      `${Date.now()}_${Math.random().toString(16).slice(2)}_${f.name}`
+    );
+  }
 
-  return client
-    .put(`/recipe/${recipeId}/steps/${stepOrder}/images`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-    .then((r) => r.data);
-};
+  const res = await client.put(`/api/recipe/${recipeId}/steps/${stepOrder}/images`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
