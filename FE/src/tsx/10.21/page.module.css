@@ -1,0 +1,62 @@
+@font-face {
+    font-family: 'SlowGothic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+.container{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 812px;
+  width: 375px;
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  margin: 0 auto; /* 중앙 정렬 */
+}
+
+.pageTitle{
+  display: flex;
+  align-items:flex-end;
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+.kurchive{
+  font-family: "SlowGothic", sans-serif;
+  font-size: 35px;
+  color: #4B0017;
+}
+
+.adminPage{
+  font-family: "SlowGothic", sans-serif;
+  font-size: 20px;
+  color: #4B0017;
+  margin-bottom: 4px;
+  margin-left: 10px;
+}
+
+.memberSearch{
+  margin-top: 120px;
+  color:#4B0017;
+  font-size: 25px;
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
+.memberSearchBody{
+  width: 85%;
+  margin-right: 20px;
+  margin-bottom: 50px;
+}
+
+.memberSearchInput{
+  width: 100%;
+  height: 40px;
+  border: none;
+  padding-left: 20px;
+  border-bottom: 2px solid #4B0017;
+}

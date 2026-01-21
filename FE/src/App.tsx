@@ -28,6 +28,7 @@ import QuitPage from "./tsx/quitpage_2.3/page";
 import AdminFirstPage from "./tsx/10.0/page";
 import AdminMainPage from "./tsx/10.1/page";
 import MemberSearchPage from "./tsx/10.2/page";
+import MemberSearchResultPage from "./tsx/10.21/page";
 
 export default function App() {
   return (
@@ -74,6 +75,7 @@ export default function App() {
       <Route path="/admin" element={<AdminFirstPage></AdminFirstPage>}></Route>
       <Route path="/admin/main" element={<AdminMainPage></AdminMainPage>}></Route>
       <Route path="/admin/member" element={<MemberSearchPage></MemberSearchPage>}></Route>
+      <Route path="/admin/member/result" element={<MemberSearchResultPage></MemberSearchResultPage>}></Route>
 
       {/* 404 */}
       <Route
