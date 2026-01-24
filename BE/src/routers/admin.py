@@ -88,6 +88,11 @@ async def update_members_status(
 
         user.role = member_update.role
 
+        # role 변경 시 관리자 권한 자동 해제
+        if member_update.role != "admin":
+            user.is_admin = False
+
+
     await db.commit()
 
 
