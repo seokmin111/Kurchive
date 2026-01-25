@@ -57,8 +57,9 @@ import oci
 _config = None
 _object_storage = None
 _BUCKET_NAME = "kurchive-uploads"
-_NAMESPACE = "axzbmseuxwhb"
-_REGION = "ap-seoul-1"  # fallback
+_NAMESPACE = None
+_REGION = None
+
 
 def _ensure_client():
     global _config, _object_storage, _REGION
@@ -68,7 +69,14 @@ def _ensure_client():
     try:
         _config = oci.config.from_file("~/.oci/config")
         _object_storage = oci.object_storage.ObjectStorageClient(_config)
-        _REGION = _config.get("region", _REGION)
+
+        # 여기서 진짜 namespace를 받아온다
+        global _NAMESPACE, _REGION
+        _NAMESPACE = _object_storage.get_namespace().data
+        _REGION = _config.get("region")
+
+        print(f"✅ OCI initialized: namespace={_NAMESPACE}, region={_REGION}")
+
         print("✅ OCI ObjectStorageClient initialized")
     except oci.exceptions.ConfigFileNotFound:
         print("⚠️ OCI config not found — skipping OCI features.")

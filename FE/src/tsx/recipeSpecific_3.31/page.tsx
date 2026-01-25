@@ -275,16 +275,17 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
   const onSave = async () => {
     if (!recipe) return;
     if (saving) return;
-    setSaving(true);
 
     if (!titleDraft.trim()) {
-      setErrMsg("제목을 입력해줘.");
+      setErrMsg("레시피 제목을 입력해주세요.");
       return;
     }
     if (hasUnconfirmedIngredient) {
-      setErrMsg("확정되지 않은 재료가 있어. 드롭다운에서 선택해줘.");
+      setErrMsg("확정되지 않은 재료가 있습니다. 드롭다운에서 선택해주세요.");
       return;
     }
+    setSaving(true);
+    
 
     try {
       setErrMsg("");
