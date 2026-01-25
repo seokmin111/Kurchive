@@ -87,8 +87,11 @@ async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
     # oci 있는지 체크
     client = _ensure_client()
     if client is None:
-        print("⚠️ Skipping OCI upload (no config)")
-        return None, f"/uploads/{prefix}/fake_{uuid.uuid4().hex}.jpg"
+        raise HTTPException(
+            status_code=500,
+            detail="OCI Object Storage is not configured"
+        )
+
     if (file.content_type or "").lower() not in ALLOWED_MIME:
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Only jpeg/png/webp allowed")
 
