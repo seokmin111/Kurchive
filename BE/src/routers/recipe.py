@@ -544,8 +544,7 @@ async def upload_step_images(
         _, url_path = await save_image(f, f"recipes/{recipe_id}/steps/{step_order}")
         db.add(RecipeStepImage(step_id=step.id, image_url=url_path))
 
-        if not recipe.thumbnail_url:
-            recipe.thumbnail_url = url_path
+
 
     await db.commit()
     recipe = await _load_recipe_with_images(db, recipe_id)

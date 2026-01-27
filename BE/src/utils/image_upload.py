@@ -123,8 +123,10 @@ async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
         _NAMESPACE,
         _BUCKET_NAME,
         object_name,
-        raw
+        raw,
+        content_type=file.content_type  # 이 줄 추가
     )
+
 
     url_path = f"https://objectstorage.{_REGION}.oraclecloud.com/n/{_NAMESPACE}/b/{_BUCKET_NAME}/o/{object_name}"
     return object_name, url_path

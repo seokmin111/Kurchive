@@ -118,6 +118,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
         setRecipe(data);
 
         setTitleDraft(data.title);
+        
         setDescDraft((data.description ?? "").toString());
         setBaseServingDraft(data.base_serving);
 
@@ -528,6 +529,20 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
           value={titleDraft}
           onChange={(e) => setTitleDraft(e.target.value)}
           style={{ marginTop: 20, marginBottom: 12, width: "80%" }}
+        />
+      )}
+      {/* 썸네일 (view 모드) */}
+      {!isEdit && recipe?.thumbnail_url && (
+        <img
+          src={recipe.thumbnail_url}
+          alt="thumbnail"
+          style={{
+            width: "90%",
+            maxWidth: 420,
+            borderRadius: 12,
+            marginBottom: 16,
+            objectFit: "cover",
+          }}
         />
       )}
 
