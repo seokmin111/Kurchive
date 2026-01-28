@@ -5,8 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": {
-        target: "http://localhost:8000", // FastAPI 서버
+      "/uploads": {
+        target: "http://146.56.117.219:8000",
         changeOrigin: true,
       },
     },

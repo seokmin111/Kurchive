@@ -57,8 +57,9 @@ import oci
 _config = None
 _object_storage = None
 _BUCKET_NAME = "kurchive-uploads"
-_NAMESPACE = "axzbmseuxwhb"
-_REGION = "ap-seoul-1"  # fallback
+_NAMESPACE = None
+_REGION = None
+
 
 def _ensure_client():
     global _config, _object_storage, _REGION
@@ -68,7 +69,14 @@ def _ensure_client():
     try:
         _config = oci.config.from_file("~/.oci/config")
         _object_storage = oci.object_storage.ObjectStorageClient(_config)
-        _REGION = _config.get("region", _REGION)
+
+        # 여기서 진짜 namespace를 받아온다
+        global _NAMESPACE, _REGION
+        _NAMESPACE = _object_storage.get_namespace().data
+        _REGION = _config.get("region")
+
+        print(f"✅ OCI initialized: namespace={_NAMESPACE}, region={_REGION}")
+
         print("✅ OCI ObjectStorageClient initialized")
     except oci.exceptions.ConfigFileNotFound:
         print("⚠️ OCI config not found — skipping OCI features.")
@@ -87,8 +95,11 @@ async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
     # oci 있는지 체크
     client = _ensure_client()
     if client is None:
-        print("⚠️ Skipping OCI upload (no config)")
-        return None, f"/uploads/{prefix}/fake_{uuid.uuid4().hex}.jpg"
+        raise HTTPException(
+            status_code=500,
+            detail="OCI Object Storage is not configured"
+        )
+
     if (file.content_type or "").lower() not in ALLOWED_MIME:
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Only jpeg/png/webp allowed")
 
@@ -112,8 +123,10 @@ async def save_image_oci(file: UploadFile, prefix: str) -> Tuple[str, str]:
         _NAMESPACE,
         _BUCKET_NAME,
         object_name,
-        raw
+        raw,
+        content_type=file.content_type  # 이 줄 추가
     )
+
 
     url_path = f"https://objectstorage.{_REGION}.oraclecloud.com/n/{_NAMESPACE}/b/{_BUCKET_NAME}/o/{object_name}"
     return object_name, url_path

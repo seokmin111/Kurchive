@@ -88,6 +88,11 @@ async def update_members_status(
 
         user.role = member_update.role
 
+        # role 변경 시 관리자 권한 자동 해제
+        if member_update.role != "admin":
+            user.is_admin = False
+
+
     await db.commit()
 
 
@@ -99,32 +104,47 @@ async def update_members_status(
     response_model=MemberInfoResponse,
     summary="다른 회원에게 관리자 권한 위임 (관리자 최대 2명)",
 )
+@router.put(
+    "/delegate/{userid}",
+    response_model=MemberInfoResponse,
+    summary="관리자 권한 위임 (본인 기준 교체)",
+)
 async def delegate_admin_role(
     userid: str,
     db: AsyncSession = Depends(get_async_db),
     current_admin: User = Depends(get_current_admin_user),
 ):
+    # 자기 자신에게 위임 금지
     if current_admin.userid == userid:
-        raise HTTPException(status_code=400, detail="자기 자신에게 관리자 권한을 위임할 수 없습니다.")
+        raise HTTPException(
+            status_code=400,
+            detail="자기 자신에게 관리자 권한을 위임할 수 없습니다."
+        )
 
+    # 대상 유저 조회
     user_to_promote = (
-        await db.execute(select(User).filter(User.userid == userid))
+        await db.execute(
+            select(User).where(User.userid == userid)
+        )
     ).scalar_one_or_none()
 
     if not user_to_promote:
-        raise HTTPException(status_code=404, detail="위임할 회원을 찾을 수 없습니다.")
-    if user_to_promote.is_admin:
-        raise HTTPException(status_code=400, detail="이미 관리자인 회원입니다.")
+        raise HTTPException(
+            status_code=404,
+            detail="위임할 회원을 찾을 수 없습니다."
+        )
 
-    # ✅ 관리자 최대 2명 제한
-    admin_count = await db.scalar(select(func.count()).select_from(User).where(User.is_admin == True))
-    if (admin_count or 0) >= 2:
-        raise HTTPException(status_code=400, detail="관리자는 최대 2명까지만 지정 가능합니다.")
+    # 현재 관리자(본인) 권한 해제
+    current_admin.is_admin = False
+    # role은 유지하거나 staff로 내리기
+    current_admin.role = "staff"
 
-    # ✅ 위임은 '추가 지정'으로 동작 (기존 관리자는 유지)
+    # 대상에게 관리자 권한 부여
     user_to_promote.is_admin = True
     user_to_promote.role = "staff"
 
     await db.commit()
     await db.refresh(user_to_promote)
+
     return user_to_promote
+
