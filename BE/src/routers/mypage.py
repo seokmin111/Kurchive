@@ -21,12 +21,15 @@ class MessageResponse(BaseModel):
     message: str
 
 class UserResponseDTO(BaseModel):
+    id: int            
+    is_admin: bool     
     name: str
     nickname: str
     role: str
-    created_at: datetime
-    class Config:
-        from_attributes = True
+    created_at: Optional[datetime] 
+
+class Config:
+    from_attributes = True
 
 class NicknameUpdateRequest(BaseModel):
     nickname: str
