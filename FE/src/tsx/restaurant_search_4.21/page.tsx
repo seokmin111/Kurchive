@@ -460,6 +460,15 @@ function SpecificRegion({ regionName, handleAddItem, upperRegions }: SpecificReg
   if (smallRegions != null) {
     return (
       <div className={styles.specificRegions}>
+        {/* 지역 대분류 전체 선택 버튼 */}
+        <div 
+          className={styles.regionAllTag}
+          onClick={() => handleAddItem({ type: "region", id: smallRegionID, name: `${regionName} 전체` })}
+        >
+          #{regionName} 전체
+        </div>
+
+        {/* 기존 소분류 리스트 */}
         {smallRegions.map((reg: any) => (
           <div key={reg.id} onClick={() => handleAddItem({ type: "region", id: reg.id, name: reg.name })}>
             {reg.name}

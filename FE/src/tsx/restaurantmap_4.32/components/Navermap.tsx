@@ -255,7 +255,7 @@ export default function NaverMap({ restaurantIds }: NaverMapProps) {
 
   const handleCardClick = () => {
     if (selectedRestaurant) {
-        navigate(`/restaurant/${selectedRestaurant.id}`);
+        navigate(`/restaurant/detail/${selectedRestaurant.id}`);
     }
   };
 

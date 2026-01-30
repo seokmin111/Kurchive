@@ -55,11 +55,7 @@ export default function MapPage() {
     newPrice: { min: number; max: number } | null
   ) => {
     try {
-      setSelectedRegionId(newRegionId);
-      setSelectedFoodIds(newFoodIds);
-      setSelectedAtmosphereIds(newAtmoIds);
-      setPriceRange(newPrice);
-
+      //   상태를 먼저 업데이트하지 않고, 파라미터만 구성하여 미리 검색 시도
       const allTagIds = [...newFoodIds, ...newAtmoIds];
 
       const params: any = {};
@@ -76,18 +72,28 @@ export default function MapPage() {
 
       console.log("검색 요청 Params:", params);
       
+      // API 호출
       const res = await client.get("/restaurants", { params });
       const results = res.data;
 
+      // 결과 확인 후 처리
       if (results && Array.isArray(results) && results.length > 0) {
+        // 결과가 있을 때만 상태 업데이트 및 지도 반영
         const newIds = results.map((r: any) => r.id);
         setRestaurantIds(newIds);
+
+        setSelectedRegionId(newRegionId);
+        setSelectedFoodIds(newFoodIds);
+        setSelectedAtmosphereIds(newAtmoIds);
+        setPriceRange(newPrice);
+
+        // 모달 닫기
+        setActiveModal(null);
       } else {
-        setRestaurantIds([]);
+        // 결과가 없으면 경고만 띄우고 기존 상태 유지 (모달도 닫지 않음)
         alert("조건에 맞는 식당이 없습니다.");
       }
 
-      setActiveModal(null);
     } catch (e) {
       console.error("Filter Error:", e);
       alert("검색 중 오류가 발생했습니다.");
@@ -103,7 +109,6 @@ export default function MapPage() {
         <span className={style.button} onClick={() => setActiveModal("atmosphere")}>분위기</span>
       </div>
 
-      {/* NaverMap 컴포넌트에 현재 로드된 식당 ID 목록 전달 */}
       <NaverMap restaurantIds={restaurantIds} />
 
       <button className={style.backButton} onClick={() => navigate(-1)}>
