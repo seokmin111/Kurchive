@@ -16,6 +16,7 @@ class Recipe(Base):
     base_serving = Column(Integer, nullable=False)
     uploader_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
+    description = Column(Text, nullable = True)
 
     thumbnail_url = Column(String(500), nullable = True)
     steps = relationship("RecipeStep", cascade="all, delete, delete-orphan", back_populates="recipe")

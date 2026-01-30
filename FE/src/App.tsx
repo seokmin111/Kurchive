@@ -16,8 +16,7 @@ import MapPage from "./tsx/restaurantmap_4.32/page";
 import RecipeMainPage from "./tsx/recipe_3.0/page"; 
 import RecipeSearchPage from "./tsx/recipeSearch_3.2/page";
 import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
-
-import RecipeSpecific from "./tsx/recipeSpecific_3.31/page";
+import RecipeSpecific from "./tsx/recipeSpecific_3.31/page"
 import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
 
@@ -25,6 +24,13 @@ import MyPage from "./tsx/mypage_2.0/page";
 import MyActivityPage from "./tsx/myactivity_2.2/page";
 import MyInfoEdit from "./tsx/myInfoEdit_2.1/page";
 import QuitPage from "./tsx/quitpage_2.3/page";
+
+import AdminFirstPage from "./tsx/10.0/page";
+import AdminMainPage from "./tsx/10.1/page";
+import MemberSearchPage from "./tsx/10.2/page";
+import MemberSearchResultPage from "./tsx/10.21~23/page";
+import AdminEntrustPage from './tsx/10.31~10.33/page'
+import AdminEntrustCompletePage from './tsx/10.34/page'
 
 export default function App() {
   return (
@@ -58,14 +64,23 @@ export default function App() {
       {/* 레시피 */}
       <Route path="/recipe" element={<RecipeMainPage />} />
       <Route path="/recipe/search" element={<RecipeSearchPage />} />
-      <Route path="/recipe/archive" element={<RecipeArchivePage />} />
-      <Route path="/recipe/:recipeId" element={<RecipeSpecific />} />
-      
+      <Route path="/recipe/:recipeId" element={<RecipeSpecific mode="view" />} />
+      <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />
+
+
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/myactivity" element={<MyActivityPage />} />
       <Route path="/infoedit" element={<MyInfoEdit />} />
       <Route path="/quitpage" element={<QuitPage />} />
+
+      {/*관리자 페이지*/}
+      <Route path="/admin" element={<AdminFirstPage></AdminFirstPage>}></Route>
+      <Route path="/admin/main" element={<AdminMainPage></AdminMainPage>}></Route>
+      <Route path="/admin/member" element={<MemberSearchPage></MemberSearchPage>}></Route>
+      <Route path="/admin/member/result" element={<MemberSearchResultPage></MemberSearchResultPage>}></Route>
+      <Route path="/admin/entrust/result" element={<AdminEntrustPage></AdminEntrustPage>}></Route>
+      <Route path="/admin/entrust/complete" element={<AdminEntrustCompletePage/>}></Route>
 
       {/* 404 */}
       <Route

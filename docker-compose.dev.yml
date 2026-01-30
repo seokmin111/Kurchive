@@ -30,6 +30,7 @@ services:
     volumes:
       - ./static/uploads:/app/static/uploads
       - ./BE:/app/BE   # 코드 수정하면 바로 반영 (핫리로드)
+      - /home/ubuntu/.oci:/root/.oci:ro
     command: >
       python -m uvicorn BE.src.main:app --host 0.0.0.0 --port 8000 --reload
 
