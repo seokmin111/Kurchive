@@ -4,9 +4,12 @@ import React, { useState } from "react";
 import style from "./page.module.css";
 
 export default function MemberSearchResultPage() { 
-  // 1. 팝업 열림/닫힘 상태 관리
+
+  // 1. 검색 결과가 있으면 true 없으면 false -> 이 state에 따라서 Negative 혹은 Positive 모달 보여줌
+  const [isPositive,setIsPositive] = useState(true)
+  // 2. 팝업 열림/닫힘 상태 관리
   const [isDropOpen, setIsDropOpen] = useState(false);
-  // 2. 탈퇴 대상자 이름을 동적으로 보여주기 위한 상태 (선택 사항)
+  // 3. 탈퇴 대상자 이름을 동적으로 보여주기 위한 상태 (선택 사항)
   const [targetName, setTargetName] = useState("최은우");
 
   return (
@@ -25,7 +28,9 @@ export default function MemberSearchResultPage() {
       </div>
 
       {/* Positive 컴포넌트에 탈퇴 버튼 클릭 함수 전달 */}
-      <Positive onExpelClick={() => setIsDropOpen(true)} />
+      {
+        isPositive ? <Positive onExpelClick={() => setIsDropOpen(true)} /> : <Negative></Negative>
+      }
 
       {/* 3. 조건부 렌더링: isDropOpen이 true일 때만 Drop 컴포넌트 표시 */}
       {isDropOpen && (
@@ -40,6 +45,16 @@ export default function MemberSearchResultPage() {
       )}
     </div>
   );
+}
+
+function Negative(){
+  return(
+    <div className={style.negativeBody}>
+      <img src="../../public/손사진.png" className={style.handImg}></img>
+      <div className={style.negativeText}>존재하지 않는 회원 정보입니다.</div>
+      <div className={style.negativeText}>다시 검색해주세요.</div>
+    </div>
+  )
 }
 
 // 4. Positive 컴포넌트: props로 함수를 받아 실행
