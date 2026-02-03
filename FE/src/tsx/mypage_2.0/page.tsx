@@ -2,24 +2,47 @@
 
 import styles from './page.module.css';
 import axios from 'axios';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
+
+import { getMyPage } from "../../api/mypage";
+import { MyPageUser } from "../../api/mypage";
 
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import { config } from '@fortawesome/fontawesome-svg-core';
 config.autoAddCss = false;
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { Link } from 'react-router-dom';
 
 export default function Mypage() {
-
+    const navigate = useNavigate();
     let today = new Date();   //날짜 구하기
     let year = today.getFullYear(); // 년도
     let month = today.getMonth() + 1;  // 월
     let date = today.getDate();  // 날짜
 
+    const [user, setUser] = useState<MyPageUser | null>(null);
+    const roleLabel = (user: MyPageUser) => {
+        if (user.role === "admin") return "관리자";
+        if (user.role === "staff") return "운영진";
+        return "일반 회원";
+        };
+
+
     useEffect(() => {
     document.body.style.overflowX = 'hidden';})
+
+    useEffect(() => {
+    getMyPage()
+      .then(setUser)
+      .catch(err => {
+        console.error(err);
+        alert("로그인이 필요합니다.");
+        navigate("/login");
+      });
+  }, [navigate]);
+
+    if (!user) return <div>로딩중...</div>;
 
     return (
         <main className={styles.nomrg}>
@@ -45,14 +68,17 @@ export default function Mypage() {
                             <div className={styles.body__main__info__title}>
                                 <span>이름</span>
                                 <span>닉네임</span>
-                                <span>권한</span>
-                                <span>가입일자</span>
+                                <span>가입일</span>
+                                <span>등급</span>
                             </div>
                             <div className={styles.body__main__info__info}>
-                                <span>ooo</span>
-                                <span>ooo</span>
-                                <span>ooo</span>
-                                <span>ooo</span>
+                                <span>{user.name}</span>
+                                <span>{user.nickname}</span>
+                                <span>{" "}
+                                {user.created_at
+                                    ? new Date(user.created_at).toLocaleDateString()
+                                    : "-"}</span>
+                                <span>{roleLabel(user)}</span>
                             </div>
                         </div>
                     </div>
@@ -61,9 +87,13 @@ export default function Mypage() {
                 <div className={styles.info__shadow}></div>
                 <img src="/images/curson_logo.png" className={styles.logo}/>
             </div>
-            <Link className={styles.info_change} to="/infoedit">기존 정보 수정하기</Link>
+            <div className={styles.info_change} onClick={() => navigate("/infoedit")}>
+                기존 정보 수정하기 </div>
+
             <div className={styles.mychoice}>
-                <Link className={styles.mychoice__title} to="/myactivity">나의 찜목록 보러가기</Link>
+                <div className={styles.mychoice__title} onClick={() => navigate("/myactivity")}>
+                    나의 찜목록 보러가기</div>
+
                 <div className={styles.mychoice__specefic}>
                   <span className={styles.mychoice__restaurant}>식당</span>
                   <span className={styles.mychoice__bar}> | </span>
@@ -71,7 +101,9 @@ export default function Mypage() {
                 </div>
             </div>
             <div className={styles.leave}>
-              <Link className={styles.leave__title} to="/quitpage">회원 탈퇴하기</Link>
+              <div className={styles.leave__title} onClick={() => navigate("/quitpage")}>
+                회원 탈퇴하기 </div>
+
               <div className={styles.leave__bar}></div>
             </div>
         </main>
