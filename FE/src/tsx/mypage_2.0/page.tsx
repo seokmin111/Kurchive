@@ -63,7 +63,14 @@ export default function Mypage() {
                         <span className={styles.body__title__card}> 활동카드</span>
                     </div>
                     <div className={styles.body__main}>
-                        <div className={styles.body__main__picture}></div>
+                        <div className={styles.body__main__picture}>
+                            <img
+                                src="/public/curson_logo.png"
+                                alt="커카이브 로고"
+                                className={styles.profile_logo}
+                            />
+                            </div>
+
                         <div className={styles.body__main__info}>
                             <div className={styles.body__main__info__title}>
                                 <span>이름</span>
@@ -88,7 +95,7 @@ export default function Mypage() {
                 <img src="/images/curson_logo.png" className={styles.logo}/>
             </div>
             <div className={styles.info_change} onClick={() => navigate("/infoedit")}>
-                기존 정보 수정하기 </div>
+                사용자 정보 수정하기 </div>
 
             <div className={styles.mychoice}>
                 <div className={styles.mychoice__title} onClick={() => navigate("/myactivity")}>
