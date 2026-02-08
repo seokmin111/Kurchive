@@ -249,6 +249,7 @@
     opacity: 0.2;
 }
 
-.info_change{
+.info_change,
+.chevronLeft{
     cursor : pointer;
 }

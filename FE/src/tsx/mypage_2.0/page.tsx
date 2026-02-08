@@ -47,7 +47,7 @@ export default function Mypage() {
     return (
         <main className={styles.nomrg}>
             <div className={styles.header}>
-                <div className={styles.chevronLeft}><FontAwesomeIcon icon={faChevronLeft}/></div>
+                <div className={styles.chevronLeft}  onClick={() => navigate("/main")}><FontAwesomeIcon icon={faChevronLeft}/></div>
                 <div className={styles.header_title}>
                   <p className={styles.sub_title} style={{ display: 'inline' }}>우리만의 미식 지도</p>
                   <h1 className={styles.title} style={{ display: 'inline' }}>커카이브</h1>

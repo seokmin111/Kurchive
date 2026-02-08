@@ -225,6 +225,7 @@
 /* cursor */
 .nicknameChange__save,
 .passwordChange__submit,
-.mypage {
+.mypage,
+.chevronLeft {
   cursor: pointer;
 }

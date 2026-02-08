@@ -102,7 +102,7 @@ export default function MainPage() {
         <main className={styles.nomrg}>
             {/* 상단 */}
             <div className={styles.header}>
-                <div className={styles.chevronLeft} onClick={() => navigate("/main")}>
+                <div className={styles.chevronLeft} onClick={() => navigate("/mypage")}>
                     <FontAwesomeIcon icon={faChevronLeft}
                      />
                 </div>
