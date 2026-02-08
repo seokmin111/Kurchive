@@ -168,7 +168,7 @@ export async function replaceStepImages(
 ) {
   const fd = new FormData();
   for (const f of files) {
-    // ✅ filename 강제 유니크(스토리지/백엔드가 file.filename을 쓰는 경우 대비)
+    // filename 강제 유니크(스토리지/백엔드가 file.filename을 쓰는 경우 대비)
     fd.append(
       "files",
       f,
@@ -176,7 +176,7 @@ export async function replaceStepImages(
     );
   }
 
-  const res = await client.put(`/api/recipe/${recipeId}/steps/${stepOrder}/images`, fd, {
+  const res = await client.put(`/recipe/${recipeId}/steps/${stepOrder}/images`, fd, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return res.data;

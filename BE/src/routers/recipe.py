@@ -128,11 +128,15 @@ def _build_recipe_response(recipe: Recipe):
     ]
 
     steps = [
-        {
-            "step_order": s.step_order,
-            "description": s.description,
-            "image_urls": [img.image_url for img in s.images],
-        } for s in recipe.steps
+    {
+        "step_order": s.step_order,
+        "description": s.description,
+        "image_urls": [img.image_url for img in s.images],  # 기존 유지
+        "images": [
+            {"id": img.id, "image_url": img.image_url}
+            for img in s.images
+        ],
+    } for s in recipe.steps
     ]
 
     return {
