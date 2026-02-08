@@ -848,6 +848,9 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                   </div>
                 ) : (
                   <div className={style.stepImageArea}>
+                    <div style={{ fontSize: 12 }}>
+  images count: {recipe.steps.find((st)=>st.step_order===order)?.images?.length ?? 0}
+</div>
 
                     {/* 1. 방금 선택한 파일 미리보기 (최우선) */}
                     {picked.length > 0 ? (

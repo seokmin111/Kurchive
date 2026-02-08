@@ -49,11 +49,15 @@ class IngredientDetailDTO(BaseModel):
     quantity: float
     unit_name: str
 
+class RecipeStepImageDTO(BaseModel):
+    id: int
+    image_url: str
 
 class RecipeStepDTO(BaseModel):
     step_order: int
     description: str
     image_urls: List[str] = []
+    images: List[RecipeStepImageDTO] = []  # 이 줄 추가
 
     class Config:
         populate_by_name = True
