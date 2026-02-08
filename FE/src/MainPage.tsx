@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
 import "./components/main.css"; // CSS 위치 맞게 조정
+import {
+  getMyPage,
+  updateNickname as updateNicknameAPI,
+  updatePassword as updatePasswordAPI,
+} from "../../api/mypage";
 
 export default function MainPage() {
   return (

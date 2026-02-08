@@ -221,3 +221,10 @@
     border: 1px solid #8B0029;
     border-radius: 90%;
 }
+
+/* cursor */
+.nicknameChange__save,
+.passwordChange__submit,
+.mypage {
+  cursor: pointer;
+}

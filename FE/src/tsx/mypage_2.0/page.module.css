@@ -248,3 +248,7 @@
     top: 250px;
     opacity: 0.2;
 }
+
+.info_change{
+    cursor : pointer;
+}

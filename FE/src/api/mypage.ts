@@ -1,10 +1,4 @@
 import client from "./client";
-import {
-  MyPageUser,
-  FavoriteRestaurant,
-  MessageResponse,
-} from "@/types/mypage";
-
 export const getMyPage = (): Promise<MyPageUser> =>
   client.get("/mypage").then(r => r.data);
 
@@ -16,10 +10,9 @@ export const updateNickname = (
 export const updatePassword = (
   currentPW: string,
   newPW: string
-): Promise<MessageResponse> =>
-  client
-    .put("/mypage/info/password", { currentPW, newPW })
-    .then(r => r.data);
+) =>
+  client.put("/mypage/info/password", { currentPW, newPW });
+
 
 export const getMyFavoriteRestaurants = (): Promise<FavoriteRestaurant[]> =>
   client.get("/mypage/logs/restaurants").then(r => r.data);
