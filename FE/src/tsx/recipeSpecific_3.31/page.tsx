@@ -848,89 +848,86 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                   </div>
                 ) : (
                   <div className={style.stepImageArea}>
-                    <div style={{ fontSize: 12 }}>
-  images count: {recipe.steps.find((st)=>st.step_order===order)?.images?.length ?? 0}
+
+                  {/* 서버 이미지 or 교체 preview (둘 중 하나만) */}
+{picked.length === 0 ? (
+  <div className={style.stepImageList}>
+    {recipe.steps
+      .find((st) => st.step_order === order)
+      ?.images?.map((img) => (
+        <div key={img.id} className={style.stepImageItem}>
+          <img src={img.image_url} className={style.stepThumb} alt="step" />
+
+          {/* 개별 삭제 버튼 */}
+          <button
+            type="button"
+            className={style.stepImageDelete}
+            onClick={async () => {
+              if (!confirm("이 이미지를 삭제할까요?")) return;
+              await deleteStepImage(recipe.id, order, img.id);
+              const fresh = await getRecipeDetail(recipe.id);
+              setRecipe(fresh);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+  </div>
+) : (
+  <div className={style.stepImagePreview}>
+  <div className={style.stepImageItem}>
+    <img
+      src={URL.createObjectURL(picked[0])}
+      className={style.stepThumb}
+      alt="preview"
+    />
+
+    {/* ✅ 선택한 이미지 취소 버튼 */}
+    <button
+      type="button"
+      className={style.stepImageDelete}
+      onClick={() => {
+        setStepFiles((prev) => {
+          const n = { ...prev };
+          delete n[order];   // 🔥 picked 제거
+          return n;
+        });
+      }}
+    >
+      ×
+    </button>
+  </div>
 </div>
 
-                    {/* 1. 방금 선택한 파일 미리보기 (최우선) */}
-                    {picked.length > 0 ? (
-                      <img
-                        src={URL.createObjectURL(picked[0])}
-                        alt="preview"
-                        className={style.stepThumb}
-                      />
-                    ) : stepsDraft[idx]?.image_urls?.[0] ? (
-                      /* 2️. 서버에 이미 있는 이미지 */
-                      <img
-                        src={stepsDraft[idx].image_urls[0]}
-                        alt="step"
-                        className={style.stepThumb}
-                      />
-                    ) : null}
-                    {/* 서버에 이미 저장된 이미지 + 삭제 버튼 */}
-                  {recipe.steps
-                    .find((st) => st.step_order === order)
-                    ?.images?.map((img) => (
-                      <div
-                        key={img.id}
-                        style={{
-                          position: "relative",
-                          display: "inline-block",
-                          marginRight: 8,
-                        }}
-                      >
-                        <img
-                          src={img.image_url}
-                          className={style.stepThumb}
-                        />
-                        <button
-                          type="button"
-                          style={{
-                            position: "absolute",
-                            top: 4,
-                            right: 4,
-                            width: 22,
-                            height: 22,
-                            borderRadius: "50%",
-                            background: "rgba(0,0,0,0.8)",
-                            color: "white",
-                            border: "none",
-                            zIndex: 10,
-                            cursor: "pointer",
-                          }}
-                          onClick={async () => {
-                            if (!confirm("이 이미지를 삭제할까요?")) return;
-                            await deleteStepImage(recipe.id, order, img.id);
-                            const fresh = await getRecipeDetail(recipe.id);
-                            setRecipe(fresh);
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+)}
 
-                    <input
-                      id={`step-file-${order}`}
-                      className={style.stepFileInput}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files ?? []);
-                        setStepFiles((prev) => ({ ...prev, [order]: files }));
-                      }}
-                    />
 
+                  {/* 3. 기존 UI 그대로: 이미지 추가 */}
+                  <input
+                    id={`step-file-${order}`}
+                    className={style.stepFileInput}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      setStepFiles((prev) => ({ ...prev, [order]: files }));
+                    }}
+                  />
+
+                  {picked.length === 0 &&
+                  recipe.steps.find((st) => st.step_order === order)?.images?.length === 0 && (
                     <label htmlFor={`step-file-${order}`} className={style.stepImageBtn}>
-                    <span className={style.stepPlus}>+</span>
-                    <span className={style.stepAddText}>이미지 추가</span>
-                  </label>
+                      <span className={style.stepPlus}>+</span>
+                      <span className={style.stepAddText}>이미지 추가</span>
+                    </label>
+                )}
 
-                    {picked.length > 0 ? (
-                      <div className={style.stepPickedText}>선택됨: {picked.length}개</div>
-                    ) : null}
-                  </div>
+
+                </div>
+
+
                 )}
             
               </div>
@@ -945,11 +942,31 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                     onChange={(e) => setStepDescription(idx, e.target.value)}
                     style={{ width: "100%" }}
                   />
-                  <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                    <button type="button" className={style.stepDeleteBtn} onClick={() => removeStep(idx)}>
-                      단계 삭제
-                    </button>
-                  </div>
+                 
+<div className={style.stepActionRow}>
+    <button
+    type="button"
+    className={style.stepImageReplaceBtn}
+    onClick={() => {
+      document.getElementById(`step-file-${order}`)?.click();
+    }}
+  >
+    이미지 교체
+  </button>
+
+  <button
+    type="button"
+    className={style.stepDeleteBtn}
+    onClick={() => removeStep(idx)}
+  >
+    단계 삭제
+  </button>
+
+
+</div>
+
+
+
                 </div>
               )}
             </div>

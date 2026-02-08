@@ -345,26 +345,30 @@ async def update_recipe(
     recipe_id: int,
     data: RecipeUpdateDTO,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    current_user: User = Depends(get_current_user_from_token),
 ):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
-        raise HTTPException(404, "Recipe not found")
+        raise HTTPException(status_code=404, detail="Recipe not found")
+
     await assert_can_edit_recipe(recipe, current_user)
 
-    if data.title:
+    # ===== 기본 필드 업데이트 =====
+    if data.title is not None:
         recipe.title = data.title
-    if data.base_serving:
+
+    if data.base_serving is not None:   # ✅ FIX 1
         recipe.base_serving = data.base_serving
+
     if data.description is not None:
-        recipe.description = data.description  # ✅ 추가
+        recipe.description = data.description
 
-    await db.commit()
-
-    # ingredients 재구성 (전체 삭제 후 재삽입)
+    # ===== ingredients 재구성 (기존 로직 유지) =====
     if data.ingredients is not None:
         await db.execute(
-            RecipeIngredient.__table__.delete().where(RecipeIngredient.recipe_id == recipe_id)
+            RecipeIngredient.__table__.delete().where(
+                RecipeIngredient.recipe_id == recipe_id
+            )
         )
 
         for ing in data.ingredients:
@@ -372,49 +376,55 @@ async def update_recipe(
                 ingredient_id = ing.ingredient_id
             else:
                 if not ing.name:
-                    raise HTTPException(status_code=400, detail="ingredient_id or name is required")
+                    raise HTTPException(
+                        status_code=400,
+                        detail="ingredient_id or name is required"
+                    )
                 ingredient = await get_or_create_ingredient(
                     db=db,
                     name=ing.name,
                     unit_type=ing.unit_type or "mass",
-                    is_custom=True
+                    is_custom=True,
                 )
                 ingredient_id = ingredient.id
 
-            db.add(RecipeIngredient(
-                recipe_id=recipe.id,
-                ingredient_id=ingredient_id,
-                quantity=ing.quantity,
-                unit_name=ing.unit_name,
-            ))
+            db.add(
+                RecipeIngredient(
+                    recipe_id=recipe.id,
+                    ingredient_id=ingredient_id,
+                    quantity=ing.quantity,
+                    unit_name=ing.unit_name,
+                )
+            )
 
-    # steps 재구성 (전체 삭제 후 재삽입)
+    # ===== steps 업데이트 (이미지는 절대 건드리지 않음) =====
     if data.steps is not None:
-        # ✅ 1) 기존 step 이미지 먼저 삭제 (FK 충돌 방지)
-        for s in list(recipe.steps):
-            for img in list(s.images):
-                try:
-                    delete_image_oci(img.image_url)
-                except Exception as e:
-                    logger.warning(f"단계 이미지 삭제 실패: {e}")
-                await db.delete(img)
-        await db.flush()
+        # 기존 step 맵
+        step_map = {s.step_order: s for s in recipe.steps}
+        incoming_orders = {s.step_order for s in data.steps}
 
-        # ✅ 2) step 삭제
-        await db.execute(
-            RecipeStep.__table__.delete().where(RecipeStep.recipe_id == recipe_id)
-        )
+        # ✅ FIX 2-1: 삭제된 step 반영
+        for step in list(recipe.steps):
+            if step.step_order not in incoming_orders:
+                await db.delete(step)
 
-        # ✅ 3) step 재삽입
-        for step in data.steps:
-            db.add(RecipeStep(
-                recipe_id=recipe.id,
-                step_order=step.step_order,
-                description=step.description
-            ))
+        # 추가 / 수정
+        for step_data in data.steps:
+            step = step_map.get(step_data.step_order)
 
+            if step:
+                step.description = step_data.description
+            else:
+                db.add(
+                    RecipeStep(
+                        recipe_id=recipe.id,
+                        step_order=step_data.step_order,
+                        description=step_data.description,
+                    )
+                )
 
     await db.commit()
+
     recipe = await _load_recipe_with_images(db, recipe_id)
     return _build_recipe_response(recipe)
 

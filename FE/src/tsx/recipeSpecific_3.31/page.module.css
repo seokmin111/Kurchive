@@ -558,3 +558,82 @@ select {
 .stepDeleteBtn:hover {
   background: #f6f6f6;
 }
+.stepImageArea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stepImageList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stepImageItem {
+  position: relative;
+}
+
+.stepThumb {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.stepImageDelete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 22px;
+  z-index: 10;              
+  pointer-events: auto;  
+}
+
+.stepImagePreview {
+  margin-top: 4px;
+}
+.stepActionRow {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: row;   /* ← 이거 필수 */
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.stepDeleteBtn {
+  white-space: nowrap;
+}
+
+.stepImageReplaceBtn {
+  white-space: nowrap;
+}
+
+.stepDeleteBtn,
+.stepImageReplaceBtn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.stepDeleteBtn {
+  background: rgba(139, 0, 40, 0.08); /* 연한 붉은색 */
+  border-color: rgba(139, 0, 40, 0.35);
+  color: #8b0028;
+}
+.stepDeleteBtn:hover {
+  background: rgba(139, 0, 40, 0.14);
+}
