@@ -106,12 +106,14 @@ async def assert_can_edit_recipe(recipe: Recipe, current_user: User):
         raise HTTPException(status_code=403, detail="You do not have permission to modify this recipe")
 
 
-async def _load_recipe_with_images(db: AsyncSession, recipe_id: int) -> Recipe:
+async def _load_recipe_with_images(db: AsyncSession, recipe_id: int):
     result = await db.execute(
-        select(Recipe).options(
+        select(Recipe)
+        .where(Recipe.id == recipe_id)
+        .options(
             selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient),
-            selectinload(Recipe.steps).selectinload(RecipeStep.images),
-        ).filter(Recipe.id == recipe_id)
+            selectinload(Recipe.steps).selectinload(RecipeStep.images),  # ⭐ 핵심
+        )
     )
     return result.scalar_one_or_none()
 
