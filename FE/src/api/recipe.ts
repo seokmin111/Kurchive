@@ -22,6 +22,10 @@ export type RecipeStepInput = {
   step_order: number;
   description: string;
   image_urls?: string[];
+  images?: {
+    id: number;
+    image_url: string;
+  }[];
 };
 
 // 레시피 생성 요청
@@ -182,3 +186,13 @@ export async function replaceStepImages(
   return res.data;
 }
 
+
+export const deleteStepImage = (
+  recipeId: number,
+  stepOrder: number,
+  imageId: number
+) => {
+  return client.delete(
+    `/recipe/${recipeId}/steps/${stepOrder}/images/${imageId}`
+  );
+};

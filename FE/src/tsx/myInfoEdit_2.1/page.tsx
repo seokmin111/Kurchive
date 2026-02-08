@@ -102,8 +102,9 @@ export default function MainPage() {
         <main className={styles.nomrg}>
             {/* 상단 */}
             <div className={styles.header}>
-                <div className={styles.chevronLeft}>
-                    <FontAwesomeIcon icon={faChevronLeft} />
+                <div className={styles.chevronLeft} onClick={() => navigate("/main")}>
+                    <FontAwesomeIcon icon={faChevronLeft}
+                     />
                 </div>
                 <div className={styles.header_title}>
                     <p className={styles.sub_title} style={{ display: 'inline' }}>우리만의 미식 지도</p>

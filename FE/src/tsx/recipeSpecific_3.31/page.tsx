@@ -13,8 +13,10 @@ import {
   scaleRecipe,
   convertRecipeUnits,
   replaceThumbnail,
+  deleteThumbnail,
   uploadStepImages,
-  replaceStepImages
+  replaceStepImages,
+  deleteStepImage
 } from "../../api/recipe";
 
 type RecipeDetail = {
@@ -25,7 +27,13 @@ type RecipeDetail = {
   created_at: string;
   thumbnail_url?: string | null;
   description?: string | null;
-  steps: { step_order: number; description: string; image_urls?: string[] }[];
+  steps: {
+  step_order: number;
+  description: string;
+  image_urls?: string[];
+  images?: { id: number; image_url: string }[];
+}[];
+
   ingredients: {
     ingredient_id: number;
     name: string;
@@ -583,6 +591,22 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
         </div>
       )}
 
+    {/* 썸네일 삭제 */}
+    {isEdit && recipe.thumbnail_url && (
+      <button
+        type="button"
+        onClick={async () => {
+          if (!confirm("썸네일을 삭제할까요?")) return;
+          await deleteThumbnail(recipe.id);
+          const fresh = await getRecipeDetail(recipe.id);
+          setRecipe(fresh);
+        }}
+      >
+        썸네일 삭제
+      </button>
+    )}
+
+
       {/* 음식 설명 */}
       <div className={style.foodDescription}>음식 설명</div>
       {!isEdit ? (
@@ -824,6 +848,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                   </div>
                 ) : (
                   <div className={style.stepImageArea}>
+
                     {/* 1. 방금 선택한 파일 미리보기 (최우선) */}
                     {picked.length > 0 ? (
                       <img
@@ -839,7 +864,48 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                         className={style.stepThumb}
                       />
                     ) : null}
-
+                    {/* 서버에 이미 저장된 이미지 + 삭제 버튼 */}
+                  {recipe.steps
+                    .find((st) => st.step_order === order)
+                    ?.images?.map((img) => (
+                      <div
+                        key={img.id}
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                          marginRight: 8,
+                        }}
+                      >
+                        <img
+                          src={img.image_url}
+                          className={style.stepThumb}
+                        />
+                        <button
+                          type="button"
+                          style={{
+                            position: "absolute",
+                            top: 4,
+                            right: 4,
+                            width: 22,
+                            height: 22,
+                            borderRadius: "50%",
+                            background: "rgba(0,0,0,0.8)",
+                            color: "white",
+                            border: "none",
+                            zIndex: 10,
+                            cursor: "pointer",
+                          }}
+                          onClick={async () => {
+                            if (!confirm("이 이미지를 삭제할까요?")) return;
+                            await deleteStepImage(recipe.id, order, img.id);
+                            const fresh = await getRecipeDetail(recipe.id);
+                            setRecipe(fresh);
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
 
                     <input
                       id={`step-file-${order}`}
@@ -863,6 +929,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                     ) : null}
                   </div>
                 )}
+            
               </div>
 
               {!isEdit ? (
