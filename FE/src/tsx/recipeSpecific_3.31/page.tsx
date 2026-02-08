@@ -98,6 +98,15 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
   const [stepFiles, setStepFiles] = useState<Record<number, File[]>>({}); // key=step_order
 
   useEffect(() => setIsEdit(mode === "edit"), [mode]);
+  useEffect(() => {
+  setIsEdit(mode === "edit");
+
+  if (mode === "edit") {
+    setSaving(false);
+  }
+}, [mode]);
+
+
 
   const stepsSorted = useMemo(() => {
     return (recipe?.steps ?? []).slice().sort((a, b) => a.step_order - b.step_order);
