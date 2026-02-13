@@ -9,7 +9,9 @@ from passlib.context import CryptContext
 
 from BE.src.dependencies import get_current_user_from_token
 from BE.src.database import get_async_db
+
 from BE.src.models.users import User
+from BE.src.models.recipes import Recipe
 from BE.src.models.restaurants import Restaurant
 
 router = APIRouter(prefix="/api/mypage", tags=["MyPage"])
@@ -43,6 +45,25 @@ class FavoriteRestaurantDTO(BaseModel):
     name: str
     address: Optional[str]
     rating: Optional[float]
+    class Config:
+        from_attributes = True
+
+class MyRecipeDTO(BaseModel):
+    id: int
+    title: str
+    base_serving: int
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class MyRestaurantDTO(BaseModel):
+    id: int
+    name: str
+    address: str
+    rating: int
+    created_at: float
+
     class Config:
         from_attributes = True
 
@@ -103,3 +124,28 @@ async def delete_user_account(
         await db.delete(user_to_delete)
         await db.commit()
     return {"message": "회원 탈퇴가 성공적으로 처리되었습니다."}
+
+# 내 활동 기록
+@router.get("/logs/recipes", response_model=List[MyRecipeDTO])
+async def get_my_uploaded_recipes(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    result = await db.execute(
+        select(Recipe)
+        .where(Recipe.uploader_id == current_user.id)
+        .order_by(Recipe.created_at.desc())
+    )
+    return result.scalars().all()
+
+@router.get("/logs/restaurants-uploaded", response_model=List[MyRestaurantDTO])
+async def get_my_uploaded_restaurants(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    result = await db.execute(
+        select(Restaurant)
+        .where(Restaurant.uploaded_by == current_user.id)
+        .order_by(Restaurant.created_at.desc())
+    )
+    return result.scalars().all()
