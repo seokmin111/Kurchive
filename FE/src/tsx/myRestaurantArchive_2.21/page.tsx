@@ -1,55 +1,26 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import styles from './page.module.css';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "./page.module.css";
+import { getMyPage, getMyFavoriteRestaurants, FavoriteRestaurant, MyPageUser } from "../../api/mypage";
 
-// 타입 정의
-interface Restaurant {
-  id: number;
-  name: string;
-  location: string;
-  rating: number;
-  memo?: string;
-  hasImage: boolean;
-  imageUrl?: string;
-  photoCount?: number;
+// 백엔드 DTO(FavoriteRestaurant)에는 UI에 필요한 일부 필드(이미지 등)가 없을 수 있으므로 확장
+interface ExtendedRestaurant extends FavoriteRestaurant {
+  summary?: string; 
+  imageUrl?: string; 
+  addedAt?: string; 
 }
-
-// 샘플 데이터
-const sampleRestaurants: Restaurant[] = [
-  {
-    id: 1,
-    name: '식당 이름',
-    location: '한 줄 설명 ...........',
-    rating: 5,
-    memo: '나중에 가볼 것 :)',
-    hasImage: false,
-  },
-  {
-    id: 2,
-    name: '식당 이름',
-    location: '한 줄 설명 ...........',
-    rating: 4,
-    hasImage: false,
-  },
-  {
-    id: 3,
-    name: '식당 이름',
-    location: '한 줄 설명 ...........',
-    rating: 3,
-    hasImage: true,
-    photoCount: 2,
-  },
-];
 
 // 별점 컴포넌트
 const StarRating = ({ rating }: { rating: number }) => {
+  const score = rating || 0;
   return (
     <div className={styles.ratingContainer}>
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
-          className={star <= rating ? styles.star : styles.starEmpty}
+          className={star <= score ? styles.star : styles.starEmpty}
         >
           ★
         </span>
@@ -59,32 +30,52 @@ const StarRating = ({ rating }: { rating: number }) => {
 };
 
 // 식당 카드 컴포넌트
-const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
+const RestaurantCard = ({ restaurant, onDelete }: { restaurant: ExtendedRestaurant; onDelete: (id: number) => void }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className={styles.restaurantCard}>
+    <div 
+      className={styles.restaurantCard} 
+      onClick={() => navigate(`/restaurant/detail/${restaurant.id}`)}
+    >
       <div className={styles.cardContent}>
         <h3 className={styles.restaurantName}>{restaurant.name}</h3>
-        <p className={styles.restaurantLocation}>{restaurant.location}</p>
-        <StarRating rating={restaurant.rating} />
-        {restaurant.memo && (
-          <div className={styles.memoContainer}>
-            <span className={styles.memoIcon}>📝</span>
-            <span className={styles.memoText}>{restaurant.memo}</span>
-          </div>
-        )}
+        <p className={styles.restaurantLocation}>
+          {restaurant.summary || restaurant.address || "주소 정보 없음"}
+        </p>
+        
+        <div className={styles.userInfo}>
+            <span className={styles.userCircle}></span>
+            <span className={styles.metaText}>
+                {/* 찜한 날짜 데이터가 없으면 임시 텍스트 표시 */}
+                저장한 식당
+            </span>
+        </div>
+
+        <div className={styles.bottomRow}>
+             <StarRating rating={restaurant.rating || 0} />
+             <span className={styles.scoreText}>{restaurant.rating?.toFixed(1)}</span>
+        </div>
       </div>
+
       <div
-        className={`${styles.cardImage} ${restaurant.hasImage ? styles.cardImageWithPhoto : ''}`}
+        className={`${styles.cardImage} ${restaurant.imageUrl ? styles.cardImageWithPhoto : ''}`}
         style={restaurant.imageUrl ? { backgroundImage: `url(${restaurant.imageUrl})` } : {}}
       >
-        <button className={styles.deleteButton}>✕</button>
-        {!restaurant.hasImage && (
-          <div className={styles.imagePlaceholder}>
-            <span className={styles.imageIcon}>🖼</span>
-          </div>
-        )}
-        {restaurant.hasImage && restaurant.photoCount && (
-          <span className={styles.imageOverlay}>포토리뷰 +{restaurant.photoCount}개</span>
+        <button 
+            className={styles.deleteButton} 
+            onClick={(e) => {
+                e.stopPropagation();
+                onDelete(restaurant.id);
+            }}
+        >
+            ✕
+        </button>
+        
+        {!restaurant.imageUrl && (
+           <div className={styles.noImageText}>
+              <div>음식 사진</div>
+           </div>
         )}
       </div>
     </div>
@@ -92,29 +83,73 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => {
 };
 
 export default function RestaurantArchivePage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const username = '나래원';
+  const navigate = useNavigate();
+  
+  const [user, setUser] = useState<MyPageUser | null>(null);
+  const [restaurants, setRestaurants] = useState<ExtendedRestaurant[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // 데이터 로드
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [userData, favData] = await Promise.all([
+          getMyPage(),
+          getMyFavoriteRestaurants()
+        ]);
+        
+        setUser(userData);
+        // 최신순 정렬 (API가 순서를 보장하지 않을 경우)
+        setRestaurants([...favData].reverse());
+      } catch (error) {
+        console.error("데이터 로딩 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 검색 기능
+  const filteredRestaurants = restaurants.filter((r) => 
+    r.name.includes(searchQuery) || 
+    (r.address && r.address.includes(searchQuery))
+  );
+
+  // 삭제 핸들러 (프론트엔드 처리)
+  const handleDeleteItem = (id: number) => {
+    if(!window.confirm("아카이브에서 삭제하시겠습니까?")) return;
+    // 추후 API 연동 필요: await client.delete(`/mypage/favorites/${id}`);
+    setRestaurants(prev => prev.filter(item => item.id !== id));
+  };
 
   return (
     <div className={styles.container}>
-      {/* 헤더 */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <button className={styles.backButton}>{'<'}</button>
+          <img 
+            src="/backstep_white_background.png" 
+            alt="뒤로가기" 
+            className={styles.backButton}
+            onClick={() => navigate(-1)}
+          />
           <div className={styles.logoSection}>
             <span className={styles.logoSubtitle}>우리만의 미식 지도</span>
             <span className={styles.logo}>커카이브</span>
           </div>
         </div>
-        <button className={styles.myPageButton}>마이페이지</button>
+        <button className={styles.myPageButton} onClick={() => navigate('/mypage')}>
+            마이페이지
+        </button>
       </header>
 
-      {/* 페이지 제목 */}
       <div className={styles.pageTitle}>
-        <span className={styles.username}>{username}</span> 의 식당 아카이브
+        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님의 식당 아카이브
       </div>
 
-      {/* 검색바 */}
       <div className={styles.searchSection}>
         <div className={styles.searchBar}>
           <input
@@ -128,24 +163,30 @@ export default function RestaurantArchivePage() {
         </div>
       </div>
 
-      {/* 필터 */}
       <div className={styles.filterSection}>
         <span className={styles.filterLabel}>
-          식당 아카이브에서<br />빨리 찾아보기!
+          식당 아카이브에<br />필터 적용하기
         </span>
-        <button className={styles.filterDropdown}>
-          지역 <span>▼</span>
-        </button>
-        <button className={styles.filterDropdown}>
-          음식 종류 <span>▼</span>
-        </button>
+        <button className={styles.filterDropdown}>지역 <span>▼</span></button>
+        <button className={styles.filterDropdown}>음식 종류 <span>▼</span></button>
       </div>
 
-      {/* 식당 리스트 */}
       <div className={styles.restaurantList}>
-        {sampleRestaurants.map((restaurant) => (
-          <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-        ))}
+        {loading ? (
+            <div style={{textAlign: 'center', padding: '20px', color: '#888'}}>로딩 중...</div>
+        ) : filteredRestaurants.length > 0 ? (
+            filteredRestaurants.map((restaurant) => (
+            <RestaurantCard 
+                key={restaurant.id} 
+                restaurant={restaurant} 
+                onDelete={handleDeleteItem}
+            />
+            ))
+        ) : (
+            <div style={{textAlign: 'center', padding: '40px', color: '#999'}}>
+                {searchQuery ? "검색 결과가 없습니다." : "아직 저장한 식당이 없습니다."}
+            </div>
+        )}
       </div>
     </div>
   );

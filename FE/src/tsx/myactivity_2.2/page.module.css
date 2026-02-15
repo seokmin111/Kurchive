@@ -10,191 +10,266 @@
 .mainPage {
   display: flex;
   flex-direction: column;
-
   background-color: white;
   position: relative;
   overflow: hidden;
-  width: 700px;
-  height: 999px;
-
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
   margin: 0 auto;
-
-  min-height: 100vh;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+  font-family: sans-serif;
 }
 
+/* --- Top Bar --- */
 .topBar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  padding: 20px 20px;
   background-color: white;
+  z-index: 10;
 }
 
-.title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  line-height: 1.2;
-  margin-left: 1vw;
-  flex-grow: 1;
-}
-
-.myPageButton {
-  border: 2px solid #a33e5c;
-  border-radius: 50%;
-  padding: 15px 15px;
-  background-color: white;
-  color: #a33e5c;
-  font-weight: bold;
-  cursor: pointer;
-  margin-right: 10%;
-  width: 28%;
-  height: 100%;
-  font-size: 18px;
-}
-
+/* 뒤로가기 버튼: 세로로 긴 직사각형 형태 유지 */
 .backstep_button {
-  margin-left: 1vw;
-}
-/* --- Favorites Section Styling --- */
-.favoritesSection {
-  margin-top: 40px;
-  text-align: center;
-}
-
-.sectionTitle {
-  font-size: 1.1rem;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #8b0029;
-}
-
-.listItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  background-color: white;
-  border: 1px solid #8b0029;
-  border-radius: 40px;
-  box-shadow: 0 6px 9px rgba(0, 0, 0, 0.3);
-
-  width: 50%;
-  min-height: 100px;
-  padding: 15px 30px;
-  margin-top: 20%;
-  margin-left: 20%;
-  margin-bottom: 3vh;
   cursor: pointer;
+  height: 24px; /* 높이 기준 */
+  width: auto;  /* 비율 유지 */
+  object-fit: contain;
 }
 
-.listItem2 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  background-color: #f1e6e6;
-  border: 1px solid #8b0029;
-  border-radius: 40px;
-  box-shadow: 0 6px 9px rgba(0, 0, 0, 0.3);
-
-  width: 50%;
-  min-height: 100px;
-  padding: 15px 30px;
-  margin-left: 20%;
-  margin-bottom: 3vh;
-  cursor: pointer;
-}
-
-.highlightedItem {
-  border: 3px solid #63a4ff; /* Blue border for the highlight */
-  /* You may need to adjust the padding or margin slightly if the border makes it jump */
-}
-
-.listContent {
+.titleGroup {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   flex-grow: 1;
+  margin-left: 15px;
+}
+
+.subTitle {
+  font-size: 0.7rem;
+  color: #8b0029;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.mainTitle {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #8b0029;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.myPageButton {
+  border: 1px solid #8b0029;
+  border-radius: 30px;
+  padding: 8px 16px;
+  background-color: white;
+  color: #8b0029;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* --- Favorites Section --- */
+.favoritesSection {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8b0029;
+  margin-bottom: 10px;
+  z-index: 10;
+}
+
+.underline {
+  border-bottom: 1px solid #8b0029;
+  width: 85%;
+  margin-bottom: 60px; /* 간격 확보 */
+  opacity: 0.5;
+}
+
+/* --- List Items (Cards) --- */
+.cardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+  align-items: center;
+  z-index: 5;
+}
+
+.listItem, .listItem2 {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  width: 65%;
+  height: 100px;
+  padding: 0 25px;
+  
+  border: 1px solid #8b0029;
+  border-radius: 50px;
+  box-shadow: 2px 4px 10px rgba(139, 0, 41, 0.15);
+  
+  cursor: pointer;
+  transition: transform 0.2s;
+  background-color: white;
+}
+
+.listItem2 {
+  background-color: #fffafa; 
+}
+
+.listItem:active, .listItem2:active {
+  transform: scale(0.98);
 }
 
 .listText {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #8b0029;
-  margin-bottom: 5px;
+}
+
+.listRight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .heartCount {
-  font-size: 0.9rem;
-  color: #a33e5c;
-  font-weight: bold;
+  font-size: 0.8rem;
+  color: #8b0029;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.heartIcon {
+  font-size: 1.2rem;
+  margin-bottom: -3px;
 }
 
 .arrow {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #a33e5c;
+  position: absolute;
+  right: -40px;
+  font-size: 2rem;
+  color: #8b0029;
+  font-weight: 300;
 }
 
-/* --- Recent Section Styling (Bottom part) --- */
+/* --- Recent Section --- */
 .recentSection {
-  margin-top: 100px;
+  margin-top: auto;
+  padding-bottom: 40px;
   text-align: center;
+  width: 100%;
+  z-index: 10;
+  background-color: white;
+}
+
+/* 타이틀 위 작은 점 */
+.dotNode {
+  width: 10px;
+  height: 10px;
+  background-color: #8b0029;
+  border-radius: 50%;
+  margin: 0 auto 10px auto;
+  position: relative;
+  left: 35%; /* 위치 조정 */
 }
 
 .recentTitle {
-  font-size: 1.1rem;
-  color: #8b0029;
-  margin-bottom: 20px;
-}
-
-.recentItems {
-  display: flex;
-
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0 5vw;
-  white-space: nowrap;
-
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  gap: 15px;
-  height: 50%;
-}
-
-.recentItemButton {
-  margin-top: 2%;
-  width: 150px;
-  flex-shrink: 0;
-  border: 1px solid #8b0029;
-  border-radius: 20px;
-  padding: 10px 20px;
-  background-color: white;
-  color: #a33e5c;
-  font-weight: bold;
-  cursor: pointer;
-}
-.underline {
-  border-bottom: 1.5px solid #0f0f0f;
-  width: 60%;
-  margin: 8px auto;
-  margin-bottom: 15%;
+  font-size: 0.95rem;
+  color: #4a4a4a;
+  font-weight: 600;
+  margin-bottom: 10px;
 }
 
 .underline2 {
-  border-bottom: 1.5px solid #0f0f0f;
-  width: 60%;
-  margin: 8px auto;
+  border-bottom: 1px solid #8b0029;
+  width: 85%;
+  margin: 0 auto 20px auto;
+  opacity: 0.5;
 }
+
+/* 좌우 스크롤 컨테이너 */
+.recentItems {
+  display: flex;
+  justify-content: flex-start; /* 왼쪽부터 정렬 */
+  gap: 15px;
+  padding: 0 20px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.recentItems::-webkit-scrollbar {
+  display: none;
+}
+
+/* 최근 항목 카드 (버튼 -> 카드 형태) */
+.recentCard {
+  min-width: 120px;
+  height: 70px;
+  border: 1px solid #8b0029;
+  border-radius: 15px;
+  background-color: #ede0e0;
+  color: #8b0029;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 5px;
+}
+
+.recentCardName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+}
+
+.recentCardRating {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.emptyMsg {
+  width: 100%;
+  color: #999;
+  font-size: 0.8rem;
+  padding: 10px 0;
+}
+
+/* 배경 흐린 이미지 */
 .blurImage {
   position: absolute;
   top: 30%;
-  left: -35%;
-
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
   opacity: 0.1;
   filter: blur(1px);
-  z-index: 1;
-
-  border: 1px solid #8b0029;
-  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
 }
