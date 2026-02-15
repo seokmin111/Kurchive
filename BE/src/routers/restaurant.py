@@ -45,6 +45,7 @@ from BE.src.models.regions import Region
 from BE.AddressLatLong import extract_location_from_link
 from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
+from BE.src.utils.image_upload import ALLOWED_MIME
 
 # ---------------------------
 # 공통 응답 헬퍼
@@ -399,31 +400,38 @@ async def list_restaurants(
     #   태그 검색 조건 준비 (계층 구조 반영 + AND 로직)
     tag_requirements = []
     if tag_ids:
-        tag_requirements = await _build_tag_requirements(db, tag_ids)
+        try:
+            req_ids = list(map(int, tag_ids.split(",")))
+        except ValueError:
+            req_ids = []
 
-    results = []
-    for r in restaurants:
-        trows = await db.execute(
-            select(Tag.id, Tag.name)
-            .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
-            .where(RestaurantTag.restaurant_id == r.id)
+        # 1️⃣ 태그 정보 조회 (카테고리 포함)
+        tag_rows = await db.execute(
+            select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
         )
-        tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-        current_tag_ids = {t["id"] for t in tag_list}
+        tag_info = tag_rows.all()
 
-        #   태그 필터링 로직
-        # tag_requirements는 [{한식그룹}, {매운맛그룹}] 형태
-        # 식당의 태그가 '한식그룹'과도 겹쳐야 하고(AND), '매운맛그룹'과도 겹쳐야 함
-        if tag_requirements:
-            is_match = True
-            for req_set in tag_requirements:
-                # isdisjoint가 True면 겹치는 게 없다는 뜻 -> 조건 불만족
-                if req_set.isdisjoint(current_tag_ids):
-                    is_match = False
-                    break
-            
-            if not is_match:
-                continue
+        # 2️⃣ 카테고리별 그룹핑
+        category_groups = {}
+        for tid, cid in tag_info:
+            category_groups.setdefault(cid, []).append(tid)
+
+        # 3️⃣ 카테고리별 확장 집합 생성
+        category_expanded_sets = []
+
+        for cid, tids in category_groups.items():
+            expanded_set = set()
+
+            for rid in tids:
+                # 자식 태그 포함
+                child_stmt = select(Tag.id).where(Tag.parent_id == rid)
+                child_rows = await db.execute(child_stmt)
+                child_ids = child_rows.scalars().all()
+
+                expanded_set.update([rid] + child_ids)
+
+            category_expanded_sets.append(expanded_set)
+
 
         img_row = await db.execute(
             select(RestaurantImage)
@@ -480,37 +488,38 @@ async def list_restaurants_nearby(
     #   태그 조건 준비
     tag_requirements = []
     if tag_ids:
-        tag_requirements = await _build_tag_requirements(db, tag_ids)
+        try:
+            req_ids = list(map(int, tag_ids.split(",")))
+        except ValueError:
+            req_ids = []
 
-    results = []
-    for r in candidates:
-        d = _haversine_km(lat, lon, r.latitude, r.longitude)
-        if d <= radius_km:
-            trows = await db.execute(
-                select(Tag.id, Tag.name)
-                .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
-                .where(RestaurantTag.restaurant_id == r.id)
-            )
-            tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-            current_tag_ids = {t["id"] for t in tag_list}
+        # 1️⃣ 태그 정보 조회 (카테고리 포함)
+        tag_rows = await db.execute(
+            select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
+        )
+        tag_info = tag_rows.all()
 
-            #   태그 필터링
-            if tag_requirements:
-                is_match = True
-                for req_set in tag_requirements:
-                    if req_set.isdisjoint(current_tag_ids):
-                        is_match = False
-                        break
-                if not is_match:
-                    continue
+        # 2️⃣ 카테고리별 그룹핑
+        category_groups = {}
+        for tid, cid in tag_info:
+            category_groups.setdefault(cid, []).append(tid)
 
-            img_row = await db.execute(
-                select(RestaurantImage)
-                .where(RestaurantImage.restaurant_id == r.id)
-                .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
-                .limit(1)
-            )
-            img = img_row.scalar_one_or_none()
+        # 3️⃣ 카테고리별 확장 집합 생성
+        category_expanded_sets = []
+
+        for cid, tids in category_groups.items():
+            expanded_set = set()
+
+            for rid in tids:
+                # 자식 태그 포함
+                child_stmt = select(Tag.id).where(Tag.parent_id == rid)
+                child_rows = await db.execute(child_stmt)
+                child_ids = child_rows.scalars().all()
+
+                expanded_set.update([rid] + child_ids)
+
+            category_expanded_sets.append(expanded_set)
+
 
             results.append({
                 "id": r.id,
@@ -751,7 +760,7 @@ async def upload_restaurant_images(
         raise HTTPException(status_code=422, detail="file(s) is required")
 
     for u in files:
-        if u.content_type not in ALLOWED_IMAGE_CT:
+        if u.content_type not in ALLOWED_MIME:
             raise HTTPException(status_code=415, detail=f"Unsupported type: {u.content_type}")
 
     # 교체 모드: 기존 레코드/파일 제거

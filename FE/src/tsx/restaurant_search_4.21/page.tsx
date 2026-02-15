@@ -142,7 +142,8 @@ export default function SearchPage() {
       )}
 
 
-      <TagSearch isTagSearchOpen={isTagSearchOpen} setIsTagSearchOpen={setIsTagSearchOpen} />
+      {isTagSearchOpen && (<TagSearch isTagSearchOpen={isTagSearchOpen} setIsTagSearchOpen={setIsTagSearchOpen}/>
+)}
 
     </main>
   );

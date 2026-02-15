@@ -50,14 +50,14 @@
 .tagSearchContainer {
     /* 애니메이션 속성 (유지) */
     position: fixed;
-    top: 900px; /* 또는 이전의 100vh */
+    top: 50px; /* 또는 이전의 100vh */
     left: 0;
     transition: all 1s;
 
     /* .tagSearch에서 가져온 Flexbox 스타일 (추가) */
     display: flex;
     flex-direction: column;
-    height: 100vh; /* 80vh 또는 90vh 등 패널의 전체 높이 */
+    height: calc(100vh - 50px);
     width: 100%;
 
     /* (기존) */
@@ -405,12 +405,16 @@
 
 .Food__foodTags{
     margin-top: 15px;
-    padding: 10px 30px;
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 14px;
     row-gap: 20px;
-    width: 350px;
-    height: 20vh;
+    width: 80vw;
+    max-width: 420px;
+    
     border: 2px solid rgb(177, 177, 177);
     border-radius: 30px;
     margin-bottom: 30px;
@@ -784,6 +788,9 @@
 
 .atmo__item {
   cursor: pointer;
+}
+.tagSearch__apply{
+    cursor: pointer;
 }
 
 /* --- 공통 타이틀 스타일 --- */
