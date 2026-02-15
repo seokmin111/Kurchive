@@ -22,6 +22,8 @@ import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
 import MyPage from "./tsx/mypage_2.0/page";
 import MyActivityPage from "./tsx/myactivity_2.2/page";
+import MyRestaurantArchivePage from "./tsx/myRestaurantArchive_2.21/page"; 
+import MyRecipeArchivePage from "./tsx/myRecipeArchive_2.22/page"; 
 import MyInfoEdit from "./tsx/myInfoEdit_2.1/page";
 import QuitPage from "./tsx/quitpage_2.3/page";
 
@@ -71,6 +73,8 @@ export default function App() {
       {/* 마이페이지 */}
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/myactivity" element={<MyActivityPage />} />
+      <Route path="/my-restaurant-archive" element={<MyRestaurantArchivePage />} />
+      <Route path="/my-recipe-archive" element={<MyRecipeArchivePage />} />
       <Route path="/infoedit" element={<MyInfoEdit />} />
       <Route path="/quitpage" element={<QuitPage />} />
 
