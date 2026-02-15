@@ -34,6 +34,7 @@ import anyio
 
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, and_, or_
 
 from BE.src.dependencies import get_async_db, get_current_user_from_token
 from BE.src.models.users import User
@@ -379,105 +380,70 @@ async def list_restaurants(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    stmt = select(Restaurant)
+    stmt = select(Restaurant).distinct()
 
-    # ---------------------------
+    # -----------------------
     # 지역 필터
-    # ---------------------------
+    # -----------------------
     if region_id is not None:
-        sub_regions_stmt = select(Region.id).where(Region.parent_id == region_id)
-        sub_regions_result = await db.execute(sub_regions_stmt)
-        child_ids = sub_regions_result.scalars().all()
-        target_ids = [region_id] + list(child_ids)
+        sub_stmt = select(Region.id).where(Region.parent_id == region_id)
+        sub_result = await db.execute(sub_stmt)
+        child_ids = sub_result.scalars().all()
+        target_ids = [region_id] + child_ids
         stmt = stmt.where(Restaurant.location_tag_id.in_(target_ids))
 
-    # ---------------------------
+    # -----------------------
     # 가격 필터
-    # ---------------------------
+    # -----------------------
     if price_min is not None:
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
 
+    category_count = 0
+
+    # -----------------------
+    # 태그 필터 (핵심)
+    # -----------------------
+    if tag_ids:
+        req_ids = list(map(int, tag_ids.split(",")))
+
+        # tag + category 조회
+        tag_rows = await db.execute(
+            select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
+        )
+        tag_info = tag_rows.all()
+
+        category_groups = {}
+        for tid, cid in tag_info:
+            category_groups.setdefault(cid, []).append(tid)
+
+        category_count = len(category_groups)
+
+        stmt = (
+            stmt.join(RestaurantTag, Restaurant.id == RestaurantTag.restaurant_id)
+            .join(Tag, Tag.id == RestaurantTag.tag_id)
+        )
+
+        or_conditions = []
+
+        for cid, tids in category_groups.items():
+            or_conditions.append(
+                and_(
+                    Tag.category_id == cid,
+                    Tag.id.in_(tids)
+                )
+            )
+
+        stmt = stmt.where(or_(*or_conditions))
+        stmt = stmt.group_by(Restaurant.id)
+        stmt = stmt.having(func.count(func.distinct(Tag.category_id)) == category_count)
+
     result = await db.execute(stmt)
     restaurants = result.scalars().all()
 
-    # ---------------------------
-    #  태그 조건 준비
-    #  카테고리 내부 OR / 카테고리 간 AND
-    # ---------------------------
-    category_expanded_sets = []
-
-    if tag_ids:
-        try:
-            req_ids = list(map(int, tag_ids.split(",")))
-        except ValueError:
-            req_ids = []
-
-        if req_ids:
-            # 1️⃣ 태그의 category 조회
-            tag_rows = await db.execute(
-                select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
-            )
-            tag_info = tag_rows.all()
-
-            # 2️⃣ 카테고리별 그룹핑
-            category_groups = {}
-            for tid, cid in tag_info:
-                category_groups.setdefault(cid, []).append(tid)
-
-            # 3️⃣ 각 카테고리별 확장 집합 생성
-            for cid, tids in category_groups.items():
-                expanded_set = set()
-
-                for rid in tids:
-                    child_stmt = select(Tag.id).where(Tag.parent_id == rid)
-                    child_rows = await db.execute(child_stmt)
-                    child_ids = child_rows.scalars().all()
-
-                    expanded_set.update([rid] + child_ids)
-
-                category_expanded_sets.append(expanded_set)
-
-    # ---------------------------
-    # 결과 필터링
-    # ---------------------------
-    results = []
-
-    for r in restaurants:
-        trows = await db.execute(
-            select(Tag.id, Tag.name)
-            .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
-            .where(RestaurantTag.restaurant_id == r.id)
-        )
-        tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-        current_tag_ids = {t["id"] for t in tag_list}
-
-        # 태그 필터 적용
-        if category_expanded_sets:
-            is_match = True
-
-            # 각 카테고리 그룹은 OR
-            for expanded_set in category_expanded_sets:
-                # 겹치는 게 하나도 없으면 탈락
-                if current_tag_ids.isdisjoint(expanded_set):
-                    is_match = False
-                    break
-
-            # 카테고리 중 하나라도 불만족이면 제외
-            if not is_match:
-                continue
-
-        # 썸네일
-        img_row = await db.execute(
-            select(RestaurantImage)
-            .where(RestaurantImage.restaurant_id == r.id)
-            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
-            .limit(1)
-        )
-        img = img_row.scalar_one_or_none()
-
-        results.append({
+    return [
+        {
             "id": r.id,
             "name": r.name,
             "address": r.address,
@@ -486,16 +452,13 @@ async def list_restaurants(
             "summary": r.summary,
             "price_min": r.price_min,
             "price_max": r.price_max,
-            "tags": tag_list,
-            "thumbnail_url": img.image_url if img else None,
             "latitude": r.latitude,
             "longitude": r.longitude,
             "uploaded_by": r.uploaded_by,
             "created_at": r.created_at
-        })
-
-    return results
-
+        }
+        for r in restaurants
+    ]
 # 현위치/임의좌표 근접 검색
 @router.get("/restaurants/nearby")
 async def list_restaurants_nearby(
@@ -505,7 +468,6 @@ async def list_restaurants_nearby(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
-    limit: int = 200,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token),
 ):
@@ -519,92 +481,49 @@ async def list_restaurants_nearby(
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
 
-    candidates = (await db.execute(stmt.limit(5000))).scalars().all()
-
-    # ---------------------------
-    # 태그 조건 준비 (카테고리 내부 OR / 카테고리 간 AND)
-    # ---------------------------
-    category_expanded_sets = []
-
+    # ---- 태그 필터 동일 로직 ----
     if tag_ids:
-        try:
-            req_ids = list(map(int, tag_ids.split(",")))
-        except ValueError:
-            req_ids = []
+        req_ids = list(map(int, tag_ids.split(",")))
+        tag_rows = await db.execute(
+            select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
+        )
+        tag_info = tag_rows.all()
 
-        if req_ids:
-            tag_rows = await db.execute(
-                select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
-            )
-            tag_info = tag_rows.all()
+        category_groups = {}
+        for tid, cid in tag_info:
+            category_groups.setdefault(cid, []).append(tid)
 
-            category_groups = {}
-            for tid, cid in tag_info:
-                category_groups.setdefault(cid, []).append(tid)
+        category_count = len(category_groups)
 
-            for cid, tids in category_groups.items():
-                expanded_set = set()
+        stmt = (
+            stmt.join(RestaurantTag)
+            .join(Tag)
+            .where(or_(*[
+                and_(Tag.category_id == cid, Tag.id.in_(tids))
+                for cid, tids in category_groups.items()
+            ]))
+            .group_by(Restaurant.id)
+            .having(func.count(func.distinct(Tag.category_id)) == category_count)
+        )
 
-                for rid in tids:
-                    child_stmt = select(Tag.id).where(Tag.parent_id == rid)
-                    child_rows = await db.execute(child_stmt)
-                    child_ids = child_rows.scalars().all()
+    result = await db.execute(stmt)
+    candidates = result.scalars().all()
 
-                    expanded_set.update([rid] + child_ids)
-
-                category_expanded_sets.append(expanded_set)
-
-    # ---------------------------
-    # 필터링
-    # ---------------------------
+    # 거리 계산만 수행
     results = []
-
     for r in candidates:
         d = _haversine_km(lat, lon, r.latitude, r.longitude)
-        if d > radius_km:
-            continue
-
-        trows = await db.execute(
-            select(Tag.id, Tag.name)
-            .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
-            .where(RestaurantTag.restaurant_id == r.id)
-        )
-        tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-        current_tag_ids = {t["id"] for t in tag_list}
-
-        if category_expanded_sets:
-            is_match = True
-            for expanded_set in category_expanded_sets:
-                if current_tag_ids.isdisjoint(expanded_set):
-                    is_match = False
-                    break
-            if not is_match:
-                continue
-
-        img_row = await db.execute(
-            select(RestaurantImage)
-            .where(RestaurantImage.restaurant_id == r.id)
-            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
-            .limit(1)
-        )
-        img = img_row.scalar_one_or_none()
-
-        results.append({
-            "id": r.id,
-            "name": r.name,
-            "address": r.address,
-            "latitude": r.latitude,
-            "longitude": r.longitude,
-            "rating": r.rating,
-            "price_min": r.price_min,
-            "price_max": r.price_max,
-            "tags": tag_list,
-            "distance_km": round(d, 3),
-            "thumbnail_url": img.image_url if img else None
-        })
+        if d <= radius_km:
+            results.append({
+                "id": r.id,
+                "name": r.name,
+                "distance_km": round(d, 3),
+                "latitude": r.latitude,
+                "longitude": r.longitude,
+            })
 
     results.sort(key=lambda x: x["distance_km"])
-    return results[:max(1, min(limit, 500))]
+    return results
 
 
 # 뷰포트 검색
