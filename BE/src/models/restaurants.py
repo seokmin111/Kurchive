@@ -19,7 +19,7 @@ class Restaurant(Base):
     description = Column(Text)
     price_min = Column(Integer, nullable=False)
     price_max = Column(Integer, nullable=False)
-    created_at = Column(Float)  # timestamp 저장
+    created_at = Column(Float, default=lambda: time.time())
 
     # 관계
     tags = relationship("RestaurantTag", back_populates="restaurant")

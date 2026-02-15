@@ -30,8 +30,8 @@ class UserResponseDTO(BaseModel):
     role: str
     created_at: Optional[datetime] 
 
-class Config:
-    from_attributes = True
+    class Config:
+        from_attributes = True
 
 class NicknameUpdateRequest(BaseModel):
     nickname: str
@@ -60,9 +60,9 @@ class MyRecipeDTO(BaseModel):
 class MyRestaurantDTO(BaseModel):
     id: int
     name: str
-    address: str
-    rating: int
-    created_at: float
+    address: Optional[str]
+    rating: Optional[int]
+    created_at: Optional[float]
 
     class Config:
         from_attributes = True
