@@ -216,14 +216,14 @@ export default function RestaurantFormPage() {
   const handleSubmit = async () => {
     if (submitting) return;
 
-    if (!name.trim()) return alert("식당 이름을 입력해줘.");
-    if (!mapLink.trim()) return alert("맵 링크를 입력해줘.");
-    if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 해.");
-    if (!selectedLv2) return alert("소지역(구/시/군)을 선택해줘.");
-    if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해줘.");
-    if (Number.isNaN(priceMin) || Number.isNaN(priceMax)) return alert("가격은 숫자만 입력해줘.");
-    if ((priceMin as number) > (priceMax as number)) return alert("최소 가격이 최대 가격보다 클 수 없어.");
-    if (selectedFoodTagIds.length === 0) return alert("음식 태그를 최소 1개 선택해줘.");
+    if (!name.trim()) return alert("식당 이름을 입력해주세요.");
+    if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
+    if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
+    if (!selectedLv2) return alert("소지역(구/시/군)을 선택해주세요.");
+    if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해주세요.");
+    if (Number.isNaN(priceMin) || Number.isNaN(priceMax)) return alert("가격은 숫자만 입력해주세요.");
+    if ((priceMin as number) > (priceMax as number)) return alert("최소 가격이 최대 가격보다 클 수 없습니다.");
+    if (selectedFoodTagIds.length === 0) return alert("음식 태그를 최소 1개 선택해주세요.");
 
     try {
       setSubmitting(true);
@@ -251,7 +251,7 @@ export default function RestaurantFormPage() {
 
       const restaurantId: number | undefined = created?.data?.id;
       if (!restaurantId) {
-        alert("등록은 됐는데 restaurant id를 못 받았어. 응답 확인 필요.");
+        alert("등록은 됐는데 restaurant id를 받지 못했습니다. 응답 확인 필요.");
         return;
       }
 
