@@ -111,7 +111,7 @@ export default function RestaurantSearchPage() {
             <div
               key={r.id}
               className={styles.restaurant_item}
-              onClick={() => navigate(`/restaurant/detail/${r.id}`)}
+              onClick={() => navigate(`/restaurant/${r.id}`)}
               style={{ cursor: "pointer" }}
               title="클릭해서 식당 상세페이지로 이동"
             >

@@ -91,7 +91,7 @@ export default function RecipeMainPage() {
 
       {/* ✅ 식당처럼: 그 아래 빨간 아카이빙 버튼 */}
       <div className={styles.button_wrapper}>
-        <Link to="/recipe/edit">
+        <Link to="/recipe/archive">
           <button className={styles.red_btn}>레시피 아카이빙</button>
         </Link>
       </div>
