@@ -11,6 +11,7 @@ import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
 import SearchPage from "./tsx/restaurant_search_4.21/page";
 import RestaurantSearchResultsPage from "./tsx/restaurant_search_result_4.3/page";
 import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page"; 
+import RestaurantEditPage from "./tsx/restaurantSpecific_4.31_edit/page";
 import MapPage from "./tsx/restaurantmap_4.32/page"; 
 
 import RecipeMainPage from "./tsx/recipe_3.0/page"; 
@@ -59,13 +60,22 @@ export default function App() {
       <Route path="/restaurant/map" element={<MapPage />} />
 
       {/* 식당 상세(4.31) */}
-      <Route path="/restaurant/detail/:restaurantId" element={<RestaurantDetailPage />}/>
+      <Route
+          path="/restaurant/:restaurantId"
+          element={<RestaurantDetailPage/>}
+        />
+
+        <Route
+          path="/restaurant/:restaurantId/edit" element={<RestaurantEditPage />}/>
+
+
       {/* 404 */}
       <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
 
       {/* 레시피 */}
       <Route path="/recipe" element={<RecipeMainPage />} />
       <Route path="/recipe/search" element={<RecipeSearchPage />} />
+      <Route path="/recipe/archive" element={<RecipeArchivePage />} />
       <Route path="/recipe/:recipeId" element={<RecipeSpecific mode="view" />} />
       <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />
 
