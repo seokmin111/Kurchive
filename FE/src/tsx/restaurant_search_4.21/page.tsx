@@ -520,7 +520,6 @@ function Culture({ handleAddItem }: ModalType) {
   return (
     <div className={styles.Food__container}>
       <div className={styles.section_title}>음식 종류</div>
-      <img className={styles.Food__mapImg} src="../images/지도.png" />
       <div className={styles.Food__tagContainer}>
         {bigCultureTags.map((item) => {
           return (

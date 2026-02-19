@@ -98,12 +98,12 @@ export default function RestaurantSearchResultsPage() {
           <div
             key={r.id}
             className={styles.card}
-            onClick={() => navigate(`/restaurant/detail/${r.id}`)} // ✅ 추가
+            onClick={() => navigate(`/restaurant/${r.id}`)} // ✅ 추가
             style={{ cursor: "pointer" }} // ✅ 선택(UX)
             role="button"                 // ✅ 선택(접근성)
             tabIndex={0}                  // ✅ 선택(키보드)
             onKeyDown={(e) => {           // ✅ 선택(Enter로 이동)
-              if (e.key === "Enter") navigate(`/restaurant/detail/${r.id}`);
+              if (e.key === "Enter") navigate(`/restaurant/${r.id}`);
             }}
           >
             <div className={styles.cardLeft}>
