@@ -10,6 +10,7 @@
     margin: 0 auto;        /* 화면 가운데 정렬 */
     min-height: 100dvh;    /* 최소 높이를 화면 높이에 맞춤 */
     background-color: white; /* 데스크톱 배경과 구분하기 위해 설정 */
+    overflow-x: hidden;
     box-shadow: 0 0 20px rgba(0,0,0,0.05); /* 데스크톱에서 앱처럼 보이게 하는 효과 */
 }
 
@@ -229,3 +230,70 @@
     color:#333
 }
 
+/* ===== 이미지 갤러리 ===== */
+
+
+
+.imageGallery::-webkit-scrollbar {
+  height: 6px;
+}
+
+.imageGallery::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.imageGallery {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 16px 8px 16px; /* 좌우 패딩 강제 */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.galleryImage {
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  max-width: 260px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex: 0 0 auto;
+}
+
+/* ===== 모달 ===== */
+
+.imageModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modalImage {
+  max-width: 92%;
+  max-height: 85%;
+  border-radius: 16px;
+  object-fit: contain;
+}
+
+.closeButton {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+}

@@ -369,13 +369,10 @@ useEffect(() => {
         price_max: priceMax as number,
         tag_ids: selectedFoodTags.map((t) => t.id)
       };
+      await client.put(`/restaurants/${id}`, payload);
 
-      const updated = await client.put(`/restaurants/${id}`, payload).then((r) => r.data);
-      // 어떤 응답이든 여기선 죽지 않게 처리
-      if (updated?.ok === false) {
-        alert(updated?.message ?? "수정 실패");
-        return;
-      }
+      // commit 보장
+      await client.get(`/restaurants/${id}`);
 
       // 이미지 업로드 (아카이브 구조: 대표 1 + 상세 여러장)
       const files: File[] = [];
@@ -389,7 +386,10 @@ useEffect(() => {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
-
+      setMainImageFile(null);
+setMainImagePreview(null);
+setDetailImageFiles([]);
+setDetailImagePreviews([]);
       alert("수정 완료!");
       nav(`/restaurant/${id}`, { replace: true });
     } catch (e: any) {
@@ -445,7 +445,7 @@ useEffect(() => {
             lineHeight: 1,
           }}
         >
-          {submitting ? "저장 중..." : "저장"}
+          {submitting ? "저장 중..." : "저장하기"}
         </button>
       </div>
 

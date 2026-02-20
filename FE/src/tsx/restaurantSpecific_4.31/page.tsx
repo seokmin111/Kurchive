@@ -61,6 +61,8 @@ export default function RestaurantSpecific() {
   const [err, setErr] = useState("");
   const [currentUser, setCurrentUser] = useState<any | null>(null);
 
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   // 내 정보 로드
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -236,6 +238,53 @@ export default function RestaurantSpecific() {
 
 
       <div className={style.line}></div>
+      {/* 본문 이미지 갤러리 */}
+      {restaurant.images && restaurant.images.length > 0 && (
+        <div
+          style={{
+            marginTop: 20,
+            display: "flex",
+            gap: 12,
+            overflowX: "auto",
+            paddingBottom: 8,
+          }}
+        >
+          {restaurant.images
+          ?.filter((img) => !img.is_cover)
+          .length > 0 && (
+          <div className={style.imageGallery}>
+            {restaurant.images
+              ?.filter((img) => !img.is_cover)
+              .map((img) => (
+                <img
+                  key={img.id}
+                  src={img.image_url}
+                  alt="restaurant"
+                  className={style.galleryImage}
+                  onClick={() => setSelectedImage(img.image_url)}
+                />
+              ))}
+          </div>
+        )}
+          {/* 이미지 확대 모달 */}
+          {selectedImage && (
+            <div className={style.imageModal}>
+              <button
+                className={style.closeButton}
+                onClick={() => setSelectedImage(null)}
+              >
+                ✕
+              </button>
+
+              <img
+                src={selectedImage}
+                alt="확대 이미지"
+                className={style.modalImage}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 상세 후기 */}
       <div

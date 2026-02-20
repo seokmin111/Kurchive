@@ -6,6 +6,7 @@
   max-width: 480px;
   margin: 0 auto;
   background: white;
+  padding: 0 20px;
   box-shadow: 0 0 14px rgba(0,0,0,0.08);
   font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
 }

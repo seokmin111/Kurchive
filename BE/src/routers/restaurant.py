@@ -761,7 +761,7 @@ from BE.src.utils.image_upload import save_image, delete_image_oci  #  추가
 @router.post("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut], status_code=201)
 async def upload_restaurant_images(
     restaurant_id: int,
-    files: TList[UploadFile] = File(..., description="하나 이상 업로드"),
+    files: List[UploadFile] = File(..., description="하나 이상 업로드"),
     replace: bool = Query(False, description="true면 기존 이미지 모두 교체"),
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token),
