@@ -15,7 +15,7 @@ export default function MainPage() {
 
 
 	// 대표 사진 선택 핸들러
-	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files && e.target.files[0]) {
 			const file = e.target.files[0];
 			setPreview(URL.createObjectURL(file));
@@ -23,7 +23,7 @@ export default function MainPage() {
 	};
 
 	// 레시피 이미지 선택 핸들러
-	const handleRecipeImageChange = (
+	const handleRecipeImgChange = (
 		index: number,
 		e: React.ChangeEvent<HTMLInputElement>
 	) => {
@@ -61,7 +61,7 @@ export default function MainPage() {
 	
 	return (
 
-		<main className={styles.main}>
+		<main className={styles.container}>
 			<div>{testData}</div>
 			<form action="#" method="get" className={`${styles.form} recipes-form`}>
 				<div className={styles.btnCarrier}>
@@ -78,26 +78,23 @@ export default function MainPage() {
 				</div>
 
 				{/* 대표 사진 업로드 */}
-				<div className={styles.container}>
+				<div className={styles.topSection}>
 					<div className = {styles.uploadContainer}>
 						<input
-							id = 'leadImage'
+							id = 'leadimg'
 							type="file"
 							accept="image/*"
-							onChange={handleImageChange}
+							onChange={handleImgChange}
 							style = {{display: 'none'}}
 						/>
-						<label htmlFor="leadImage" className={styles.uploadLabel}>
+						<label htmlFor="leadimg" className={styles.uploadLabel}>
 							대표 사진<br/>+
 						</label>
 						{preview && (
-							<Image 
-								src={preview}
-								alt="대표 사진 미리보기"
-								className={styles.preview}
-								width = {0}
-								height = {0}
-								sizes = "100vw" 
+							<img 
+							src={preview}
+							alt="대표 사진 미리보기"
+							style={{ width: "100%", borderRadius: 12 }}
 							/>
 						)}
 					</div>
@@ -146,15 +143,16 @@ export default function MainPage() {
 							<input
 								type="file"
 								accept="image/*"
-								onChange={(e) => handleRecipeImageChange(index, e)}
+								onChange={(e) => handleRecipeImgChange(index, e)}
 								className={styles.recipeImg}
-								id="file"
-							/>
-							<label for="file">사진 업로드</label>
+								id={`file-${index}`}
+								/>
+
+								<label htmlFor={`file-${index}`}>사진 업로드</label>
 							<div>+</div>
 							</div>
 							{recipe.img && (
-								<Image
+								<img
 									src={recipe.img}
 									alt={`레시피 ${index + 1} 미리보기`}
 									className={styles.preview}

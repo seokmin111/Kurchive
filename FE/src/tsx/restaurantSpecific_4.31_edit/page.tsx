@@ -180,6 +180,15 @@ useEffect(() => {
   return regionMap[selectedLv2] ?? null;
 }, [selectedLv2, regionMap]);
 
+
+// image
+  const [detailInputKey, setDetailInputKey] = useState(0);
+  const [mainInputKey, setMainInputKey] = useState(0);
+
+  const fileInputMainRef = useRef<HTMLInputElement | null>(null);
+
+  const [toast, setToast] = useState<string | null>(null);
+
   useEffect(() => {
   (async () => {
     try {
@@ -334,7 +343,24 @@ useEffect(() => {
     }
   })();
 }, [id]);   // 🔥 regionMap 제거
+  const handleDetailFileChange = (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const files = e.target.files;
 
+  if (!files || files.length === 0) return;
+
+  const arr = Array.from(files);
+
+  setDetailImageFiles((prev) => [...prev, ...arr]);
+  setDetailImagePreviews((prev) => [
+    ...prev,
+    ...arr.map((f) => URL.createObjectURL(f)),
+  ]);
+
+  // 같은 파일 다시 선택 가능하게 초기화
+  e.currentTarget.value = "";
+};
 
   // =========================================================
   // 저장
@@ -387,11 +413,15 @@ useEffect(() => {
         });
       }
       setMainImageFile(null);
-setMainImagePreview(null);
-setDetailImageFiles([]);
-setDetailImagePreviews([]);
-      alert("수정 완료!");
-      nav(`/restaurant/${id}`, { replace: true });
+      setMainImagePreview(null);
+      setDetailImageFiles([]);
+      setDetailImagePreviews([]);
+
+      setToast("수정 완료!");
+
+setTimeout(() => {
+  nav(`/restaurant/${id}`, { replace: true });
+}, 800);
     } catch (e: any) {
       console.error(e);
       const msg =
@@ -494,7 +524,13 @@ setDetailImagePreviews([]);
                   type="file"
                   accept="image/*"
                   style={{ display: "none" }}
-                  onChange={(e) => handleMainImageChange(e.target.files?.[0] ?? null)}
+                   onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      handleMainImageChange(file);
+
+                      //이 줄 추가
+                      e.currentTarget.value = "";
+                    }}
                 />
               </label>
             </div>
@@ -814,25 +850,34 @@ setDetailImagePreviews([]);
 
             {/* 아카이브 detailPhotoRow + 버튼 형태 그대로 */}
             <div className={styles.detailPhotoRow}>
-              <label
-                className={styles.detailPhotoButton}
-                onClick={() => fileInputDetailRef.current?.click()}
-              >
-                사진 추가
-                <span className={styles.plus}>+</span>
-                <input
-                  ref={fileInputDetailRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={(e) => handleDetailImagesChange(e.target.files)}
-                />
-              </label>
-            </div>
+  {/* 버튼 */}
+  <button
+    type="button"
+    className={styles.detailPhotoButton}
+    onClick={() => fileInputDetailRef.current?.click()}
+  >
+    사진 추가
+    <span className={styles.plus}>+</span>
+  </button>
+
+  {/* 실제 파일 input */}
+  <input
+    ref={fileInputDetailRef}
+    type="file"
+    accept="image/*"
+    multiple
+    style={{ display: "none" }}
+    onChange={handleDetailFileChange}
+  />
+</div>
           </section>
         </main>
       </div>
+      {toast && (
+  <div className={styles.toast}>
+    {toast}
+  </div>
+)}
     </div>
   );
 }

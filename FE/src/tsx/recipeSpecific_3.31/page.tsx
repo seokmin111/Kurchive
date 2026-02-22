@@ -525,7 +525,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     <div className={style.container}>
       <div className={style.banner}>
         <img
-          src="/backstep_white_white_background.png"
+          src="/backstep_white_background.png"
           className={style.backstep}
           alt="back"
           onClick={onClickBack}
