@@ -372,7 +372,7 @@ async def update_recipe(
         )
 
         for ing in data.ingredients:
-            if ing.ingredient_id:
+            if ing.ingredient_id and ing.ingredient_id > 0:
                 ingredient_id = ing.ingredient_id
             else:
                 if not ing.name:
