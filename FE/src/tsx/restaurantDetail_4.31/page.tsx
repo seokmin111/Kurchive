@@ -300,8 +300,16 @@ export default function RestaurantDetailPage() {
   if (loading) return <div className={styles.screen} style={{ padding: 16 }}>로딩중...</div>;
   if (errMsg) return <div className={styles.screen} style={{ padding: 16 }}>{errMsg}</div>;
 
-  return (
-    <div className={styles.rightActions}>
+   return (
+    <div className={styles.screen}>
+      <header className={styles.topbar}>
+        <button className={styles.backBtn} onClick={() => nav(-1)} aria-label="back">
+          ‹
+        </button>
+        <h1 className={styles.title}>식당 상세</h1>
+        
+        {/* 우상단: 펜 버튼(작성자만) + 하트 버튼 배치 */}
+        <div className={styles.rightActions}>
           {isOwner && (
             <button
               className={styles.actionBtn}
