@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
+import client from "../../api/client"; 
 import { getMyPage, getMyFavoriteRestaurants, FavoriteRestaurant, MyPageUser } from "../../api/mypage";
 
 // 백엔드 DTO(FavoriteRestaurant)에는 UI에 필요한 일부 필드(이미지 등)가 없을 수 있으므로 확장
 interface ExtendedRestaurant extends FavoriteRestaurant {
   summary?: string; 
-  imageUrl?: string; 
+  thumbnail_url?: string;
   addedAt?: string; 
 }
-
 // 별점 컴포넌트
 const StarRating = ({ rating }: { rating: number }) => {
   const score = rating || 0;
@@ -47,34 +47,34 @@ const RestaurantCard = ({ restaurant, onDelete }: { restaurant: ExtendedRestaura
         <div className={styles.userInfo}>
             <span className={styles.userCircle}></span>
             <span className={styles.metaText}>
-                {/* 찜한 날짜 데이터가 없으면 임시 텍스트 표시 */}
                 저장한 식당
             </span>
         </div>
 
         <div className={styles.bottomRow}>
              <StarRating rating={restaurant.rating || 0} />
-             <span className={styles.scoreText}>{restaurant.rating?.toFixed(1)}</span>
+             <span className={styles.scoreText}>{restaurant.rating?.toFixed(1) || "0.0"}</span>
         </div>
       </div>
 
+      {/* ✅ imageUrl 대신 thumbnail_url 사용 */}
       <div
-        className={`${styles.cardImage} ${restaurant.imageUrl ? styles.cardImageWithPhoto : ''}`}
-        style={restaurant.imageUrl ? { backgroundImage: `url(${restaurant.imageUrl})` } : {}}
+        className={`${styles.cardImage} ${restaurant.thumbnail_url ? styles.cardImageWithPhoto : ''}`}
+        style={restaurant.thumbnail_url ? { backgroundImage: `url(${restaurant.thumbnail_url})` } : {}}
       >
         <button 
             className={styles.deleteButton} 
             onClick={(e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // 카드 클릭(상세페이지 이동) 방지
                 onDelete(restaurant.id);
             }}
         >
             ✕
         </button>
         
-        {!restaurant.imageUrl && (
+        {!restaurant.thumbnail_url && (
            <div className={styles.noImageText}>
-              <div>음식 사진</div>
+              <div>사진 없음</div>
            </div>
         )}
       </div>
@@ -101,8 +101,7 @@ export default function RestaurantArchivePage() {
         ]);
         
         setUser(userData);
-        // 최신순 정렬 (API가 순서를 보장하지 않을 경우)
-        setRestaurants([...favData].reverse());
+        setRestaurants(favData);
       } catch (error) {
         console.error("데이터 로딩 실패:", error);
       } finally {
@@ -119,15 +118,25 @@ export default function RestaurantArchivePage() {
     (r.address && r.address.includes(searchQuery))
   );
 
-  // 삭제 핸들러 (프론트엔드 처리)
-  const handleDeleteItem = (id: number) => {
+  // 삭제 핸들러 
+  const handleDeleteItem = async (id: number) => {
     if(!window.confirm("아카이브에서 삭제하시겠습니까?")) return;
-    // 추후 API 연동 필요: await client.delete(`/mypage/favorites/${id}`);
-    setRestaurants(prev => prev.filter(item => item.id !== id));
+    
+    try {
+      // 이전에 만들어둔 즐겨찾기 토글 API를 호출하여 찜 해제 (이미 찜한 상태에서 post하면 취소됨)
+      await client.post(`/restaurants/${id}/favorite`);
+      
+      // 상태 업데이트 (UI에서 즉시 제거)
+      setRestaurants(prev => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error("즐겨찾기 삭제 실패:", error);
+      alert("식당을 아카이브에서 삭제하는 데 실패했습니다.");
+    }
   };
 
   return (
     <div className={styles.container}>
+      {/* --- 기존 마크업과 동일 --- */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <img 
