@@ -117,7 +117,30 @@ async def convert_unit(db: AsyncSession, ingredient, qty, from_unit_name: str, t
         coeff2 = await get_conversion_coefficient(db, "g", to_unit_name)
         if coeff2:
             return g_value * coeff2, to_unit_name
+    # 5. weight에서 count
+    if from_type == "weight" and to_type == "count" and getattr(ingredient, "average_weight", None):
+        # 먼저 g로 맞추기
+        if from_unit_name == "g":
+            grams = qty
+        else:
+            coeff = await get_conversion_coefficient(db, from_unit_name, "g")
+            if not coeff:
+                return qty, from_unit_name
+            grams = qty * coeff
 
+        # 개수 계산
+        count = grams / ingredient.average_weight
+
+        # "개"로 가려는 경우 그대로
+        if to_unit_name == "개":
+            return count, "개"
+
+        # count 타입 단위들 사이 변환(예: 개 <-> 쪽 같은 걸 unit_conversions에 넣어둔 경우)
+        coeff2 = await get_conversion_coefficient(db, "개", to_unit_name)
+        if coeff2:
+            return count * coeff2, to_unit_name
+
+        return count, to_unit_name
     # 변환 실패 → 원래 값 반환
     return qty, from_unit_name
 
