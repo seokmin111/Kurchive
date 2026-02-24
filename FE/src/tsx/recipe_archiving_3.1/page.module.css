@@ -193,9 +193,8 @@ select {
 /* 부모가 스크롤 담당 */
 .ingredientBody {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  overflow-x: auto;     /* 핵심 */
+  display: block;       /* flex 제거 */
 }
 
 /* 테이블이 좁아지면 글자를 쪼개지 말고 스크롤 */
@@ -340,7 +339,10 @@ select {
 .table {
   table-layout: auto !important;
 }
-
+.table {
+  min-width: 560px;     /* 원하는 최소 폭 */
+  width: max-content;   /* 🔥 핵심 */
+}
 /* 2) 셀은 nowrap 유지하되, 단위/숫자 쪽이 너무 커지지 않게 */
 .table th,
 .table td {

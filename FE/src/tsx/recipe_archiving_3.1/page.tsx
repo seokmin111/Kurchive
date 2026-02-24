@@ -14,14 +14,17 @@ import {
   getOrCreateIngredient
 } from "../../api/recipe";
 
+type UnitType = "mass" | "volume" | "count" | "misc";
+
 type DraftIngredient = {
   local_id: string;
   ingredient_id: number;
   name: string;
   quantity: number;
   unit_name: string;
+  unit_type: UnitType;
+  is_existing: boolean;   // 🔥 기존 재료인지 여부
 };
-
 type DraftStep = {
   step_order: number;
   description: string;
@@ -33,6 +36,13 @@ type SuggestItem = {
 };
 
 export default function RecipeCreate() {
+  // 단위 매핑
+  const defaultUnitMap: Record<UnitType, string[]> = {
+  mass: ["g", "kg"],
+  volume: ["ml", "L"],
+  count: ["개"],
+  misc: [],
+};
 // state 정의
   const nav = useNavigate();
 
@@ -77,36 +87,6 @@ export default function RecipeCreate() {
   // -----------------------------
   // 재료 자동완성
   // -----------------------------
-  const handleIngredientBlur = async (idx: number) => {
-  const item = ingredients[idx];
-  if (!item.name.trim()) return;
-
-  if (item.ingredient_id > 0) return;
-
-  try {
-    const created = await getOrCreateIngredient(item.name);
-
-    setIngredients(prev =>
-      prev.map((it, i) =>
-        i === idx
-          ? {
-              ...it,
-              ingredient_id: created.id,
-              unit_name: created.units?.[0] ?? "",  // 기본 단위 자동 세팅
-            }
-          : it
-      )
-    );
-
-    setAllowedUnits(prev => ({
-      ...prev,
-      [created.id]: created.units ?? [],
-    }));
-
-  } catch (e) {
-    console.error("ingredient 생성 실패", e);
-  }
-};
   const onChangeIngredientName = (idx: number, value: string) => {
   const localId = ingredients[idx].local_id;
 
@@ -116,8 +96,10 @@ export default function RecipeCreate() {
         ? {
             ...it,
             name: value,
-            ingredient_id: it.ingredient_id > 0 ? -1 : it.ingredient_id,
-            unit_name: it.ingredient_id > 0 ? "" : it.unit_name,
+            ingredient_id: -1,      // 무조건 초기화
+            unit_name: "",          // 초기화
+            unit_type: "mass",      // 기본값 복귀
+            is_existing: false,     // 기존 확정 해제
           }
         : it
     )
@@ -151,8 +133,6 @@ export default function RecipeCreate() {
 };
 
   const onPickIngredient = async (idx: number, pick: SuggestItem) => {
-  const localId = ingredients[idx].local_id;
-
   const created = await getOrCreateIngredient(pick.name);
 
   setIngredients(prev =>
@@ -162,7 +142,9 @@ export default function RecipeCreate() {
             ...it,
             ingredient_id: created.id,
             name: created.name,
+            unit_type: created.unit_type as UnitType,
             unit_name: created.units?.[0] ?? "",
+            is_existing: true,
           }
         : it
     )
@@ -172,9 +154,8 @@ export default function RecipeCreate() {
     ...prev,
     [created.id]: created.units ?? [],
   }));
-
-  setSuggestOpen(prev => ({ ...prev, [localId]: false })); // ✅ 수정
 };
+
 
   // -----------------------------
   // 재료 관리
@@ -185,12 +166,14 @@ export default function RecipeCreate() {
   setIngredients(prev => [
     ...prev,
     {
-      local_id: localId,
-      ingredient_id: -1,
-      name: "",
-      quantity: 0,
-      unit_name: "",
-    },
+  local_id: localId,
+  ingredient_id: -1,
+  name: "",
+  quantity: 0,
+  unit_name: "g",
+  unit_type: "mass",
+  is_existing: false,
+},
   ]);
 
   setSuggestOpen(prev => ({ ...prev, [localId]: true }));
@@ -237,41 +220,65 @@ export default function RecipeCreate() {
   // 저장
   // -----------------------------
   const onSave = async () => {
-    if (!title.trim()) return;
+  if (!title.trim()) return;
 
-    setSaving(true);
+  setSaving(true);
 
-    try {
-      const body = {
-        title,
-        description,
-        base_serving: baseServing,
-        ingredients: ingredients.map((x) => ({
-          ingredient_id: x.ingredient_id > 0 ? x.ingredient_id : undefined,
-          name: x.name,
-          quantity: x.quantity,
-          unit_name: x.unit_name,
-          unit_type: "mass",
-        })),
-        steps,
-      };
+  try {
+    const resolvedIngredients = [];
 
-      const result = await createRecipe(body);
-	  if (thumbnailFile) {
-  await replaceThumbnail(result.id, thumbnailFile);
-}
+    for (const ing of ingredients) {
+      if (!ing.name.trim()) continue;
 
-for (const s of steps) {
-  const files = stepFiles[s.step_order];
-  if (files?.length) {
-    await uploadStepImages(result.id, s.step_order, files);
-  }
-}
-      nav(`/recipe/${result.id}`);
-    } finally {
-      setSaving(false);
+      if (ing.ingredient_id > 0) {
+        resolvedIngredients.push(ing);
+      } else {
+        const created = await getOrCreateIngredient(
+          ing.name,
+          ing.unit_type
+        );
+
+        resolvedIngredients.push({
+          ...ing,
+          ingredient_id: created.id,
+          unit_name: created.units?.[0] ?? "",
+          is_existing: true,
+        });
+      }
     }
-  };
+
+    const body = {
+      title,
+      description,
+      base_serving: baseServing,
+      ingredients: resolvedIngredients.map((x) => ({
+        ingredient_id: x.ingredient_id,
+        name: x.name,
+        quantity: x.quantity,
+        unit_name: x.unit_name,
+        unit_type: x.unit_type,
+      })),
+      steps,
+    };
+
+    const result = await createRecipe(body);
+
+    if (thumbnailFile) {
+      await replaceThumbnail(result.id, thumbnailFile);
+    }
+
+    for (const s of steps) {
+      const files = stepFiles[s.step_order];
+      if (files?.length) {
+        await uploadStepImages(result.id, s.step_order, files);
+      }
+    }
+
+    nav(`/recipe/${result.id}`);
+  } finally {
+    setSaving(false);
+  }
+};
 
   // =======================================================
   // =====================  UI  ============================
@@ -333,6 +340,7 @@ for (const s of steps) {
               <th>재료</th>
               <th>숫자</th>
               <th>단위</th>
+              <th>타입</th>
               <th></th>
             </tr>
           </thead>
@@ -341,7 +349,6 @@ for (const s of steps) {
               <tr key={item.local_id}>
                <td className={style.ingCell}>
   <input
-  onBlur={() => handleIngredientBlur(idx)}
     value={item.name}
     onFocus={() =>
       setSuggestOpen(prev => ({
@@ -382,16 +389,21 @@ for (const s of steps) {
                 <td>
                   <input
                     type="number"
+                    min={0}
+                    step="1"
                     value={item.quantity}
-                    onChange={(e) =>
-                      setIngredients((prev) =>
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      const safeValue = value < 0 ? 0 : value;
+
+                      setIngredients(prev =>
                         prev.map((it, i) =>
                           i === idx
-                            ? { ...it, quantity: Number(e.target.value) }
+                            ? { ...it, quantity: safeValue }
                             : it
                         )
-                      )
-                    }
+                      );
+                    }}
                   />
                 </td>
 
@@ -408,11 +420,52 @@ for (const s of steps) {
                       )
                     }
                   >
-                    {(allowedUnits[item.ingredient_id] ?? []).map((u) => (
-                      <option key={u}>{u}</option>
-                    ))}
+                    {
+  (
+    item.ingredient_id > 0
+      ? allowedUnits[item.ingredient_id] ?? []
+      : defaultUnitMap[item.unit_type]
+  ).map((u) => (
+    <option key={u}>{u}</option>
+  ))
+}
+                      
                   </select>
                 </td>
+                <td>
+  {item.is_existing ? (
+    // 기존 재료는 텍스트만 표시
+    <span>
+      {item.unit_type === "mass" && "질량"}
+      {item.unit_type === "volume" && "부피"}
+      {item.unit_type === "count" && "개수"}
+      {item.unit_type === "misc" && "기타"}
+    </span>
+  ) : (
+    // 새 재료만 선택 가능
+    <select
+  value={item.unit_type}
+  onChange={(e) =>
+    setIngredients(prev =>
+      prev.map((it, i) =>
+        i === idx
+          ? {
+              ...it,
+              unit_type: e.target.value as UnitType,
+              unit_name:
+                defaultUnitMap[e.target.value as UnitType][0] ?? "",
+            }
+          : it
+      )
+    )
+  }
+>
+      <option value="mass">질량</option>
+      <option value="volume">부피</option>
+      <option value="count">개수</option>
+    </select>
+  )}
+</td>
 
                 <td>
                   <button onClick={() => removeIngredient(idx)}>삭제</button>
