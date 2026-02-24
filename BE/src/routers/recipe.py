@@ -166,7 +166,9 @@ async def get_or_create_ingredient(
     unit_type: str = "mass",
     is_custom: bool = True
 ):
-    result = await db.execute(select(Ingredient).filter(Ingredient.name == name))
+    result = await db.execute(
+        select(Ingredient).filter(Ingredient.name == name)
+    )
     ingredient = result.scalar_one_or_none()
 
     if ingredient:
@@ -178,8 +180,7 @@ async def get_or_create_ingredient(
         is_custom=is_custom
     )
     db.add(ingredient)
-    await db.commit()
-    await db.refresh(ingredient)
+    await db.flush()  # commit 대신 flush
 
     default_units = {
         "mass": ["g", "kg"],
@@ -189,17 +190,44 @@ async def get_or_create_ingredient(
     }
 
     units = default_units.get(unit_type, ["g"])
-    for i, u in enumerate(units):
-        db.add(IngredientUnit(
-            ingredient_id=ingredient.id,
-            unit_name=u,
-            is_default=(i == 0)
-        ))
 
-    await db.commit()
+    for i, u in enumerate(units):
+        db.add(
+            IngredientUnit(
+                ingredient_id=ingredient.id,
+                unit_name=u,
+                is_default=(i == 0)
+            )
+        )
+
+    await db.flush()
+
     return ingredient
 
+# front용 라우터
+@router.post("/ingredients/get-or-create")
+async def get_or_create_ingredient_api(
+    payload: IngredientCreateDTO,
+    db: AsyncSession = Depends(get_async_db),
+):
+    ingredient = await get_or_create_ingredient(
+        db=db,
+        name=payload.name,
+        unit_type=payload.unit_type or "mass",
+    )
 
+    unit_result = await db.execute(
+        select(IngredientUnit.unit_name)
+        .where(IngredientUnit.ingredient_id == ingredient.id)
+    )
+    units = [u[0] for u in unit_result.fetchall()]
+
+    return {
+        "id": ingredient.id,
+        "name": ingredient.name,
+        "unit_type": ingredient.unit_type,
+        "units": units
+    }
 # ============================================================
 # 조회 API
 # ============================================================
