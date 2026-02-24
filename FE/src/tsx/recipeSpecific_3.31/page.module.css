@@ -185,9 +185,21 @@ select {
   margin: 14px 0 10px;
   border: 1px solid #e7e7e7;
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;
 
   table-layout: fixed; /* 열 너비 안정화 */
+}
+.table {
+  border-radius: 14px;
+  overflow: visible;
+}
+
+.table th:first-child {
+  border-top-left-radius: 14px;
+}
+
+.table th:last-child {
+  border-top-right-radius: 14px;
 }
 
 /* 부모가 스크롤 담당 */
@@ -199,9 +211,7 @@ select {
 }
 
 /* 테이블이 좁아지면 글자를 쪼개지 말고 스크롤 */
-.ingredientBody .table {
-  min-width: 420px; /* 이 값보다 작아지면 가로 스크롤 */
-}
+
 
 /* th/td 공통: 한 글자씩 쪼개지지 않게 */
 .table th,
@@ -636,4 +646,9 @@ select {
 }
 .stepDeleteBtn:hover {
   background: rgba(139, 0, 40, 0.14);
+}
+
+.ingCell {
+  position: relative;
+  overflow: visible !important;
 }

@@ -1,180 +1,572 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import styles from "./page.module.css";
-import axios from "axios";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import style from "./page.module.css";
+import {
+  searchIngredients,
+  getIngredientUnitsByName,
+} from "../../api/ingredient";
+import {
+  createRecipe,
+  replaceThumbnail,
+  uploadStepImages,
+} from "../../api/recipe";
 
-export default function MainPage() {
-	const [preview, setPreview] = useState<string | null>(null); // 대표 사진
-	const [recipes, setRecipes] = useState<{ img: string | null; text: string }[]>([
-		{ img: null, text: "" }
-	]); // 레시피 배열
-	const [recipeCategory,setRecipeCategory] = useState<number[]>([1,1,1])
-	const [testData,setTestData] = useState(null)
+type DraftIngredient = {
+  local_id: string;
+  ingredient_id: number;
+  name: string;
+  quantity: number;
+  unit_name: string;
+};
 
+type DraftStep = {
+  step_order: number;
+  description: string;
+};
 
-	// 대표 사진 선택 핸들러
-	const handleImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			const file = e.target.files[0];
-			setPreview(URL.createObjectURL(file));
-		}
-	};
+type SuggestItem = {
+  id: number;
+  name: string;
+};
 
-	// 레시피 이미지 선택 핸들러
-	const handleRecipeImgChange = (
-		index: number,
-		e: React.ChangeEvent<HTMLInputElement>
-	) => {
-		if (e.target.files && e.target.files[0]) {
-			const file = e.target.files[0];
-			const url = URL.createObjectURL(file);
-			const newRecipes = [...recipes];
-			newRecipes[index].img = url;
-			setRecipes(newRecipes);
-		}
-	};
+export default function RecipeCreate() {
+// state 정의
+  const nav = useNavigate();
 
-	// 레시피 텍스트 변경 핸들러
-	const handleRecipeTextChange = (
-		index: number,
-		e: React.ChangeEvent<HTMLTextAreaElement>
-	) => {
-		const newRecipes = [...recipes];
-		newRecipes[index].text = e.target.value;
-		setRecipes(newRecipes);
-	};
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [baseServing, setBaseServing] = useState(1);
+  const [ingredients, setIngredients] = useState<DraftIngredient[]>([]);
+  const [steps, setSteps] = useState<DraftStep[]>([]);
+  const [allowedUnits, setAllowedUnits] = useState<Record<number, string[]>>(
+    {}
+  );
 
-	// 레시피 추가 버튼
-	const addRecipe = () => {
-		setRecipes([...recipes, { img: null, text: "" }]);
-	};
+  // 자동완성
+  const [suggest, setSuggest] = useState<Record<string, SuggestItem[]>>({});
+  const [suggestOpen, setSuggestOpen] = useState<Record<string, boolean>>({});
+  const [suggestLoading, setSuggestLoading] = useState<Record<string, boolean>>({});
+  const debounceRef = useRef<Map<string, any>>(new Map());
+  const [saving, setSaving] = useState(false);
 
-	//재료 카테고리 추가 버튼
-	const addCategory = () => {
-		let copy = [...recipeCategory,1]
-		setRecipeCategory(copy)
-	}
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+// 이미지 state
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [stepFiles, setStepFiles] = useState<Record<number, File[]>>({});
 
-	
-	
-	return (
+  useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (!dropdownRef.current) return;
 
-		<main className={styles.container}>
-			<div>{testData}</div>
-			<form action="#" method="get" className={`${styles.form} recipes-form`}>
-				<div className={styles.btnCarrier}>
-				{/*돌아가기 버튼*/}
-				<Link to="/recipe" className={styles.returnBtn}>&lt;</Link>
+    if (!dropdownRef.current.contains(e.target as Node)) {
+      setSuggestOpen({});
+    }
+  };
 
-				{/* 완료 버튼 */}
-				<button type="submit" className={styles.submitButton}>완료</button>
-				</div>
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
-				{/* 음식 이름 */}
-				<div className={styles.center}>
-					<input type = "text" className = {styles.nameBox} placeholder = "음식 이름을 입력해주세요"/>
-				</div>
+  // -----------------------------
+  // 단위 조회
+  // -----------------------------
+  useEffect(() => {
+    (async () => {
+      const map: Record<number, string[]> = {};
 
-				{/* 대표 사진 업로드 */}
-				<div className={styles.topSection}>
-					<div className = {styles.uploadContainer}>
-						<input
-							id = 'leadimg'
-							type="file"
-							accept="image/*"
-							onChange={handleImgChange}
-							style = {{display: 'none'}}
-						/>
-						<label htmlFor="leadimg" className={styles.uploadLabel}>
-							대표 사진<br/>+
-						</label>
-						{preview && (
-							<img 
-							src={preview}
-							alt="대표 사진 미리보기"
-							style={{ width: "100%", borderRadius: 12 }}
-							/>
-						)}
-					</div>
-					<textarea
-					placeholder="음식 설명을 입력해주세요."
-					className={styles.description}
-					/>
-				</div>
-				
-				{/* 재료 카테고리명 입력 */}
-				<div className={styles.category_container}>
-					<h4>재료 카테고리명 입력</h4>
-					<div className={styles.underbar}></div>
-					<div className={styles.underbar}></div>
-					{
-						recipeCategory.map(()=>{
-							return(
-								<div className={styles.category}>
-									<input type="text" placeholder="재료 입력/선택" className={styles.category__item}></input>
-									<input type="text" placeholder="숫자 입력" className={styles.category__item}></input>
-									<select className={styles.category__item}>
-										<option>단위</option>
-										<option>g</option>
-										<option>kg</option>
-										<option>ml</option>
-										<option>L</option>
-									</select>
-								</div>
-							)
-						})
-					}
-					<div className={styles.underbar}></div>
-					<button className={styles.categoryPlus} type="button" onClick={addCategory}>+</button>
-					<div className={styles.underbar}></div>
-					<div className={styles.underbar}></div>
-				</div>
+      for (const ing of ingredients) {
+        if (ing.ingredient_id > 0) {
+          try {
+            const data = await getIngredientUnitsByName(ing.name);
+            map[ing.ingredient_id] = data.units ?? [];
+          } catch {
+            map[ing.ingredient_id] = [];
+          }
+        }
+      }
 
-				<h4>{testData}</h4>
+      setAllowedUnits(map);
+    })();
+  }, [ingredients]);
 
-				{/* 레시피 입력 영역 */}
-				<div className={styles.recipeBlock}> 
-					{recipes.map((recipe, index) => (
-						<div key={index} className={styles.recipeContainer}>
-							<div className={styles.recipeNum}><span>{index+1}</span></div>
-							<div className={styles.recipeLabel}>
-							<input
-								type="file"
-								accept="image/*"
-								onChange={(e) => handleRecipeImgChange(index, e)}
-								className={styles.recipeImg}
-								id={`file-${index}`}
-								/>
+  // -----------------------------
+  // 재료 자동완성
+  // -----------------------------
+  const handleIngredientBlur = async (idx: number) => {
+  const item = ingredients[idx];
+  if (!item.name.trim()) return;
 
-								<label htmlFor={`file-${index}`}>사진 업로드</label>
-							<div>+</div>
-							</div>
-							{recipe.img && (
-								<img
-									src={recipe.img}
-									alt={`레시피 ${index + 1} 미리보기`}
-									className={styles.preview}
-								/>
-							)}
-							<textarea
-								value={recipe.text}
-								onChange={(e) => handleRecipeTextChange(index, e)}
-								placeholder="레시피 입력:"
-								className={styles.recipeDescription}
-							/>
-						</div>
-					))}
-				</div>
-				<button
-						type="button"
-						onClick={addRecipe}
-						className={styles.categoryPlus}
-					>
-						+
-					</button>
-			</form>
-		</main>
-	);
+  // 이미 확정된 재료면 스킵
+  if (item.ingredient_id > 0) return;
+
+  try {
+    // 1️⃣ get_or_create 실행
+    const created = await getOrCreateIngredient(item.name);
+
+    // 2️⃣ ingredient_id 세팅
+    setIngredients(prev =>
+      prev.map((it, i) =>
+        i === idx
+          ? { ...it, ingredient_id: created.id }
+          : it
+      )
+    );
+
+    // 3️⃣ 단위 다시 조회
+    const unitData = await getIngredientUnitsByName(item.name);
+
+    setAllowedUnits(prev => ({
+      ...prev,
+      [created.id]: unitData.units ?? [],
+    }));
+
+  } catch (e) {
+    console.error("ingredient 생성 실패", e);
+  }
+};
+  const onChangeIngredientName = (idx: number, value: string) => {
+  const localId = ingredients[idx].local_id;
+
+  setIngredients(prev =>
+    prev.map((it, i) =>
+      i === idx
+        ? {
+            ...it,
+            name: value,
+            ingredient_id: it.ingredient_id > 0 ? -1 : it.ingredient_id,
+            unit_name: it.ingredient_id > 0 ? "" : it.unit_name,
+          }
+        : it
+    )
+  );
+
+  setSuggestOpen(prev => ({ ...prev, [localId]: true }));
+
+  const prevTimer = debounceRef.current.get(localId);
+  if (prevTimer) clearTimeout(prevTimer);
+
+  const timer = setTimeout(async () => {
+    const q = value.trim();
+    if (!q) {
+      setSuggest(prev => ({ ...prev, [localId]: [] }));
+      return;
+    }
+
+    setSuggestLoading(prev => ({ ...prev, [localId]: true }));
+
+    try {
+      const items = await searchIngredients(q, 8);
+      setSuggest(prev => ({ ...prev, [localId]: items }));
+    } catch {
+      setSuggest(prev => ({ ...prev, [localId]: [] }));
+    } finally {
+      setSuggestLoading(prev => ({ ...prev, [localId]: false }));
+    }
+  }, 250);
+
+  debounceRef.current.set(localId, timer);
+};
+
+  const onPickIngredient = (idx: number, pick: SuggestItem) => {
+
+  setIngredients(prev =>
+    prev.map((it, i) =>
+      i === idx
+        ? {
+            ...it,
+            ingredient_id: pick.id,
+            name: pick.name,
+            unit_name: "",
+          }
+        : it
+    )
+  );
+
+  setSuggestOpen(prev => ({ ...prev, [idx]: false }));
+};
+
+  // -----------------------------
+  // 재료 관리
+  // -----------------------------
+  const addIngredient = () => {
+  const localId = crypto.randomUUID();
+
+  setIngredients(prev => [
+    ...prev,
+    {
+      local_id: localId,
+      ingredient_id: -1,
+      name: "",
+      quantity: 0,
+      unit_name: "",
+    },
+  ]);
+
+  setSuggestOpen(prev => ({ ...prev, [localId]: true }));
+};
+  const removeIngredient = (idx: number) => {
+  const target = ingredients[idx];
+  if (!target) return;
+
+  setIngredients(prev => prev.filter((_, i) => i !== idx));
+
+  setAllowedUnits(prev => {
+    const copy = { ...prev };
+    delete copy[target.ingredient_id];
+    return copy;
+  });
+};
+  // -----------------------------
+  // 단계 관리
+  // -----------------------------
+  const addStep = () => {
+    setSteps((prev) => [
+      ...prev,
+      { step_order: prev.length + 1, description: "" },
+    ]);
+  };
+
+  const removeStep = (idx: number) => {
+  const removedOrder = steps[idx].step_order;
+
+  setSteps((prev) =>
+    prev
+      .filter((_, i) => i !== idx)
+      .map((s, i) => ({ ...s, step_order: i + 1 }))
+  );
+
+  setStepFiles((prev) => {
+    const copy = { ...prev };
+    delete copy[removedOrder];
+    return copy;
+  });
+};
+
+  // -----------------------------
+  // 저장
+  // -----------------------------
+  const onSave = async () => {
+    if (!title.trim()) return;
+
+    setSaving(true);
+
+    try {
+      const body = {
+        title,
+        description,
+        base_serving: baseServing,
+        ingredients: ingredients.map((x) => ({
+          ingredient_id: x.ingredient_id > 0 ? x.ingredient_id : undefined,
+          name: x.name,
+          quantity: x.quantity,
+          unit_name: x.unit_name,
+          unit_type: "mass",
+        })),
+        steps,
+      };
+
+      const result = await createRecipe(body);
+	  if (thumbnailFile) {
+  await replaceThumbnail(result.id, thumbnailFile);
 }
+
+for (const s of steps) {
+  const files = stepFiles[s.step_order];
+  if (files?.length) {
+    await uploadStepImages(result.id, s.step_order, files);
+  }
+}
+      nav(`/recipe/${result.id}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // =======================================================
+  // =====================  UI  ============================
+  // =======================================================
+
+  return (
+    <div className={style.container} ref={containerRef}>
+      {/* 헤더 */}
+      <div className={style.banner}>
+        <img
+          src="/backstep_white_white_background.png"
+          className={style.backstep}
+          alt="back"
+          onClick={() => nav(-1)}
+        />
+      </div>
+
+      {/* 제목 */}
+      <div className={style.foodTitle}>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="음식 이름을 입력해주세요"
+          style={{ width: "90%" }}
+        />
+      </div>
+
+      {/* 설명 */}
+      <div className={style.foodDescription}>음식 설명</div>
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="음식 설명을 입력해주세요."
+        style={{ width: "90%", marginBottom: 20 }}
+      />
+
+      {/* 기준 인분 */}
+      <div className={style.portionBody}>
+        <div>기준 인분</div>
+        <input
+          type="number"
+          min={1}
+          value={baseServing}
+          onChange={(e) => setBaseServing(Number(e.target.value))}
+        />
+      </div>
+
+      <div className={style.line}></div>
+      <div className={style.line}></div>
+
+      {/* 재료 */}
+      <div className={style.ingredientBody}>
+        <div className={style.ingredientTitle}>재료</div>
+
+        <table className={style.table}>
+          <thead>
+            <tr>
+              <th>재료</th>
+              <th>숫자</th>
+              <th>단위</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {ingredients.map((item, idx) => (
+              <tr key={item.local_id}>
+               <td className={style.ingCell}>
+  <input
+  onBlur={() => handleIngredientBlur(idx)}
+    value={item.name}
+    onFocus={() =>
+      setSuggestOpen(prev => ({
+        ...prev,
+        [item.local_id]: true,
+      }))
+    }
+    onChange={(e) =>
+      onChangeIngredientName(idx, e.target.value)
+    }
+  />
+
+  {suggestOpen[item.local_id] && (
+    <div
+    ref={dropdownRef}
+    className={style.ingDropdown}
+  >
+      {suggestLoading[item.local_id] ? (
+  <div className={style.ingDropdownLoading}>
+    검색중...
+  </div>
+) : (
+  (suggest[item.local_id] ?? []).map(it => (
+    <div
+      key={it.id}
+      className={style.ingDropdownItem}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => onPickIngredient(idx, it)}
+    >
+      {it.name}
+    </div>
+  ))
+)}
+    </div>
+  )}
+</td>
+
+                <td>
+                  <input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      setIngredients((prev) =>
+                        prev.map((it, i) =>
+                          i === idx
+                            ? { ...it, quantity: Number(e.target.value) }
+                            : it
+                        )
+                      )
+                    }
+                  />
+                </td>
+
+                <td>
+                  <select
+                    value={item.unit_name}
+                    onChange={(e) =>
+                      setIngredients((prev) =>
+                        prev.map((it, i) =>
+                          i === idx
+                            ? { ...it, unit_name: e.target.value }
+                            : it
+                        )
+                      )
+                    }
+                  >
+                    {(allowedUnits[item.ingredient_id] ?? []).map((u) => (
+                      <option key={u}>{u}</option>
+                    ))}
+                  </select>
+                </td>
+
+                <td>
+                  <button onClick={() => removeIngredient(idx)}>삭제</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <button className={style.addRowBtn} onClick={addIngredient}>
+          <span className={style.addRowPlus}>+</span>
+          재료 추가하기
+        </button>
+      </div>
+
+      <div className={style.line}></div>
+      <div className={style.line}></div>
+
+      {/* 단계 */}
+      <div className={style.recipeTitle}>레시피</div>
+      <div className={style.recipeBody}>
+  {steps.map((s, idx) => {
+    const picked = stepFiles[s.step_order] ?? [];
+
+    return (
+      <div key={s.step_order} className={style.recipeItem}>
+        {/* 이미지 영역 */}
+        <div className={style.photoBox}>
+          <div className={style.number}>{s.step_order}</div>
+
+          <div className={style.stepImageArea}>
+  <input
+    id={`step-file-${s.step_order}`}
+    type="file"
+    hidden
+    multiple
+    accept="image/*"
+    onChange={(e) =>
+      setStepFiles((prev) => ({
+        ...prev,
+        [s.step_order]: Array.from(e.target.files ?? []),
+      }))
+    }
+  />
+
+  {picked.length === 0 ? (
+    <label
+      htmlFor={`step-file-${s.step_order}`}
+      className={style.stepImageBtn}
+    >
+      <span className={style.stepPlus}>+</span>
+      <span className={style.stepAddText}>이미지 추가</span>
+    </label>
+  ) : (
+    <div className={style.stepImageList}>
+      {picked.map((file, i) => (
+        <div key={i} className={style.stepImageItem}>
+          <img
+            src={URL.createObjectURL(file)}
+            className={style.stepThumb}
+            alt="preview"
+          />
+          <button
+            type="button"
+            className={style.stepImageDelete}
+            onClick={() =>
+              setStepFiles((prev) => {
+                const copy = { ...prev };
+                copy[s.step_order] = copy[s.step_order].filter(
+                  (_, j) => j !== i
+                );
+                return copy;
+              })
+            }
+          >
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+        </div>
+
+        {/* 텍스트 영역 */}
+        <div style={{ flex: 1 }}>
+          <textarea
+            className={style.textBox}
+            value={s.description}
+            onChange={(e) =>
+              setSteps((prev) =>
+                prev.map((st, i) =>
+                  i === idx
+                    ? { ...st, description: e.target.value }
+                    : st
+                )
+              )
+            }
+          />
+
+          <div className={style.stepActionRow}>
+  <button
+    type="button"
+    className={style.stepImageReplaceBtn}
+    onClick={() =>
+      document
+        .getElementById(`step-file-${s.step_order}`)
+        ?.click()
+    }
+  >
+    이미지 교체
+  </button>
+
+  <button
+    type="button"
+    className={style.stepDeleteBtn}
+    onClick={() => removeStep(idx)}
+  >
+    단계 삭제
+  </button>
+</div>
+        </div>
+      </div>
+    );
+  })}
+
+  <button className={style.addRowBtn} onClick={addStep}>
+    <span className={style.addRowPlus}>+</span>
+    단계 추가하기
+  </button>
+  <div style={{ width: "90%", margin: "30px 0 60px" }}>
+  <button
+    className={style.actionBtn}
+    onClick={onSave}
+    disabled={saving}
+    style={{ width: "100%" }}
+  >
+    {saving ? "생성중..." : "레시피 생성하기"}
+  </button>
+</div>
+</div>
+</div>
+  ); }
