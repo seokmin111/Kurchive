@@ -206,31 +206,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     })();
   }, [recipe, ingredientsDraft]);
 
-  // 단위 목록 도착 후 unit_name 비어있으면 첫 단위 자동 채움
-  useEffect(() => {
-    if (!isEdit) return;
 
-    setIngredientsDraft((prev) =>
-      prev.map((it) => {
-        if (it.ingredient_id <= 0) return it;
-        if (it.unit_name?.trim()) return it;
-        const first = allowedUnits[it.ingredient_id]?.[0];
-        return first ? { ...it, unit_name: first } : it;
-      })
-    );
-
-    setUnitSelections((prev) => {
-      const next = { ...prev };
-      for (const it of ingredientsDraft) {
-        if (it.ingredient_id <= 0) continue;
-        if (next[it.ingredient_id]) continue;
-        const first = allowedUnits[it.ingredient_id]?.[0];
-        if (first) next[it.ingredient_id] = first;
-      }
-      return next;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowedUnits]);
 
   const onClickBack = () => nav(-1);
 
