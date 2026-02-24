@@ -313,13 +313,7 @@ async def convert_recipe(
     for ri in recipe.ingredients:
         target_unit_name = unit_map.get(ri.ingredient_id)
         if target_unit_name:
-            allowed_units_result = await db.execute(
-                select(IngredientUnit).filter(IngredientUnit.ingredient_id == ri.ingredient_id)
-            )
-            allowed_units = allowed_units_result.scalars().all()
-            allowed_unit_names = {u.unit_name for u in allowed_units}
-
-            if target_unit_name in allowed_unit_names:
+            if target_unit_name:
                 ri.quantity, ri.unit_name = await convert_unit(
                     db=db,
                     ingredient=ri.ingredient,
