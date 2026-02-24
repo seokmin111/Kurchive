@@ -101,6 +101,9 @@ class RecipeResponseDTO(BaseModel):
     class Config:
         from_attributes = True
 
+class RecipeFavoriteToggleResponse(BaseModel):
+    is_favorite: bool
+    message: str
 
 # -------- 공통 --------
 async def assert_can_edit_recipe(recipe: Recipe, current_user: User):
@@ -636,3 +639,51 @@ async def delete_step_image(
 
     await db.delete(img)
     await db.commit()
+
+# --- 즐겨찾기 여부 확인 API ---
+@router.get("/{recipe_id}/favorite", response_model=RecipeFavoriteToggleResponse)
+async def check_recipe_favorite(
+    recipe_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    stmt = select(RecipeFavorite).where(
+        RecipeFavorite.user_id == current_user.id,
+        RecipeFavorite.recipe_id == recipe_id
+    )
+    result = await db.execute(stmt)
+    is_fav = result.scalar_one_or_none() is not None
+
+    return {"is_favorite": is_fav, "message": "조회 완료"}
+
+# --- 즐겨찾기 토글 (찜하기/취소) API ---
+@router.post("/{recipe_id}/favorite", response_model=RecipeFavoriteToggleResponse)
+async def toggle_recipe_favorite(
+    recipe_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    # 레시피 존재 여부 확인
+    recipe = await db.get(Recipe, recipe_id)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="레시피를 찾을 수 없습니다.")
+
+    # 기존 찜 여부 확인
+    stmt = select(RecipeFavorite).where(
+        RecipeFavorite.user_id == current_user.id,
+        RecipeFavorite.recipe_id == recipe_id
+    )
+    result = await db.execute(stmt)
+    existing_fav = result.scalar_one_or_none()
+
+    if existing_fav:
+        # 이미 찜한 상태면 삭제 (취소)
+        await db.delete(existing_fav)
+        await db.commit()
+        return {"is_favorite": False, "message": "즐겨찾기가 취소되었습니다."}
+    else:
+        # 찜하지 않은 상태면 추가
+        new_fav = RecipeFavorite(user_id=current_user.id, recipe_id=recipe_id)
+        db.add(new_fav)
+        await db.commit()
+        return {"is_favorite": True, "message": "즐겨찾기에 추가되었습니다."}
