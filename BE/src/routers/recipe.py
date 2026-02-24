@@ -309,7 +309,7 @@ async def convert_recipe(
     if not recipe:
         raise HTTPException(404, "Recipe not found")
 
-    unit_map = request.units
+    unit_map = {int(k): v for k, v in (request.units or {}).items()}
     for ri in recipe.ingredients:
         target_unit_name = unit_map.get(ri.ingredient_id)
         if target_unit_name:
