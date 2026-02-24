@@ -52,6 +52,7 @@ class IngredientDetailDTO(BaseModel):
     name: str
     quantity: float
     unit_name: str
+    unit_type: str
 
 class RecipeStepImageDTO(BaseModel):
     id: int
@@ -133,6 +134,7 @@ def _build_recipe_response(recipe: Recipe):
             "name": ri.ingredient.name,
             "quantity": ri.quantity,
             "unit_name": ri.unit_name,
+            "unit_type": ri.ingredient.unit_type,
             "is_custom": getattr(ri.ingredient, "is_custom", False),  # 프론트용 추가
         } for ri in recipe.ingredients
     ]
