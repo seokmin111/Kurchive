@@ -95,12 +95,18 @@ export default function RestaurantArchivePage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [userData, favData] = await Promise.all([
+        // getMyFavoriteRestaurants() 대신 client.get 으로 확실하게 요청
+        const [userData, favRes] = await Promise.all([
           getMyPage(),
-          getMyFavoriteRestaurants()
+          client.get('/mypage/logs/restaurants')
         ]);
         
         setUser(userData);
+        
+        // 데이터 안전하게 추출 (배열인지 체크)
+        const favData = Array.isArray(favRes.data) ? favRes.data : (favRes.data?.data || []);
+        
+        // 백엔드에서 최신순으로 오므로 .reverse()를 하지 않습니다.
         setRestaurants(favData);
       } catch (error) {
         console.error("데이터 로딩 실패:", error);
@@ -111,6 +117,7 @@ export default function RestaurantArchivePage() {
 
     fetchData();
   }, []);
+
 
   // 검색 기능
   const filteredRestaurants = restaurants.filter((r) => 

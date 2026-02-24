@@ -297,3 +297,29 @@
   border-radius: 50%;
   cursor: pointer;
 }
+
+/* ===== 상단 네비게이션 액션 버튼 ===== */
+.backBtnWrap {
+  min-width: 60px; /* 우측 버튼 영역과 너비를 맞춰 제목이 중앙에 오도록 함 */
+  display: flex;
+  align-items: center;
+}
+
+.rightActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 60px;
+  justify-content: flex-end;
+}
+
+.actionBtn {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

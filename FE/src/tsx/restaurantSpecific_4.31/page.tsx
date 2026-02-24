@@ -33,6 +33,7 @@ function formatPrice(min?: number, max?: number) {
   return `${f(a)}원 ~ ${f(b)}원`;
 }
 
+// 기존 Stars 컴포넌트 오류 수정 (매개변수 구조 분해)
 function Stars({ value }: { value: number }) {
   const v = Math.max(0, Math.min(5, Math.round(value ?? 0)));
   return (
@@ -63,6 +64,9 @@ export default function RestaurantSpecific() {
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // ✅ 찜하기 상태
+  const [isZzim, setIsZzim] = useState(false);
+
   // 내 정보 로드
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -71,10 +75,9 @@ export default function RestaurantSpecific() {
     client.get("/mypage")
       .then((res) => setCurrentUser(res.data.data || res.data))
       .catch(() => {});
-    
   }, []);
 
-  // 식당 상세 로드
+  // 식당 상세 및 찜하기 상태 로드
   useEffect(() => {
     const id = Number(restaurantId);
     if (!id) return;
@@ -82,9 +85,14 @@ export default function RestaurantSpecific() {
     (async () => {
       try {
         setLoading(true);
-        const res = await client.get(`/restaurants/${id}`);
-        console.log("상세 응답:", res.data); 
-        setRestaurant(res.data.data || res.data);
+        // 상세 정보와 즐겨찾기 상태를 동시에 가져옴
+        const [detailRes, favRes] = await Promise.all([
+          client.get(`/restaurants/${id}`),
+          client.get(`/restaurants/${id}/favorite`).catch(() => ({ data: { is_favorite: false } })) // 에러 무시
+        ]);
+        
+        setRestaurant(detailRes.data.data || detailRes.data);
+        setIsZzim(favRes.data.is_favorite);
       } catch (e: any) {
         setErr(e?.response?.data?.detail ?? "식당 정보를 불러오지 못했습니다.");
       } finally {
@@ -92,6 +100,17 @@ export default function RestaurantSpecific() {
       }
     })();
   }, [restaurantId]);
+
+  // ✅ 즐겨찾기 토글 함수
+  const toggleFavorite = async () => {
+    try {
+      const res = await client.post(`/restaurants/${restaurantId}/favorite`);
+      setIsZzim(res.data.is_favorite);
+    } catch (e) {
+      console.error(e);
+      alert("즐겨찾기 상태를 변경할 수 없습니다.");
+    }
+  };
 
   // 수정 권한 체크
   const canEdit = useMemo(() => {
@@ -124,34 +143,38 @@ export default function RestaurantSpecific() {
 
   return (
     <div className={style.main}>
-      {/* 상단 네비 */}
+      {/* ===== 상단 네비 ===== */}
       <div className={style.navbar}>
-        <img
-          src="/backstep_white_background.png"
-          width="15px"
-          alt="back"
-          style={{ cursor: "pointer" }}
-          onClick={() => nav(-1)}
-        />
+        <div className={style.backBtnWrap}>
+          <img
+            src="/backstep_white_background.png"
+            width="15px"
+            alt="back"
+            style={{ cursor: "pointer" }}
+            onClick={() => nav(-1)}
+          />
+        </div>
+        
         <div className={style.nav_title}>{restaurant.name}</div>
 
-        {canEdit ? (
-          <span
-            onClick={() => nav(`/restaurant/${restaurant.id}/edit`)}
-            style={{
-              cursor: "pointer",
-              color: "#8B0029",
-              fontSize: 14,
-              fontWeight: 600,
-              minWidth: 50,
-              textAlign: "right",
-            }}
+        <div className={style.rightActions}>
+          {canEdit && (
+            <button
+              className={style.actionBtn}
+              onClick={() => nav(`/restaurant/${restaurant.id}/edit`)}
+              title="수정하기"
+            >
+              ✏️
+            </button>
+          )}
+          <button
+            className={style.actionBtn}
+            onClick={toggleFavorite}
+            title="찜하기"
           >
-            수정하기
-          </span>
-        ) : (
-          <div style={{ width: 50 }} />
-        )}
+            {isZzim ? "❤️" : "🤍"}
+          </button>
+        </div>
       </div>
 
       {/* 상단 박스 */}
@@ -164,7 +187,7 @@ export default function RestaurantSpecific() {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <div style={{ textAlign: "center", color: "#8B0029" }}>사진 없음</div>
+            <div style={{ textAlign: "center", color: "#8B0029", marginTop: "50%" }}>사진 없음</div>
           )}
         </div>
 
@@ -174,10 +197,10 @@ export default function RestaurantSpecific() {
             <div>{restaurant.summary}</div>
 
             <div style={{ color: "#8B0029", fontWeight: 800 }}>주소</div>
-            <div>{restaurant.address ?? "주소 정보 없음"}</div>
+            <div style={{ fontSize: "12px" }}>{restaurant.address ?? "주소 정보 없음"}</div>
 
             <div style={{ color: "#8B0029", fontWeight: 800 }}>가격대</div>
-            <div>{formatPrice(restaurant.price_min, restaurant.price_max)}</div>
+            <div style={{ fontSize: "12px" }}>{formatPrice(restaurant.price_min, restaurant.price_max)}</div>
           </div>
         </div>
       </div>
@@ -189,55 +212,61 @@ export default function RestaurantSpecific() {
       </div>
 
       {/* 맵 링크 */}
-      <div className={style.map}>
-      <div style={{ marginBottom: 6, fontWeight: 600 }}>맵 링크</div>
-      <a
-        href={restaurant.location_link}
-        target="_blank"
-        rel="noreferrer"
-        style={{
-          display: "inline-block",
-          padding: "6px 12px",
-          borderRadius: 20,
-          background: "#f4f4f4",
-          textDecoration: "none",
-          color: "#8B0029",
-          fontWeight: 600,
-          fontSize: 14
-        }}
-      >
-        지도 보러가기 →
-      </a>
-    </div>
-
-
+      <div className={style.map} style={{ width: "100%" }}>
+        <div style={{ marginBottom: 6, fontWeight: 600 }}>맵 링크</div>
+        <a
+          href={restaurant.location_link}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: "inline-block",
+            padding: "6px 12px",
+            borderRadius: 20,
+            background: "#f4f4f4",
+            textDecoration: "none",
+            color: "#8B0029",
+            fontWeight: 600,
+            fontSize: 14
+          }}
+        >
+          지도 보러가기 →
+        </a>
+      </div>
 
       {/* 태그 */}
       <div className={style.tags}>
-      <div className={style.tags_title}>태그</div>
+        <div className={style.tags_title}>태그</div>
 
-      {/* 지역 먼저 */}
-      {restaurant.region && (
-        <div className={style.tags_tag}>
-          {restaurant.region.name}
-        </div>
-      )}
+        {/* 지역 먼저 */}
+        {restaurant.region && (
+          <div className={style.tags_tag}>
+            {restaurant.region.name}
+          </div>
+        )}
 
-      {/* 음식 태그 */}
-      {restaurant.tags.map((tag) => (
-        <div key={tag.id} className={style.tags_tag}>
-          {tag.name}
-        </div>
-      ))}
+        {/* 음식 태그 */}
+        {restaurant.tags.map((tag) => (
+          <div key={tag.id} className={style.tags_tag}>
+            {tag.name}
+          </div>
+        ))}
 
-      {/* 아무것도 없을 때 */}
-      {!restaurant.region && restaurant.tags.length === 0 && (
-        <div className={style.tags_tag}>태그 없음</div>
-      )}
-    </div>
-
+        {/* 아무것도 없을 때 */}
+        {!restaurant.region && restaurant.tags.length === 0 && (
+          <div className={style.tags_tag}>태그 없음</div>
+        )}
+      </div>
 
       <div className={style.line}></div>
+
+      {/* 상세 후기 */}
+      <div
+        className={style.lower_box}
+        style={{ padding: 16, whiteSpace: "pre-wrap", overflowY: "auto" }}
+      >
+        {restaurant.description}
+      </div>
+
       {/* 본문 이미지 갤러리 */}
       {restaurant.images && restaurant.images.length > 0 && (
         <div
@@ -247,6 +276,7 @@ export default function RestaurantSpecific() {
             gap: 12,
             overflowX: "auto",
             paddingBottom: 8,
+            width: "100%"
           }}
         >
           {restaurant.images
@@ -275,7 +305,6 @@ export default function RestaurantSpecific() {
               >
                 ✕
               </button>
-
               <img
                 src={selectedImage}
                 alt="확대 이미지"
@@ -285,14 +314,6 @@ export default function RestaurantSpecific() {
           )}
         </div>
       )}
-
-      {/* 상세 후기 */}
-      <div
-        className={style.lower_box}
-        style={{ padding: 16, whiteSpace: "pre-wrap" }}
-      >
-        {restaurant.description}
-      </div>
     </div>
   );
 }
