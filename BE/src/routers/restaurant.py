@@ -41,6 +41,7 @@ from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant, RestaurantTag, RestaurantImage
 from BE.src.models.tags import Tag, TagCategory
 from BE.src.models.regions import Region
+from BE.src.models.favorites import Favorite
 
 # 주소 추출 모듈 임포트
 from BE.AddressLatLong import extract_location_from_link
@@ -146,6 +147,10 @@ class ImageOut(BaseModel):
     id: int
     image_url: str
     created_at: float
+
+class FavoriteToggleResponse(BaseModel):
+    is_favorite: bool
+    message: str
 
 # ---------------------------
 # API 엔드포인트
@@ -909,3 +914,51 @@ async def patch_restaurant_image(
     await db.commit()
     await db.refresh(img)
     return {"id": img.id, "image_url": img.image_url, "created_at": img.created_at}
+
+# --- 즐겨찾기 여부 확인 API ---
+@router.get("/restaurants/{restaurant_id}/favorite", response_model=FavoriteToggleResponse)
+async def check_restaurant_favorite(
+    restaurant_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    stmt = select(Favorite).where(
+        Favorite.user_id == current_user.id,
+        Favorite.restaurant_id == restaurant_id
+    )
+    result = await db.execute(stmt)
+    is_fav = result.scalar_one_or_none() is not None
+
+    return {"is_favorite": is_fav, "message": "조회 완료"}
+
+# --- 즐겨찾기 토글 (찜하기/취소) API ---
+@router.post("/restaurants/{restaurant_id}/favorite", response_model=FavoriteToggleResponse)
+async def toggle_restaurant_favorite(
+    restaurant_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+    # 식당 존재 여부 확인
+    restaurant = await db.get(Restaurant, restaurant_id)
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="식당을 찾을 수 없습니다.")
+
+    # 기존 찜 여부 확인
+    stmt = select(Favorite).where(
+        Favorite.user_id == current_user.id,
+        Favorite.restaurant_id == restaurant_id
+    )
+    result = await db.execute(stmt)
+    existing_fav = result.scalar_one_or_none()
+
+    if existing_fav:
+        # 이미 찜한 상태면 삭제 (취소)
+        await db.delete(existing_fav)
+        await db.commit()
+        return {"is_favorite": False, "message": "즐겨찾기가 취소되었습니다."}
+    else:
+        # 찜하지 않은 상태면 추가
+        new_fav = Favorite(user_id=current_user.id, restaurant_id=restaurant_id)
+        db.add(new_fav)
+        await db.commit()
+        return {"is_favorite": True, "message": "즐겨찾기에 추가되었습니다."}
