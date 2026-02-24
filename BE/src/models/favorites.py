@@ -16,8 +16,8 @@ class Favorite(Base):
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
 
     # user랑 restaurant 테이블 접근
-    user = relationship("User", back_populates="favorites")
-    restaurant = relationship("Restaurant", back_populates="favorites")
+    user = relationship("User")
+    restaurant = relationship("Restaurant")
 
 # 레시피 즐겨찾기 모델 
 class RecipeFavorite(Base):
