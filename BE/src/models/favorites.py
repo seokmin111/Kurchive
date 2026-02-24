@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from BE.src.database import Base
 
+from sqlalchemy import DateTime
+
 # from .users import User
 # from .restaurants import Restaurant 
 
