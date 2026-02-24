@@ -30,6 +30,10 @@ router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 
 
 # -------- DTO 정의 --------
+class IngredientGetOrCreateRequest(BaseModel):
+    name: str
+    unit_type: Optional[str] = "mass"
+    
 class IngredientDTO(BaseModel):
     ingredient_id: int
     quantity: float
@@ -207,7 +211,7 @@ async def get_or_create_ingredient(
 # front용 라우터
 @router.post("/ingredients/get-or-create")
 async def get_or_create_ingredient_api(
-    payload: IngredientCreateDTO,
+    payload: IngredientGetOrCreateRequest,
     db: AsyncSession = Depends(get_async_db),
 ):
     ingredient = await get_or_create_ingredient(
