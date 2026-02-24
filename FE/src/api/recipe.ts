@@ -97,6 +97,14 @@ export const convertRecipeUnits = (
 
 // 2. 생성 / 수정 / 삭제
 
+export async function getOrCreateIngredient(name: string) {
+  const res = await client.post("/ingredients/get-or-create", {
+    name,
+  });
+  return res.data; 
+  // 기대: { id: number, unit_type: string }
+}
+
 // 레시피 생성
 export const createRecipe = (body: CreateRecipeBody) =>
   client.post("/recipe", body).then((r) => r.data);
