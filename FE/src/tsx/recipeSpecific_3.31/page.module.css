@@ -189,29 +189,18 @@ select {
 
   table-layout: fixed; /* 열 너비 안정화 */
 }
-.table {
-  border-radius: 14px;
-  overflow: visible;
-}
-
-.table th:first-child {
-  border-top-left-radius: 14px;
-}
-
-.table th:last-child {
-  border-top-right-radius: 14px;
-}
 
 /* 부모가 스크롤 담당 */
 .ingredientBody {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  overflow-x: auto;     /* 핵심 */
+  display: block;       /* flex 제거 */
 }
 
 /* 테이블이 좁아지면 글자를 쪼개지 말고 스크롤 */
-
+.ingredientBody .table {
+  min-width: 420px; /* 이 값보다 작아지면 가로 스크롤 */
+}
 
 /* th/td 공통: 한 글자씩 쪼개지지 않게 */
 .table th,
@@ -293,7 +282,8 @@ select {
 
 .recipeItem {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  align-items: flex-start;
 }
 
 .photoBox {
@@ -310,6 +300,7 @@ select {
 
 .textBox {
   flex: 1;
+  width : 100%;
   height: 120px;
   border: 1px dashed rgba(0, 0, 0, 0.35);
   border-radius: 14px;
@@ -348,7 +339,10 @@ select {
 .table {
   table-layout: auto !important;
 }
-
+.table {
+  min-width: 560px;     /* 원하는 최소 폭 */
+  width: max-content;   /* 🔥 핵심 */
+}
 /* 2) 셀은 nowrap 유지하되, 단위/숫자 쪽이 너무 커지지 않게 */
 .table th,
 .table td {
@@ -648,7 +642,85 @@ select {
   background: rgba(139, 0, 40, 0.14);
 }
 
+/* ===== Ingredient Autocomplete ===== */
+
 .ingCell {
-  position: relative;
+  position: relative;   /* 드롭다운 기준점 */
   overflow: visible !important;
+}
+
+.ingDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  min-width: 160px;
+
+  background: #fff;
+  border: 1px solid #e4e4e4;
+  border-radius: 12px;
+
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  z-index: 999;
+
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* 스크롤 부드럽게 */
+.ingDropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.ingDropdown::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 6px;
+}
+
+/* 각 항목 */
+.ingDropdownItem {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s ease;
+}
+
+.ingDropdownItem:hover {
+  background: rgba(139, 0, 40, 0.06);
+}
+
+/* 검색중 표시 */
+.ingDropdownLoading {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* 저장하기 버튼 */
+/* ===== Create Button ===== */
+
+.createActionWrap {
+  width: 90%;
+  margin: 32px 0 60px;
+}
+
+.createBtn {
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  border: none;
+  background-color: #8b0028;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.createBtn:hover {
+  background-color: #6f001f;
+}
+
+.createBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

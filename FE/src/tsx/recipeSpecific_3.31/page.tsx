@@ -39,15 +39,20 @@ type RecipeDetail = {
     name: string;
     quantity: number;
     unit_name: string;
+    unit_type: UnitType;
   }[];
 };
 
+type UnitType = "mass" | "volume" | "count" | "misc";
+
 type DraftIngredient = {
-  local_id: string;        // 프론트 전용
-  ingredient_id: number;   // 서버용
+  local_id: string;
+  ingredient_id: number;
   name: string;
   quantity: number;
   unit_name: string;
+  unit_type: UnitType;
+  is_existing: boolean;
 };
 
 type DraftStep = {
@@ -141,14 +146,16 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
         setBaseServingDraft(data.base_serving);
 
         setIngredientsDraft(
-  (data.ingredients ?? []).map((x) => ({
-    local_id: crypto.randomUUID(),   // ✅
-    ingredient_id: x.ingredient_id,
-    name: x.name,
-    quantity: x.quantity,
-    unit_name: x.unit_name,
-  }))
-);
+          (data.ingredients ?? []).map((x) => ({
+            local_id: crypto.randomUUID(),
+            ingredient_id: x.ingredient_id,
+            name: x.name,
+            quantity: x.quantity,
+            unit_name: x.unit_name,
+            unit_type: x.unit_type as UnitType,
+            is_existing: true,
+          }))
+        );
         setStepsDraft(
           (data.steps ?? [])
             .slice()
@@ -211,6 +218,13 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
   const onClickBack = () => nav(-1);
 
   // 재료 자동완성
+
+  const defaultUnitMap: Record<UnitType, string[]> = {
+  mass: ["g", "kg"],
+  volume: ["ml", "L"],
+  count: ["개"],
+  misc: [],
+};
   const onChangeIngredientName = (idx: number, v: string) => {
   const localId = ingredientsDraft[idx].local_id;
 
@@ -220,16 +234,14 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
         ? {
             ...it,
             name: v,
-            ingredient_id: it.ingredient_id > 0 ? -1 : it.ingredient_id,
-            unit_name: it.ingredient_id > 0 ? "" : it.unit_name,
+            ingredient_id: -1,
+            unit_name: "",
+            unit_type: "mass",
+            is_existing: false,
           }
         : it
     )
   );
-  console.log("=== onChangeIngredientName ===");
-console.log("idx:", idx);
-console.log("local_id:", localId);
-console.log("value:", v);
 
   setIngSuggestOpen((prev) => ({ ...prev, [localId]: true }));
 
@@ -247,9 +259,7 @@ console.log("value:", v);
 
     try {
       const items = await searchIngredients(q, 8);
-      console.log("API 요청 local_id:", localId, "query:", q);
       setIngSuggest((prev) => ({ ...prev, [localId]: items }));
-      
     } catch {
       setIngSuggest((prev) => ({ ...prev, [localId]: [] }));
     } finally {
@@ -258,19 +268,31 @@ console.log("value:", v);
   }, 250);
 
   debounceTimersRef.current.set(localId, t);
-  
 };
-  const onPickIngredient = (idx: number, pick: IngredientSuggestItem) => {
+  const onPickIngredient = async (idx: number, pick: IngredientSuggestItem) => {
   const localId = ingredientsDraft[idx].local_id;
+
+  // units 다시 가져와서 첫 단위 세팅 (간단 버전)
+  const u = await getIngredientUnitsByName(pick.name);
+  const first = (u.units ?? [])[0] ?? "";
 
   setIngredientsDraft((prev) =>
     prev.map((it, i) =>
       i === idx
-        ? { ...it, ingredient_id: pick.id, name: pick.name, unit_name: "" }
+        ? {
+            ...it,
+            ingredient_id: pick.id,
+            name: pick.name,
+            unit_name: first,
+            unit_type: (pick.unit_type as UnitType) ?? "mass",
+            is_existing: true,
+          }
         : it
     )
   );
 
+  setAllowedUnits((prev) => ({ ...prev, [pick.id]: u.units ?? [] }));
+  setUnitSelections((prev) => ({ ...prev, [pick.id]: first })); // convert용
   setIngSuggestOpen((prev) => ({ ...prev, [localId]: false }));
 };
 
@@ -294,14 +316,14 @@ console.log("value:", v);
         base_serving: baseServingDraft,
         description: descDraft,
         ingredients: ingredientsDraft
-  .filter((x) => x.name?.trim())
-  .map((x) => ({
-    ingredient_id: x.ingredient_id > 0 ? x.ingredient_id : undefined,
-    name: x.name,
-    unit_type: "mass",   // 기본값 (원하면 선택 UI 붙여도 됨)
-    quantity: Number(x.quantity),
-    unit_name: x.unit_name,
-  })),
+      .filter((x) => x.name?.trim())
+      .map((x) => ({
+        ingredient_id: x.ingredient_id > 0 ? x.ingredient_id : undefined,
+        name: x.name,
+        unit_type: x.unit_type,  
+        quantity: Number(x.quantity),
+        unit_name: x.unit_name,
+      })),
         steps: stepsDraft.map((s) => ({
           step_order: s.step_order,
           description: s.description,
@@ -339,14 +361,16 @@ console.log("value:", v);
       setBaseServingDraft(fresh.base_serving);
 
       setIngredientsDraft(
-  (fresh.ingredients ?? []).map((x) => ({
-    local_id: crypto.randomUUID(),  // ✅ 반드시
-    ingredient_id: x.ingredient_id,
-    name: x.name,
-    quantity: x.quantity,
-    unit_name: x.unit_name,
-  }))
-);
+      fresh.ingredients.map((x) => ({
+        local_id: crypto.randomUUID(),
+        ingredient_id: x.ingredient_id,
+        name: x.name,
+        quantity: x.quantity,
+        unit_name: x.unit_name,
+        unit_type: x.unit_type as UnitType,
+        is_existing: true,
+      }))
+    );
 
       setStepsDraft(
         (fresh.steps ?? [])
@@ -405,14 +429,16 @@ console.log("value:", v);
 
       setBaseServingDraft(scaled.base_serving);
       setIngredientsDraft(
-        (scaled.ingredients ?? []).map((x) => ({
-          local_id: crypto.randomUUID(),
-          ingredient_id: x.ingredient_id,
-          name: x.name,
-          quantity: x.quantity,
-          unit_name: x.unit_name,
-        }))
-      );
+  (scaled.ingredients ?? []).map((x) => ({
+    local_id: crypto.randomUUID(),
+    ingredient_id: x.ingredient_id,
+    name: x.name,
+    quantity: x.quantity,
+    unit_name: x.unit_name,
+    unit_type: x.unit_type as UnitType,
+    is_existing: true,
+  }))
+);
     } catch (e: any) {
       console.error(e);
       setErrMsg(e?.response?.data?.detail ?? e?.message ?? "인분 변환 실패");
@@ -434,14 +460,16 @@ console.log("value:", v);
       setRecipe(converted);
 
       setIngredientsDraft(
-        (converted.ingredients ?? []).map((x) => ({
-          local_id: crypto.randomUUID(),
-          ingredient_id: x.ingredient_id,
-          name: x.name,
-          quantity: x.quantity,
-          unit_name: x.unit_name,
-        }))
-      );
+      (converted.ingredients ?? []).map((x) => ({
+        local_id: crypto.randomUUID(),
+        ingredient_id: x.ingredient_id,
+        name: x.name,
+        quantity: x.quantity,
+        unit_name: x.unit_name,
+        unit_type: x.unit_type as UnitType,
+        is_existing: true,
+      }))
+    );
 
       const newUnits: Record<number, string> = {};
       (converted.ingredients ?? []).forEach((it) => {
@@ -476,12 +504,14 @@ console.log("value:", v);
   setIngredientsDraft((prev) => [
     ...prev,
     {
-      local_id: localId,
-      ingredient_id: -1,
-      name: "",
-      quantity: 0,
-      unit_name: "",
-    },
+  local_id: localId,
+  ingredient_id: -1,
+  name: "",
+  quantity: 0,
+  unit_name: "g",
+  unit_type: "mass",
+  is_existing: false,
+},
   ]);
 
   setTimeout(() => {
@@ -682,6 +712,7 @@ console.log("value:", v);
               <th>재료</th>
               <th>숫자</th>
               <th>단위</th>
+              <th>타입</th>
               {isEdit && <th></th>}
             </tr>
           </thead>
@@ -774,32 +805,73 @@ console.log("value:", v);
                   </td>
 
                   <td>
-                    <select
-                      value={unitValue ?? ""}
-                      disabled={!isConfirmed || units.length === 0}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setUnitSelections((prev) => ({ ...prev, [item.ingredient_id]: v }));
-                        setUnitDirty(true);
-                        if (isEdit) setIngredientUnit(idx, v);
-                      }}
-                      style={{ width: 90 }}
-                      title={!isConfirmed ? "재료를 먼저 선택해줘" : undefined}
-                    >
-                      {!isConfirmed ? (
-                        <option value="">선택 후 단위</option>
-                      ) : units.length ? (
-                        units.map((unit) => (
-                          <option key={unit} value={unit}>
-                            {unit}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="">단위 없음</option>
-                      )}
-                    </select>
-                  </td>
+  <select
+    value={
+      item.ingredient_id > 0
+        ? (unitSelections[item.ingredient_id] ?? item.unit_name)
+        : item.unit_name
+    }
+    disabled={item.ingredient_id > 0 ? (allowedUnits[item.ingredient_id]?.length ?? 0) === 0 : false}
+    onChange={(e) => {
+      const v = e.target.value;
 
+      if (item.ingredient_id > 0) {
+        // ✅ 기존 재료: convert 대상
+        setUnitSelections((prev) => ({ ...prev, [item.ingredient_id]: v }));
+        setUnitDirty(true);
+      }
+
+      // ✅ edit draft에도 반영(저장 시 unit_name 쓰니까)
+      setIngredientsDraft((prev) =>
+        prev.map((it, i) => (i === idx ? { ...it, unit_name: v } : it))
+      );
+    }}
+  >
+    {item.ingredient_id > 0
+      ? (allowedUnits[item.ingredient_id] ?? []).map((u) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))
+      : (defaultUnitMap[item.unit_type] ?? []).map((u) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))}
+  </select>
+</td>
+                    <td>
+  {item.is_existing ? (
+    <span>
+      {item.unit_type === "mass" && "질량"}
+      {item.unit_type === "volume" && "부피"}
+      {item.unit_type === "count" && "개수"}
+      {item.unit_type === "misc" && "기타"}
+    </span>
+  ) : (
+    <select
+      value={item.unit_type}
+      onChange={(e) =>
+        setIngredientsDraft((prev) =>
+          prev.map((it, i) =>
+            i === idx
+              ? {
+                  ...it,
+                  unit_type: e.target.value as UnitType,
+                  unit_name:
+                    defaultUnitMap[e.target.value as UnitType][0] ?? "",
+                }
+              : it
+          )
+        )
+      }
+    >
+      <option value="mass">질량</option>
+      <option value="volume">부피</option>
+      <option value="count">개수</option>
+    </select>
+  )}
+</td>
                   {isEdit && (
                     <td>
                       <button onClick={() => removeIngredient(idx)}>삭제</button>
