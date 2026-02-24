@@ -11,6 +11,7 @@ import {
   createRecipe,
   replaceThumbnail,
   uploadStepImages,
+  getOrCreateIngredient
 } from "../../api/recipe";
 
 type DraftIngredient = {
@@ -72,27 +73,6 @@ export default function RecipeCreate() {
   };
 }, []);
 
-  // -----------------------------
-  // 단위 조회
-  // -----------------------------
-  useEffect(() => {
-    (async () => {
-      const map: Record<number, string[]> = {};
-
-      for (const ing of ingredients) {
-        if (ing.ingredient_id > 0) {
-          try {
-            const data = await getIngredientUnitsByName(ing.name);
-            map[ing.ingredient_id] = data.units ?? [];
-          } catch {
-            map[ing.ingredient_id] = [];
-          }
-        }
-      }
-
-      setAllowedUnits(map);
-    })();
-  }, [ingredients]);
 
   // -----------------------------
   // 재료 자동완성
@@ -101,28 +81,26 @@ export default function RecipeCreate() {
   const item = ingredients[idx];
   if (!item.name.trim()) return;
 
-  // 이미 확정된 재료면 스킵
   if (item.ingredient_id > 0) return;
 
   try {
-    // 1️⃣ get_or_create 실행
     const created = await getOrCreateIngredient(item.name);
 
-    // 2️⃣ ingredient_id 세팅
     setIngredients(prev =>
       prev.map((it, i) =>
         i === idx
-          ? { ...it, ingredient_id: created.id }
+          ? {
+              ...it,
+              ingredient_id: created.id,
+              unit_name: created.units?.[0] ?? "",  // 기본 단위 자동 세팅
+            }
           : it
       )
     );
 
-    // 3️⃣ 단위 다시 조회
-    const unitData = await getIngredientUnitsByName(item.name);
-
     setAllowedUnits(prev => ({
       ...prev,
-      [created.id]: unitData.units ?? [],
+      [created.id]: created.units ?? [],
     }));
 
   } catch (e) {
@@ -172,22 +150,30 @@ export default function RecipeCreate() {
   debounceRef.current.set(localId, timer);
 };
 
-  const onPickIngredient = (idx: number, pick: SuggestItem) => {
+  const onPickIngredient = async (idx: number, pick: SuggestItem) => {
+  const localId = ingredients[idx].local_id;
+
+  const created = await getOrCreateIngredient(pick.name);
 
   setIngredients(prev =>
     prev.map((it, i) =>
       i === idx
         ? {
             ...it,
-            ingredient_id: pick.id,
-            name: pick.name,
-            unit_name: "",
+            ingredient_id: created.id,
+            name: created.name,
+            unit_name: created.units?.[0] ?? "",
           }
         : it
     )
   );
 
-  setSuggestOpen(prev => ({ ...prev, [idx]: false }));
+  setAllowedUnits(prev => ({
+    ...prev,
+    [created.id]: created.units ?? [],
+  }));
+
+  setSuggestOpen(prev => ({ ...prev, [localId]: false })); // ✅ 수정
 };
 
   // -----------------------------
