@@ -18,11 +18,14 @@ from BE.src.models.recipes import (
     Ingredient, IngredientUnit, ConvertRequestDTO
 )
 from BE.src.models.users import User
+from BE.src.models.favorites import RecipeFavorite
 
 # Helper 함수 호출
 from BE.src.utils.units import convert_unit
 from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
+
+
 
 logger = logging.getLogger("convert")
 
