@@ -24,7 +24,7 @@ MAP_LINK_PREFIXES = (
 )
 '''
 
-from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator, conint
 from typing import List, Optional, Dict, Any
@@ -930,6 +930,38 @@ async def upload_restaurant_thumbnail(
 
     return {"thumbnail_url": url_path}
 
+@router.delete("/restaurants/{restaurant_id}/thumbnail", status_code=204)
+async def delete_restaurant_thumbnail(
+    restaurant_id: int,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    restaurant = (await db.execute(
+        select(Restaurant).where(Restaurant.id == restaurant_id)
+    )).scalar_one_or_none()
+
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    if restaurant.uploaded_by != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # 썸네일 없으면 그냥 204로 끝 (멱등)
+    if not restaurant.thumbnail_url:
+        return
+
+    # OCI(또는 스토리지)에서 파일 삭제 시도
+    try:
+        delete_image_oci(restaurant.thumbnail_url)
+    except Exception as e:
+        # 스토리지 삭제 실패해도 DB는 정리해주는 게 UX상 보통 더 낫다
+        # (원하면 여기서 500으로 막아도 됨)
+        print(f"[썸네일 삭제 실패] {e}")
+
+    restaurant.thumbnail_url = None
+    await db.commit()
+    return
+# 이미지
 @router.delete("/restaurants/{restaurant_id}/images/{image_id}", status_code=204)
 async def delete_restaurant_image(
     restaurant_id: int,
