@@ -220,12 +220,15 @@ export default function RecipeCreate() {
   // 저장
   // -----------------------------
   const onSave = async () => {
-  if (!title.trim()) return;
+  if (!title.trim()) {
+    alert("제목을 입력해줘");
+    return;
+  }
 
   setSaving(true);
 
   try {
-    const resolvedIngredients = [];
+    const resolvedIngredients: any[] = [];
 
     for (const ing of ingredients) {
       if (!ing.name.trim()) continue;
@@ -233,10 +236,7 @@ export default function RecipeCreate() {
       if (ing.ingredient_id > 0) {
         resolvedIngredients.push(ing);
       } else {
-        const created = await getOrCreateIngredient(
-          ing.name,
-          ing.unit_type
-        );
+        const created = await getOrCreateIngredient(ing.name, ing.unit_type);
 
         resolvedIngredients.push({
           ...ing,
@@ -261,25 +261,39 @@ export default function RecipeCreate() {
       steps,
     };
 
+    console.log("CREATE BODY", body);
+
     const result = await createRecipe(body);
+    console.log("CREATE OK", result);
 
     if (thumbnailFile) {
       await replaceThumbnail(result.id, thumbnailFile);
+      console.log("THUMB OK");
     }
 
     for (const s of steps) {
       const files = stepFiles[s.step_order];
       if (files?.length) {
         await uploadStepImages(result.id, s.step_order, files);
+        console.log("STEP IMG OK", s.step_order);
       }
     }
 
     nav(`/recipe/${result.id}`);
+  } catch (err: any) {
+    console.error("SAVE FAIL", err);
+
+    const msg =
+      err?.response?.data?.detail ||
+      err?.response?.data?.message ||
+      err?.message ||
+      "저장 실패";
+
+    alert(typeof msg === "string" ? msg : JSON.stringify(msg));
   } finally {
     setSaving(false);
   }
 };
-
   // =======================================================
   // =====================  UI  ============================
   // =======================================================
