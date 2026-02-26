@@ -153,6 +153,16 @@ class FavoriteToggleResponse(BaseModel):
     is_favorite: bool
     message: str
 
+class RestaurantUpdate(BaseModel):
+    name: Optional[str] = None
+    location_link: Optional[str] = None
+    location_tag_id: Optional[int] = None
+    rating: Optional[conint(ge=0, le=5)] = None
+    summary: Optional[str] = None
+    description: Optional[str] = None
+    price_min: Optional[int] = None
+    price_max: Optional[int] = None
+    tag_ids: Optional[List[int]] = None
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
@@ -655,10 +665,10 @@ async def list_restaurants_in_viewport(
     return results[:max(1, min(limit, 500))]
 
 # 식당 정보 수정
-@router.put("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
+@router.patch("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
 async def update_restaurant(
     restaurant_id: int,
-    payload: RestaurantCreate,
+    payload: RestaurantUpdate,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
@@ -670,43 +680,62 @@ async def update_restaurant(
     is_uploader = restaurant.uploaded_by == current_user.id
     is_admin = current_user.is_admin
     if not (is_uploader or is_admin):
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-    
-    address, lat, lon = restaurant.address, restaurant.latitude, restaurant.longitude
-    if payload.location_link != restaurant.location_link or not (lat and lon):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    update_data = payload.dict(exclude_unset=True)
+
+    # ✅ 아무것도 안 바뀌었으면 그냥 기존 데이터 반환
+    if not update_data:
+        return await get_restaurant(restaurant_id, db, current_user)
+
+    # -------------------------
+    # 주소 재추출 필요한 경우
+    # -------------------------
+    if "location_link" in update_data:
         try:
-            loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
+            loc = await anyio.to_thread.run_sync(
+                extract_location_from_link,
+                str(update_data["location_link"])
+            )
             if loc:
-                address = loc.get("road_address") or loc.get("address")
-                lat, lon = loc.get("lat"), loc.get("lng")
-                print(f" (Update) 주소 재추출 성공: {address}")
+                restaurant.address = loc.get("road_address") or loc.get("address")
+                restaurant.latitude = loc.get("lat")
+                restaurant.longitude = loc.get("lng")
         except Exception as e:
-            print(f" (Update) 주소 추출 에러: {e}")
+            print(f"(Update) 주소 추출 에러: {e}")
 
-    # 필드 반영
-    restaurant.name = payload.name
-    restaurant.location_link = str(payload.location_link)
-    restaurant.location_tag_id = payload.location_tag_id
-    restaurant.rating = payload.rating
-    restaurant.summary = payload.summary
-    restaurant.description = payload.description
-    restaurant.price_min = payload.price_min
-    restaurant.price_max = payload.price_max
-    restaurant.address = address
-    restaurant.latitude = lat
-    restaurant.longitude = lon
+    # -------------------------
+    # 일반 필드 반영
+    # -------------------------
+    for field in [
+        "name",
+        "location_link",
+        "location_tag_id",
+        "rating",
+        "summary",
+        "description",
+        "price_min",
+        "price_max",
+    ]:
+        if field in update_data:
+            setattr(restaurant, field, update_data[field])
 
-    # 태그 갱신
-    await db.execute(
-        delete(RestaurantTag).where(RestaurantTag.restaurant_id == restaurant.id)
-    )
-    for tag_id in payload.tag_ids:
-        db.add(RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id))
+    # -------------------------
+    # 태그 갱신 (있을 때만)
+    # -------------------------
+    if "tag_ids" in update_data:
+        await db.execute(
+            delete(RestaurantTag).where(RestaurantTag.restaurant_id == restaurant.id)
+        )
+        for tag_id in update_data["tag_ids"]:
+            db.add(RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id))
 
     await db.commit()
     await db.refresh(restaurant)
 
-    # 응답용 조인
+    # -------------------------
+    # 응답용 데이터 구성
+    # -------------------------
     ParentTag = aliased(Tag)
 
     tag_rows = await db.execute(
@@ -736,10 +765,23 @@ async def update_restaurant(
         .where(Region.id == restaurant.location_tag_id)
     )
     rr = region_row.first()
-    region_dict = {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]} if rr else None
+    region_dict = (
+        {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]}
+        if rr else None
+    )
 
-    imgs_result = await db.execute(select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id))
-    images = [{"id": i.id, "image_url": i.image_url, "created_at": i.created_at} for i in imgs_result.scalars().all()]
+    imgs_result = await db.execute(
+        select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id)
+    )
+    images = [
+        {
+            "id": i.id,
+            "image_url": i.image_url,
+            "created_at": i.created_at,
+            "is_cover": getattr(i, "is_cover", False)
+        }
+        for i in imgs_result.scalars().all()
+    ]
 
     return {
         "id": restaurant.id,
@@ -759,7 +801,7 @@ async def update_restaurant(
         "created_at": restaurant.created_at,
         "images": images
     }
-
+    
 # 식당 삭제(Delete)
 @router.delete("/restaurants/{restaurant_id}")
 async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user_from_token)):
