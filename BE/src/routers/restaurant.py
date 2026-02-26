@@ -35,6 +35,7 @@ import anyio
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, and_, or_
+from sqlalchemy.orm import aliased
 
 from BE.src.dependencies import get_async_db, get_current_user_from_token
 from BE.src.models.users import User
@@ -309,13 +310,29 @@ async def get_restaurant(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
+    ParentTag = aliased(Tag)
+
     tag_rows = await db.execute(
-        select(Tag.id, Tag.name)
+        select(
+            Tag.id,
+            Tag.name,
+            Tag.parent_id,
+            ParentTag.name.label("parent_name")
+        )
         .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+        .outerjoin(ParentTag, ParentTag.id == Tag.parent_id)
         .where(RestaurantTag.restaurant_id == restaurant.id)
     )
-    tags = [{"id": t[0], "name": t[1]} for t in tag_rows.all()]
 
+    tags = [
+        {
+            "id": t.id,
+            "name": t.name,
+            "parent_id": t.parent_id,
+            "parent_name": t.parent_name
+        }
+        for t in tag_rows.all()
+    ]
     region_row = await db.execute(
         select(Region.id, Region.name, Region.parent_id, Region.depth)
         .where(Region.id == restaurant.location_tag_id)
@@ -690,12 +707,29 @@ async def update_restaurant(
     await db.refresh(restaurant)
 
     # 응답용 조인
-    tag_q = await db.execute(
-        select(Tag.id, Tag.name)
+    ParentTag = aliased(Tag)
+
+    tag_rows = await db.execute(
+        select(
+            Tag.id,
+            Tag.name,
+            Tag.parent_id,
+            ParentTag.name.label("parent_name")
+        )
         .join(RestaurantTag, RestaurantTag.tag_id == Tag.id)
+        .outerjoin(ParentTag, ParentTag.id == Tag.parent_id)
         .where(RestaurantTag.restaurant_id == restaurant.id)
     )
-    tags = [{"id": t[0], "name": t[1]} for t in tag_q.all()]
+
+    tags = [
+        {
+            "id": t.id,
+            "name": t.name,
+            "parent_id": t.parent_id,
+            "parent_name": t.parent_name
+        }
+        for t in tag_rows.all()
+    ]
 
     region_row = await db.execute(
         select(Region.id, Region.name, Region.parent_id, Region.depth)
