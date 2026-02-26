@@ -36,8 +36,6 @@ export default function LoginPage() {
 
       // 프로젝트 전체에서 이 키로 통일(인터셉터가 이거 읽음)
       localStorage.setItem("access_token", token);
-
-      alert("로그인 성공!");
       navigate("/main"); 
     } catch (err: any) {
       const status = err?.response?.status;
