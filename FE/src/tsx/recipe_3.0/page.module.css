@@ -9,11 +9,26 @@
   font-display: swap;
 }
 
+/* ✅ Pretendard: 굵기별 로드(400/600/800) -> 합성볼드 방지 */
 @font-face {
   font-family: "Pretendard";
   src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2")
     format("woff2");
   font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-SemiBold.woff2")
+    format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pretendard";
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-ExtraBold.woff2")
+    format("woff2");
+  font-weight: 800;
   font-display: swap;
 }
 
@@ -28,6 +43,10 @@
 /* =========================
    Header
 ========================= */
+.header {
+  position: relative;
+}
+
 .title {
   font-family: "SlowGothic", sans-serif;
   color: #8b0029;
@@ -44,7 +63,7 @@
 }
 
 /* =========================
-   Search
+   Search (있어도 되고 없어도 됨)
 ========================= */
 .search_container {
   display: flex;
@@ -73,6 +92,7 @@
   background: transparent;
   color: #8b0029;
   outline: none;
+  font-family: "Pretendard", sans-serif;
 }
 
 .input_box::placeholder {
@@ -89,10 +109,10 @@
   justify-content: center;
   margin: 20px 0 50px;
 }
+
 .ivory_btn {
   font-family: "SlowGothic", sans-serif;
 
-  /* 빨간 버튼과 완전히 동일 */
   width: 240px;
   padding: 20px 0 25px;
   border-radius: 18px;
@@ -105,15 +125,12 @@
   cursor: pointer;
   text-align: center;
 
-  /* 밑줄/링크 스타일 제거 */
   text-decoration: none;
   white-space: nowrap;
 
-  /* 위치 */
   display: block;
   margin: 100px auto 0;
 }
-
 
 .red_btn {
   font-family: "SlowGothic", sans-serif;
@@ -145,17 +162,9 @@
 }
 
 /* =========================
-   Recipe Container (하단 패널)
+   Recipe Grid Container (4.0 스타일로 통일)
 ========================= */
 .recipe_container {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: 100%;
-  max-width: 1200px;
-
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: 120px;
@@ -163,65 +172,65 @@
   column-gap: 25px;
   row-gap: 80px;
 
+  width: 100%;
   padding: 50px 10px 90px;
   box-sizing: border-box;
 
-  /* 🔥 핵심: 패널이 footer를 덮지 않게 투명 */
-  background: transparent;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  z-index: 10;
-
-  /* 🔥 핵심: ::before z-index가 안정적으로 먹게 */
-  isolation: isolate;
-}
-
-.recipe_container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-
-  background: #ffffff;
+  background-color: #ffffff;
   border-top-left-radius: 30px;
   border-top-right-radius: 30px;
 
-  z-index: -1;
-  pointer-events: none;
+  position: fixed;
+  bottom: 0;
+  z-index: 10;
+
+  overflow: hidden;
+
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 1200px;
 }
 
-
 /* =========================
-   Recipe Card
+   Recipe Card (식당 4.0 느낌)
 ========================= */
 .recipe_item {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+
   height: 120px;
   padding: 12px 14px;
+  box-sizing: border-box;
 
-  background: white;
+  background: #ffffff;
   border: 1.5px solid #8b0029;
   border-radius: 12px;
 
-  text-decoration: none;
-  box-sizing: border-box;
+  min-width: 0;
 }
 
-.recipe_descriptionContainer {
-  margin-top: auto;
+.recipe_contentCarrier {
   display: flex;
-  align-items: center;
-  justify-content: space-between; 
-  gap: 10px;
-  width: 100%; 
+  flex-direction: column;
+  min-width: 0;
 }
 
+/* ✅ 텍스트 렌더링 보정(식당처럼 쨍하게) */
+.recipe_title,
+.recipe_text,
+.recipe_uploader,
+.recipe_date {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 제목 */
 .recipe_title {
   font-family: "Pretendard", sans-serif;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 800; /* ✅ ExtraBold 실제 폰트 로드됨 */
   line-height: 1.15;
   color: #8b0029;
 
@@ -232,28 +241,67 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
+
+  text-align: left;
 }
 
+/* 보조 텍스트(= summary 자리) */
 .recipe_text {
   font-family: "Pretendard", sans-serif;
   font-size: 9px;
+  font-weight: 600; /* ✅ 식당 느낌으로 조금 더 힘 줌 */
   line-height: 1.2;
   color: #8b0029;
 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  text-align: left;
 }
 
-.recipe_reviewer {
+/* 하단 영역 */
+.recipe_descriptionContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.recipe_underContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-width: 0;
+  flex: 1;
+  gap: 2px;
+
+  text-align: left;
+}
+
+/* 업로더 */
+.recipe_uploader {
   font-family: "Pretendard", sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 400;
   color: rgb(141, 141, 141);
+
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  text-align: left;
 }
 
+/* 날짜 */
 .recipe_date {
+  font-family: "Pretendard", sans-serif;
   font-size: 11px;
+  font-weight: 400;
   color: rgb(141, 141, 141);
 
   white-space: nowrap;
@@ -261,24 +309,19 @@
   text-overflow: ellipsis;
 
   margin-top: 2px;
+  text-align: left;
 }
 
-
-.recipe_icon {
+/* 썸네일 */
+.recipe_thumbnail {
   width: 48px;
   height: 48px;
+  border-radius: 10px;
   background-color: #f2ece5;
-  border-radius: 8px;
   flex-shrink: 0;
-  margin-left: auto; 
+  margin-left: auto;
+  display: block;
 }
-
-.recipe_underContainer {
-  display: flex;
-  flex-direction: column;
-}
-
-
 
 /* =========================
    Footer Gradient
@@ -300,19 +343,30 @@
   pointer-events: none;
   z-index: 0;
 }
-
-
+.recipe_text {
+  margin-bottom: 10px;   /* 👈 핵심 */
+}
 /* =========================
-   Mobile (2 x 4)
+   Mobile (Carousel: 식당 4.0과 동일)
 ========================= */
 @media (max-width: 600px) {
   .recipe_container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: 120px;
-    row-gap: 30px;
-    column-gap: 15px;
+    grid-template-columns: unset;
+    grid-template-rows: repeat(2, 120px);
+    grid-auto-flow: column;
+    grid-auto-columns: 200px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
   }
 
+  .recipe_item {
+    width: 200px;
+    scroll-snap-align: start;
+  }
 
   .search_container {
     width: 85vw;
@@ -327,3 +381,4 @@
     font-size: 30px;
   }
 }
+
