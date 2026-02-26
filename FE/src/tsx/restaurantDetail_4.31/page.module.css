@@ -14,16 +14,15 @@
   position: sticky;
   top: 0;
   background: #fff;
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  display: flex;
+  justify-content: space-between; /* 양 끝 정렬 */
   align-items: center;
   padding: 12px 12px 8px;
   border-bottom: 1px solid #eee;
   z-index: 10;
 }
 
-.backBtn,
-.bookmarkBtn {
+.backBtn {
   height: 36px;
   width: 36px;
   border: none;
@@ -31,6 +30,9 @@
   font-size: 28px;
   line-height: 1;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .title {
@@ -38,6 +40,26 @@
   font-size: 16px;
   margin: 0;
   color: #8b0029;
+  flex: 1; /* 중앙 정렬을 위해 플렉스 공간 차지 */
+}
+
+.rightActions {
+  display: flex;
+  gap: 4px; /* 버튼 사이 간격 */
+  align-items: center;
+}
+
+.actionBtn {
+  height: 36px;
+  width: 36px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .body {

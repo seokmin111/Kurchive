@@ -102,6 +102,8 @@ export default function RestaurantDetailPage() {
   const [serverImages, setServerImages] = useState<RestaurantDetail["images"]>([]);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
+  const [isZzim, setIsZzim] = useState(false);
+
   // --- GET detail ---
   useEffect(() => {
     if (!rid || Number.isNaN(rid)) return;
@@ -157,8 +159,28 @@ export default function RestaurantDetailPage() {
       }
     };
 
+    const fetchFavorite = async () => {
+      try {
+        const res = await client.get(`/restaurants/${rid}/favorite`);
+        setIsZzim(res.data.is_favorite);
+      } catch (e) {
+        console.error("즐겨찾기 상태 조회 실패:", e);
+      }
+    };
+
     fetchDetail();
+    fetchFavorite();
   }, [rid]);
+
+  const toggleFavorite = async () => {
+    try {
+      const res = await client.post(`/restaurants/${rid}/favorite`);
+      setIsZzim(res.data.is_favorite);
+    } catch (e) {
+      console.error(e);
+      alert("즐겨찾기 상태를 변경할 수 없습니다.");
+    }
+  };
 
   // --- 태그 자동완성: debounce fetch ---
   useEffect(() => {
@@ -278,16 +300,39 @@ export default function RestaurantDetailPage() {
   if (loading) return <div className={styles.screen} style={{ padding: 16 }}>로딩중...</div>;
   if (errMsg) return <div className={styles.screen} style={{ padding: 16 }}>{errMsg}</div>;
 
-  return (
+   return (
     <div className={styles.screen}>
       <header className={styles.topbar}>
         <button className={styles.backBtn} onClick={() => nav(-1)} aria-label="back">
           ‹
         </button>
         <h1 className={styles.title}>식당 상세</h1>
-        <button className={styles.bookmarkBtn} type="button" aria-label="bookmark">
-          ⌁
-        </button>
+        
+        {/* 우상단: 펜 버튼(작성자만) + 하트 버튼 배치 */}
+        <div className={styles.rightActions}>
+          {isOwner && (
+            <button
+              className={styles.actionBtn}
+              type="button"
+              aria-label="edit"
+              onClick={() => {
+                alert("내용을 수정하고 페이지 하단의 '저장' 버튼을 눌러주세요.");
+              }}
+              title="수정하기"
+            >
+              ✏️
+            </button>
+          )}
+          
+          <button
+            className={styles.actionBtn}
+            type="button"
+            aria-label="bookmark"
+            onClick={toggleFavorite}
+          >
+            {isZzim ? "❤️" : "🤍"}
+          </button>
+        </div>
       </header>
 
       <main className={styles.body}>

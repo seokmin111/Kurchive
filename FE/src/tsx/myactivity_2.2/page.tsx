@@ -3,31 +3,43 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
-import { getMyFavoriteRestaurants, FavoriteRestaurant } from "../../api/mypage";
+// ✅ client 직접 임포트
+import client from "../../api/client";
 
 export default function MyActivity() {
   const navigate = useNavigate();
   
   // 최근 저장한 식당 목록 상태
-  const [recentItems, setRecentItems] = useState<FavoriteRestaurant[]>([]);
+  const [recentItems, setRecentItems] = useState<any[]>([]);
+  // 레시피 찜 개수 상태 추가
+  const [recipeCount, setRecipeCount] = useState(0);
 
   useEffect(() => {
-    // 찜한 식당 목록 가져오기 API 호출
-    getMyFavoriteRestaurants()
-      .then((data) => {
-        // 최신순으로 보여주기 위해 배열 역순 정렬 (API가 오래된 순이라면)
-        // 만약 API가 이미 최신순이라면 .reverse() 제거
-        const sorted = [...data].reverse();
-        setRecentItems(sorted);
-      })
-      .catch((err) => console.error("최근 활동 로딩 실패", err));
+    const fetchFavorites = async () => {
+      try {
+        // 1. 식당 찜 목록 가져오기 (백엔드에서 이미 최신순 정렬됨)
+        const restRes = await client.get('/mypage/logs/restaurants');
+        // 응답이 배열인지 { data: [...] } 구조인지 안전하게 파싱
+        const restData = Array.isArray(restRes.data) ? restRes.data : (restRes.data?.data || []);
+        setRecentItems(restData);
+
+        // 2. 레시피 찜 목록 가져오기 (개수 표시용)
+        const recipeRes = await client.get('/mypage/logs/favorite-recipes');
+        const recipeData = Array.isArray(recipeRes.data) ? recipeRes.data : (recipeRes.data?.data || []);
+        setRecipeCount(recipeData.length);
+        
+      } catch (err) {
+        console.error("최근 활동 로딩 실패", err);
+      }
+    };
+
+    fetchFavorites();
   }, []);
 
   return (
     <div className={style.mainPage}>
       {/* 1. 상단 헤더 */}
       <header className={style.topBar}>
-        {/* 뒤로가기 버튼 */}
         <img
           src="/backstep_white_background.png" 
           alt="Back"
@@ -50,7 +62,6 @@ export default function MyActivity() {
         <h2 className={style.sectionTitle}>즐겨찾기 목록</h2>
         <div className={style.underline} />
 
-        {/* 배경 로고 (흐릿하게) */}
         <img
           src="/curson_logo.png"
           alt="Background Logo"
@@ -62,7 +73,7 @@ export default function MyActivity() {
           {/* 식당 목록 카드 */}
           <div 
             className={style.listItem} 
-            onClick={() => navigate('/my-restaurant-archive')} // App.tsx에 등록된 경로로 이동
+            onClick={() => navigate('/my-restaurant-archive')} 
           >
             <span className={style.listText}>식당 목록</span>
             <div className={style.listRight}>
@@ -78,13 +89,14 @@ export default function MyActivity() {
           {/* 레시피 목록 카드 */}
           <div 
             className={style.listItem2} 
-            onClick={() => navigate('/my-recipe-archive')} // App.tsx에 등록된 경로로 이동
+            onClick={() => navigate('/my-recipe-archive')} 
           >
             <span className={style.listText}>레시피 목록</span>
             <div className={style.listRight}>
               <div className={style.heartCount}>
                 <span className={style.heartIcon}>♡</span>
-                <span>0</span> {/* 레시피 API 연동 전 0 처리 */}
+                {/* 찜한 레시피 개수 표시 */}
+                <span>{recipeCount}</span>
               </div>
             </div>
             <span className={style.arrow}>›</span>
@@ -95,7 +107,7 @@ export default function MyActivity() {
       {/* 3. 최근 활동 섹션 (하단 스크롤 영역) */}
       <section className={style.recentSection}>
         <div className={style.dotNode}></div>
-        <p className={style.recentTitle}>내가 최근 저장한 식당 &amp;레시피</p>
+        <p className={style.recentTitle}>내가 최근 저장한 식당 &amp; 레시피</p>
         <div className={style.underline2} />
         
         <div className={style.recentItems}>
