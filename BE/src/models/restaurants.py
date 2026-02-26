@@ -19,6 +19,7 @@ class Restaurant(Base):
     description = Column(Text)
     price_min = Column(Integer, nullable=False)
     price_max = Column(Integer, nullable=False)
+    thumbnail_url = Column(String(500), nullable=True)
     created_at = Column(Float, default=lambda: time.time())
 
     # 관계

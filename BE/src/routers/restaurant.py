@@ -288,14 +288,6 @@ async def search_restaurants_by_name(
 
     out = []
     for r in restaurants:
-        img_row = await db.execute(
-            select(RestaurantImage)
-            .where(RestaurantImage.restaurant_id == r.id)
-            .order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc())
-            .limit(1)
-        )
-        img = img_row.scalar_one_or_none()
-
         out.append({
             "id": r.id,
             "name": r.name,
@@ -304,7 +296,7 @@ async def search_restaurants_by_name(
             "summary": r.summary,
             "price_min": r.price_min,
             "price_max": r.price_max,
-            "thumbnail_url": img.image_url if img else None,
+            "thumbnail_url": r.thumbnail_url
         })
     return out
 
@@ -351,14 +343,16 @@ async def get_restaurant(
     region_dict = {"id": rr[0], "name": rr[1], "parent_id": rr[2], "depth": rr[3]} if rr else None
 
     imgs_result = await db.execute(
-        select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id)
-    )
+    select(RestaurantImage)
+    .where(RestaurantImage.restaurant_id == restaurant.id)
+    .order_by(RestaurantImage.created_at.asc())
+)
+
     image_list = [
         {
             "id": i.id,
             "image_url": i.image_url,
             "created_at": i.created_at,
-            "is_cover": getattr(i, "is_cover", False)
         }
         for i in imgs_result.scalars().all()
     ]
@@ -379,6 +373,7 @@ async def get_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
+        "thumbnail_url": restaurant.thumbnail_url,
         "images": image_list
     }
 
@@ -777,8 +772,7 @@ async def update_restaurant(
         {
             "id": i.id,
             "image_url": i.image_url,
-            "created_at": i.created_at,
-            "is_cover": getattr(i, "is_cover", False)
+            "created_at": i.created_at
         }
         for i in imgs_result.scalars().all()
     ]
@@ -799,6 +793,7 @@ async def update_restaurant(
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
+        "thumbnail_url": restaurant.thumbnail_url,
         "images": images
     }
     
@@ -878,23 +873,62 @@ async def upload_restaurant_images(
         await db.flush()
 
     out: TList[ImageOut] = []
-    for i, u in enumerate(files):
+    for u in files:
         _, url_path = await save_image(u, f"restaurants/{restaurant_id}")
 
-        # 첫 번째 업로드 이미지는 자동으로 썸네일로 지정
         img = RestaurantImage(
             restaurant_id=restaurant.id,
             image_url=url_path,
-            created_at=time.time(),
-            is_cover=(i == 0)
+            created_at=time.time()
         )
+
         db.add(img)
         await db.flush()
-        out.append(ImageOut(id=img.id, image_url=img.image_url, created_at=img.created_at))
 
+        out.append(
+            ImageOut(
+                id=img.id,
+                image_url=img.image_url,
+                created_at=img.created_at
+            )
+        )
     await db.commit()
     return out
 
+# thumbnail
+@router.post("/restaurants/{restaurant_id}/thumbnail", status_code=201)
+async def upload_restaurant_thumbnail(
+    restaurant_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    restaurant = (await db.execute(
+        select(Restaurant).where(Restaurant.id == restaurant_id)
+    )).scalar_one_or_none()
+
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    if restaurant.uploaded_by != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if file.content_type not in ALLOWED_MIME:
+        raise HTTPException(status_code=415, detail="Unsupported file type")
+
+    _, url_path = await save_image(file, f"restaurants/{restaurant_id}/thumbnail")
+
+    # 기존 썸네일 삭제 (선택)
+    if restaurant.thumbnail_url:
+        try:
+            delete_image_oci(restaurant.thumbnail_url)
+        except:
+            pass
+
+    restaurant.thumbnail_url = url_path
+    await db.commit()
+
+    return {"thumbnail_url": url_path}
 
 @router.delete("/restaurants/{restaurant_id}/images/{image_id}", status_code=204)
 async def delete_restaurant_image(
@@ -947,7 +981,6 @@ async def list_restaurant_images(
 # 이미지 메타 수정
 from typing import Optional as _Optional
 class ImagePatch(BaseModel):
-    is_cover: _Optional[bool] = None
     caption: _Optional[str] = None
     sort_order: _Optional[int] = None
 
@@ -973,19 +1006,6 @@ async def patch_restaurant_image(
     )).scalar_one_or_none()
     if not img:
         raise HTTPException(status_code=404, detail="Image not found")
-
-    if body.is_cover is not None:
-        if body.is_cover:
-            await db.execute(
-                update(RestaurantImage)
-                .where(RestaurantImage.restaurant_id == r.id)
-                .values(is_cover=False)
-            )
-        img.is_cover = body.is_cover
-    if body.caption is not None:
-        img.caption = body.caption
-    if body.sort_order is not None:
-        img.sort_order = body.sort_order
 
     await db.commit()
     await db.refresh(img)

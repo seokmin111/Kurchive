@@ -208,6 +208,7 @@ useEffect(() => {
     }
   })();
 }, []);
+  
 
   const handleFoodParentClick = (parentId: number) => {
     if (selectedFoodParentId === parentId) return;
@@ -300,7 +301,6 @@ useEffect(() => {
       }
     })();
   }, [selectedFoodParentId]);
-
 
 // (E) 기존 식당 데이터 로드 + 초기값 주입
 useEffect(() => {
@@ -395,7 +395,7 @@ useEffect(() => {
         price_max: priceMax as number,
         tag_ids: selectedFoodTags.map((t) => t.id)
       };
-      await client.put(`/restaurants/${id}`, payload);
+      await client.patch(`/restaurants/${id}`, payload);
 
       // commit 보장
       await client.get(`/restaurants/${id}`);
@@ -418,6 +418,7 @@ useEffect(() => {
       setDetailImagePreviews([]);
 
       setToast("수정 완료!");
+
 
 setTimeout(() => {
   nav(`/restaurant/${id}`, { replace: true });
