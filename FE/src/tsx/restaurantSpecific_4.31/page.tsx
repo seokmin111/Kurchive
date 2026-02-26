@@ -11,7 +11,7 @@ type Tag = {
   parent_name?: string | null;
 };
 type Region = { id: number; name: string };
-type Image = { id: number; image_url: string; is_cover?: boolean };
+type Image = { id: number; image_url: string; };
 
 type RestaurantDetail = {
   id: number;
@@ -26,6 +26,7 @@ type RestaurantDetail = {
   description: string;
   price_min: number;
   price_max: number;
+  thumbnail_url?: string | null;
   images?: Image[];
 };
 
@@ -98,6 +99,7 @@ export default function RestaurantSpecific() {
         
         setRestaurant(detailRes.data.data || detailRes.data);
         setIsZzim(favRes.data.is_favorite);
+        console.log(detailRes.data);
       } catch (e: any) {
         setErr(e?.response?.data?.detail ?? "식당 정보를 불러오지 못했습니다.");
       } finally {
@@ -105,8 +107,9 @@ export default function RestaurantSpecific() {
       }
     })();
   }, [restaurantId]);
+  
 
-  // ✅ 즐겨찾기 토글 함수
+  // 즐겨찾기 토글 함수
   const toggleFavorite = async () => {
     try {
       const res = await client.post(`/restaurants/${restaurantId}/favorite`);
@@ -137,11 +140,7 @@ export default function RestaurantSpecific() {
     return authorCheck || adminCheck;
   }, [currentUser, restaurant]);
 
-  const coverUrl = useMemo(() => {
-    const imgs = restaurant?.images ?? [];
-    const cover = imgs.find((x) => x.is_cover);
-    return cover?.image_url ?? imgs[0]?.image_url ?? "";
-  }, [restaurant]);
+  const coverUrl = restaurant?.thumbnail_url ?? "";
 
   if (loading) return <div className={style.main}>불러오는 중...</div>;
   if (err || !restaurant) return <div className={style.main}>{err}</div>;
@@ -289,23 +288,24 @@ export default function RestaurantSpecific() {
             width: "100%"
           }}
         >
-          {restaurant.images
-          ?.filter((img) => !img.is_cover)
-          .length > 0 && (
-          <div className={style.imageGallery}>
-            {restaurant.images
-              ?.filter((img) => !img.is_cover)
-              .map((img) => (
-                <img
-                  key={img.id}
-                  src={img.image_url}
-                  alt="restaurant"
-                  className={style.galleryImage}
-                  onClick={() => setSelectedImage(img.image_url)}
-                />
-              ))}
-          </div>
-        )}
+          {restaurant.images?.length > 0 && (
+  <div className={style.imageGallery}>
+    {restaurant.images
+      .filter((img) => {
+        if (!restaurant.thumbnail_url) return true;
+        return img.image_url !== restaurant.thumbnail_url;
+      })
+      .map((img) => (
+        <img
+          key={img.id}
+          src={img.image_url}
+          alt="restaurant"
+          className={style.galleryImage}
+          onClick={() => setSelectedImage(img.image_url)}
+        />
+      ))}
+  </div>
+)}
           {/* 이미지 확대 모달 */}
           {selectedImage && (
             <div className={style.imageModal}>

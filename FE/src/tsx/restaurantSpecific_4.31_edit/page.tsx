@@ -59,6 +59,7 @@ export default function RestaurantEditPage() {
   // -------------------------
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   // -------------------------
   // 기본 입력 (아카이브 구조)
@@ -144,11 +145,9 @@ useEffect(() => {
   };
 
   // 대표 이미지 url (cover 우선)
-  const coverUrl = useMemo(() => {
-    const imgs = existingImages ?? [];
-    const cover = imgs.find((x) => x.is_cover);
-    return cover?.image_url ?? imgs[0]?.image_url ?? "";
-  }, [existingImages]);
+  const coverUrl = mainImagePreview
+  ? mainImagePreview
+  : thumbnailUrl ?? "";
 
   // 상세 이미지 리스트(대표 제외)
   const detailExisting = useMemo(() => {
@@ -320,6 +319,7 @@ useEffect(() => {
       setPriceMin(data.price_min ?? "");
       setPriceMax(data.price_max ?? "");
       setExistingImages(data.images ?? []);
+      setThumbnailUrl(data.thumbnail_url ?? null);
       setDetailReview((data.description ?? "").toString());
       setSelectedFoodTags(data.tags ?? []);
 
@@ -401,13 +401,21 @@ useEffect(() => {
       await client.get(`/restaurants/${id}`);
 
       // 이미지 업로드 (아카이브 구조: 대표 1 + 상세 여러장)
-      const files: File[] = [];
-      if (mainImageFile) files.push(mainImageFile);
-      if (detailImageFiles.length) files.push(...detailImageFiles);
-
-      if (files.length) {
+      // 1️⃣ 썸네일 따로 업로드
+      if (mainImageFile) {
         const fd = new FormData();
-        files.forEach((f) => fd.append("files", f));
+        fd.append("file", mainImageFile);
+
+        await client.post(`/restaurants/${id}/thumbnail`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      // 2️⃣ 상세 이미지만 업로드
+      if (detailImageFiles.length) {
+        const fd = new FormData();
+        detailImageFiles.forEach((f) => fd.append("files", f));
+
         await client.post(`/restaurants/${id}/images`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
