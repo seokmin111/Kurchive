@@ -4,7 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import client from "../../api/client";
 
-type Tag = { id: number; name: string };
+type Tag = {
+  id: number;
+  name: string;
+  parent_id?: number | null;
+  parent_name?: string | null;
+};
 type Region = { id: number; name: string };
 type Image = { id: number; image_url: string; is_cover?: boolean };
 
@@ -246,10 +251,15 @@ export default function RestaurantSpecific() {
 
         {/* 음식 태그 */}
         {restaurant.tags.map((tag) => (
-          <div key={tag.id} className={style.tags_tag}>
-            {tag.name}
-          </div>
-        ))}
+        <div key={tag.id} className={style.tags_tag}>
+          {tag.parent_name && (
+            <span className={style.parentTag}>
+              {tag.parent_name}
+            </span>
+          )}
+          <span>{tag.name}</span>
+        </div>
+      ))}
 
         {/* 아무것도 없을 때 */}
         {!restaurant.region && restaurant.tags.length === 0 && (

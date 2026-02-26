@@ -323,3 +323,9 @@
   align-items: center;
   justify-content: center;
 }
+.parentTag {
+  opacity: 0.9;
+  font-size: 12px;
+  margin-right: 4px;
+  color:#8B0029;
+}
