@@ -55,9 +55,9 @@ export default function RestaurantSearchPage() {
     } catch (e: any) {
       console.error(e);
       if (e?.response?.status === 401) {
-        setErrMsg("로그인이 필요합니다. 다시 로그인해줘!");
+        setErrMsg("로그인이 필요합니다.");
       } else {
-        setErrMsg("식당 목록을 불러오지 못했어.");
+        setErrMsg("식당 목록을 불러오지 못했습니다.");
       }
       setItems([]);
     } finally {
