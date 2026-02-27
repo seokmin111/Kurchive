@@ -148,7 +148,18 @@ export default function RestaurantSearchPage() {
               </div>
             </div>
           ))}
-
+        <button
+          className={styles.mapFab}
+          onClick={() => navigate("/restaurant/map")}
+          aria-label="지도 탐색"
+        >
+          <img
+            src="/map.svg"
+            alt="지도"
+            className={styles.mapFabIcon}
+          />
+          <span className={styles.mapFabText}>지도</span>
+        </button>
 
         {!loading && !errMsg && items.length === 0 && (
           <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없어!</div>
