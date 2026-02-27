@@ -38,6 +38,7 @@ type RestaurantDetail = {
   price_max: number;
   tags: Tag[];
   images?: Image[];
+  thumbnail_url?: string | null;
 };
 
 async function safeDeleteRestaurantImage(restaurantId: number, imageId: number) {
@@ -362,6 +363,20 @@ useEffect(() => {
   e.currentTarget.value = "";
 };
 
+ // 썸네일 삭제
+ const deleteThumbnail = async () => {
+  const ok = window.confirm("대표 이미지를 삭제할까요?");
+  if (!ok) return;
+
+  try {
+    await client.delete(`/restaurants/${id}/thumbnail`);
+    setThumbnailUrl(null);
+    setMainImageFile(null);
+    setMainImagePreview(null);
+  } catch (e: any) {
+    alert(e?.response?.data?.detail ?? e?.message ?? "썸네일 삭제 실패");
+  }
+};
   // =========================================================
   // 저장
   // =========================================================
@@ -546,19 +561,16 @@ setTimeout(() => {
 
             {/* 대표 이미지가 서버에 있고, 삭제도 제공(아카이브 구조: 삭제 가능) */}
             {coverUrl && !mainImagePreview && (
-              <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  type="button"
-                  className={styles.trashButton}
-                  onClick={() => {
-                    const cover = (existingImages ?? []).find((x) => x.is_cover) ?? existingImages?.[0];
-                    if (cover) deleteExisting(cover.id);
-                  }}
-                >
-                  대표 이미지 삭제
-                </button>
-              </div>
-            )}
+            <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.trashButton}
+                onClick={deleteThumbnail}   // ✅ 여기
+              >
+                대표 이미지 삭제
+              </button>
+            </div>
+          )}
 
             <div className={styles.labelRow}>
               <span className={styles.label}>식당 맵 링크 :</span>

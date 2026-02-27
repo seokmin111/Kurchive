@@ -40,11 +40,12 @@ export default function RestaurantSearchPage() {
   const [errMsg, setErrMsg] = useState("");
 
   const getRestaurants = async () => {
+
     setLoading(true);
     setErrMsg("");
     try {
       const res = await client.get("/restaurants");
-
+      console.log(res.data);
     //  최신순 정렬 기준이 없으면 일단 id 큰 게 최신이라고 가정
     const list = Array.isArray(res.data) ? res.data : [];
     const recent8 = [...list]
