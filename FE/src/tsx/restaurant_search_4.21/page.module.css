@@ -822,3 +822,4 @@
 .Price__title, .atmo__title {
   display: none; /* 아래 JSX 수정에서 section_title로 교체할 것이므로 숨김 */
 }
+
