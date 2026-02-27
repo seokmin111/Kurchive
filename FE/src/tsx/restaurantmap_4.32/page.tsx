@@ -113,7 +113,7 @@ export default function MapPage() {
 
       <button className={style.backButton} onClick={() => navigate(-1)}>
         <img
-          src="/../public/backstep_button.svg.png"
+          src="/backstep_button.svg.png"
           alt="Back"
           style={{ width: "100%", height: "100%", objectFit: "contain" }}
         />
