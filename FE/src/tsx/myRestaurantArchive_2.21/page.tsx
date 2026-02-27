@@ -108,11 +108,13 @@ export default function RestaurantArchivePage() {
         
         // 백엔드에서 최신순으로 오므로 .reverse()를 하지 않습니다.
         setRestaurants(favData);
-      } catch (error) {
-        console.error("데이터 로딩 실패:", error);
-      } finally {
-        setLoading(false);
-      }
+      } catch (error: any) {
+  console.error("데이터 로딩 실패:", error);
+  console.error("response:", error?.response);
+  console.error("status:", error?.response?.status);
+  console.error("data:", error?.response?.data);
+}
+
     };
 
     fetchData();

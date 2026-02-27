@@ -137,8 +137,8 @@ export default function RecipeArchivePage() {
 
       {/* 페이지 제목 */}
       <div className={styles.pageTitle}>
-        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님의 레시피 아카이브
-      </div>
+              <span className={styles.username}>{user?.nickname || "사용자"}</span> 님의 식당 아카이브
+       </div>
 
       {/* 검색바 */}
       <div className={styles.searchSection}>
