@@ -13,6 +13,7 @@ class Favorite(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # user랑 restaurant 테이블 접근
     user = relationship("User")
