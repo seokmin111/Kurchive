@@ -482,7 +482,8 @@ async def list_restaurants(
             "latitude": r.latitude,
             "longitude": r.longitude,
             "uploaded_by": r.uploaded_by,
-            "created_at": r.created_at
+            "created_at": r.created_at,
+            "thumbnail_url": r.thumbnail_url
         }
         for r in restaurants
     ]
