@@ -102,9 +102,9 @@ export default function Mypage() {
                     나의 찜목록 보러가기</div>
 
                 <div className={styles.mychoice__specefic}>
-                  <span className={styles.mychoice__restaurant}>식당</span>
+                  <span className={styles.mychoice__restaurant} onClick={() => navigate("/my-restaurant-archive")}>식당</span>
                   <span className={styles.mychoice__bar}> | </span>
-                  <span className={styles.mychoice__recipe}>레시피</span>
+                  <span className={styles.mychoice__recipe}  onClick={() => navigate("/my-recipe-archive")}>레시피</span>
                 </div>
             </div>
             <div className={styles.leave}>

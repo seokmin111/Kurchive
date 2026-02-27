@@ -199,6 +199,12 @@
     margin-bottom: 10px;
     text-decoration: none;
     color: white;
+    cursor: pointer;
+}
+
+.mychoice__restaurant,
+.mychoice__recipe {
+    cursor: pointer;
 }
 
 .mychoice__specefic{
