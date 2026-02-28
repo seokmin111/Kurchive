@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "http://146.56.117.219:8000/api",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: false,
   timeout: 10000,
 });
