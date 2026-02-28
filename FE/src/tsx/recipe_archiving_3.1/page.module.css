@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 480px;
+  width: 100%;
   margin: 0 auto;
   background-color: #ffffff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
@@ -16,10 +16,18 @@
   text-rendering: optimizeLegibility;
 }
 
+@media (min-width: 768px) {
+  .container {
+    max-width: 657px;
+    margin: 0 auto;
+    box-shadow: none;
+  }
+}
+
 /* ===== Banner ===== */
 .banner {
   width: 100%;
-  height: 150px;
+  height: 15%;
   background-color: #8b0028;
   display: flex;
   align-items: flex-start;
@@ -58,6 +66,7 @@
   font-size: 24px;
   font-weight: 900;
   color: #8b0028;
+  width: 80%;
 }
 
 .foodDescription {
@@ -190,15 +199,23 @@ select {
   table-layout: fixed; /* 열 너비 안정화 */
 }
 
-/* 부모가 스크롤 담당 */
-.ingredientBody {
+.ingredientSection {
   width: 100%;
-  overflow-x: auto;     /* 핵심 */
-  display: block;       /* flex 제거 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tableScroll {
+  width: 90%;
+  overflow-x: auto;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* 테이블이 좁아지면 글자를 쪼개지 말고 스크롤 */
-.ingredientBody .table {
+.tableScroll .table {
   min-width: 420px; /* 이 값보다 작아지면 가로 스크롤 */
 }
 
@@ -387,7 +404,7 @@ select {
 /* 표 아래 / 단계 목록 아래에 붙는 “추가하기” 버튼 */
 .addRowBtn {
   width: 90%;
-  margin: 12px 0 2px;
+  margin: 12px auto 2px;
   padding: 14px 14px;
   border-radius: 14px;
   border: 1px solid rgba(139, 0, 40, 0.45);
@@ -700,7 +717,7 @@ select {
 
 .createActionWrap {
   width: 90%;
-  margin: 32px 0 60px;
+  margin: 32px auto 60px;
 }
 
 .createBtn {

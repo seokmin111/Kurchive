@@ -56,7 +56,7 @@ export default function LoginPage() {
 
   return (
     <div className={style.container}>
-      <header className={style.header}>베너 이미지</header>
+      <header className={style.header}>배너 이미지</header>
       <main className={style.main}>
         <div className={style.logoGroup}>
           <img className={style.logo} src="/curson_logo.png" alt="logo" />
@@ -71,7 +71,7 @@ export default function LoginPage() {
               type="text"
               id="id"
               name="id"
-              placeholder="Value"
+              placeholder="ID"
               required
               value={formData.id}
               onChange={handleChange}
@@ -84,7 +84,7 @@ export default function LoginPage() {
               type="password"
               id="password"
               name="password"
-              placeholder="Value"
+              placeholder="Password"
               required
               value={formData.password}
               onChange={handleChange}

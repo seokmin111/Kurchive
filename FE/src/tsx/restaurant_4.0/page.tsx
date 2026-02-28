@@ -162,7 +162,7 @@ export default function RestaurantSearchPage() {
         </button>
 
         {!loading && !errMsg && items.length === 0 && (
-          <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없어!</div>
+          <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없습니다</div>
         )}
       </div>
 
