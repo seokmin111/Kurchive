@@ -2,16 +2,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 812px;
-  width: 375px;
+  width: 100%;
+  min-height: 100vh;
   background-color: #ffffff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-  margin: 0 auto; /* 중앙 정렬 */
 }
-.logo {
-  width: 56px;
-  height: 56px;
+
+/* 데스크탑에서만 카드형 */
+@media (min-width: 768px) {
+  .container {
+    max-width: 375px;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  }
 }
+
 .header {
   width: 100%;
   height: 96px;
@@ -22,6 +26,7 @@
   font-size: 14px;
   color: #333;
 }
+
 .main {
   flex-grow: 1;
   display: flex;
@@ -30,14 +35,20 @@
   width: 100%;
   padding: 0 30px;
 }
+
 .footer {
-  width: 375px;
+  width: 100%;
   height: 96px;
-  background-color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+.logo {
+  width: 56px;
+  height: 56px;
+}
+
+
 .logoGroup {
   margin-top: 45px;
   text-align: center;
