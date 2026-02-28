@@ -8,8 +8,6 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
@@ -26,14 +24,22 @@ services:
       - .env
     environment:
       DATABASE_URL: "mysql+aiomysql://devuser:kurchive202508%21@kurchive-mysql:3306/kurchive"
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
-        - /home/ubuntu/Kurchive/wait-for-mysql.sh:/app/wait-for-mysql.sh
-        - ./static/uploads:/app/static/uploads
-        - /home/ubuntu/.oci:/root/.oci
-
+      - /home/ubuntu/Kurchive/wait-for-mysql.sh:/app/wait-for-mysql.sh
+      - ./static/uploads:/app/static/uploads
+      - /home/ubuntu/.oci:/root/.oci
     command: ["sh", "/app/wait-for-mysql.sh", "python", "-m", "uvicorn", "BE.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-volumes:
-  mysql_data:
+  nginx:
+    image: nginx:latest
+    container_name: kurchive-nginx
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./static/uploads:/app/static/uploads
