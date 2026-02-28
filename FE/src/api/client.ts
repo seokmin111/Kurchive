@@ -15,6 +15,7 @@ client.interceptors.request.use((config) => {
   }
   return config;
 });
+console.log("API BASE:", import.meta.env.VITE_API_URL);
 
 // 응답 인터셉터: 401/403이면 로그인으로
 client.interceptors.response.use(
