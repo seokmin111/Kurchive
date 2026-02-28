@@ -43,6 +43,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/dist:/usr/share/nginx/html
       - ./static/uploads:/app/static/uploads
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
