@@ -62,20 +62,16 @@ export default function RecipeMainPage() {
     <main className={styles.nomrg}>
       {/* 헤더 (식당 메인처럼) */}
       <div className={styles.header}>
-        <Link to="/main">
-          <button className={styles.back_btn}>
-            &lt;<br />
-            메인화면으로 <br /> 돌아가기
-          </button>
-        </Link>
-
-        <br />
-        <h1 className={styles.title} style={{ display: "inline" }}>
-          커카이브
-        </h1>
-        <p className={styles.sub_title} style={{ display: "inline" }}>
-          우리만의 미식 지도
-        </p>
+        <button
+          className={styles.back_btn}
+          onClick={() => navigate("/main")}
+          >
+          &lt;
+        </button>
+        <div className={styles.title_group}>
+          <h1 className={styles.title}>커카이브</h1>
+          <p className={styles.sub_title}>우리만의 미식 지도</p>
+        </div>
       </div>
 
       {/* 검색창 제거 / 아이보리 버튼만 */}
