@@ -1,11 +1,6 @@
-h1 {
-    font-family: 'SlowGothic', sans-serif;
-    color: #8B0029;
-    font-size: 48px !important;
-    font-weight: 500 !important;
-    line-height: 0.7;
-    margin: 0px 0px 30px;
-}
+/* =========================
+    FONT
+========================= */
 
 @font-face {
     font-family: 'SlowGothic';
@@ -21,42 +16,59 @@ h1 {
     font-display: swap;
 }
 
+/* =========================
+    BASE (Mobile First)
+========================= */
+
 body {
     font-family: 'Pretendard', sans-serif;
+    margin: 0;
+}
+
+div {
+    text-align: center;
+}
+
+h1 {
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    font-size: 32px;        /* 모바일 기준 */
+    font-weight: 500;
+    line-height: 1.1;
+    margin: 0 0 20px;
 }
 
 h2 {
-    font-size: 24px !important;
+    font-size: 18px;
 }
 
 a {
     text-decoration: none;
 }
 
-a:link, a:visited {
-    color : #888
+a:link,
+a:visited {
+    color: #888;
 }
 
 a:hover {
-    color : #8B0029
+    color: #8B0029;
 }
 
 input:focus {
     border-radius: 8px;
-    border : 2px solid #8B0029;
-    outline : none;
+    border: 2px solid #8B0029;
+    outline: none;
 }
 
 button {
     display: inline-block;
-    box-sizing: content-box;
-    width: 60px;
-    height: 20px;
-    line-height: 20px;
-    margin: 10px;
-    padding: 10px 100px;
-    border-radius: 5px;
-    border: 0px;
+    width: 100%;              /* 모바일은 꽉 차게 */
+    max-width: 300px;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
     font-size: 16px;
     background-color: #8B0029;
     color: white;
@@ -65,48 +77,77 @@ button {
 
 .btn {
     display: inline-block;
-    box-sizing: content-box;
-    width: 60px;
-    height: 20px;
-    margin: 10px;
-    padding: 10px 100px;
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    margin: 10px 0;
     background-color: #F2ECE5;
     color: gray;
-    text-decoration: none;
-    border-radius: 5px;
+    border-radius: 8px;
 }
 
 .mrg {
-    margin: 30px;
+    margin: 20px;
 }
 
 label {
-    text-align: right;
-    display: inline-block;
+    display: block;         /* 모바일에서는 세로 정렬 */
+    text-align: left;
     color: #8B0029;
-    box-sizing: border-box;
-    width: 100px;
-    border: none;
-    padding:5px;
-    margin:5px;
+    margin: 10px 0 5px;
 }
 
 .input-box {
-    display: inline-block;
-    width: 150px;
-    height: 30px;
+    width: 100%;
+    max-width: 300px;
+    height: 40px;
     font-size: 16px;
-    padding: 8px;   
-    border-radius: 8px; 
+    padding: 8px;
+    border-radius: 8px;
     border: 1px solid #ccc;
-    margin: 10px;
+    margin-bottom: 10px;
 }
 
 .logo {
-    margin: 20px 0px 0px 0px;
-    width: 120px;
+    margin-top: 20px;
+    width: 100px;
 }
 
-div {
-    text-align: center;
+/* =========================
+    PC (768px 이상)
+========================= */
+
+@media (min-width: 768px) {
+
+    h1 {
+        font-size: 48px;
+        line-height: 0.9;
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    label {
+        display: inline-block;
+        width: 100px;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .input-box {
+        width: 250px;
+        margin: 10px;
+    }
+
+    button,
+    .btn {
+        width: auto;
+        padding: 10px 100px;
+    }
+
+    .logo {
+        width: 120px;
+    }
 }

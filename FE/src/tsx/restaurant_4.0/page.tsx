@@ -75,8 +75,6 @@ export default function RestaurantSearchPage() {
       <div className={styles.header}>
         <Link to="/main">
           <button className={styles.back_btn}>
-            &lt;<br />
-            메인화면으로 <br /> 돌아가기
           </button>
         </Link>
         <br />
@@ -162,7 +160,7 @@ export default function RestaurantSearchPage() {
         </button>
 
         {!loading && !errMsg && items.length === 0 && (
-          <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없어!</div>
+          <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없습니다</div>
         )}
       </div>
 

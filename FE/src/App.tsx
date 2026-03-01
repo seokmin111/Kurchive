@@ -70,11 +70,11 @@ export default function App() {
 
 
       {/* 404 */}
-      <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
+      <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404:not found)</div>} />
 
       {/* 레시피 */}
       <Route path="/recipe" element={<RecipeMainPage />} />
-      <Route path="/recipe/search" element={<RecipeSearchPage />} />
+      <Route path="/recipe/search" element={<RecipeSearchPage />} /> 
       <Route path="/recipe/archive" element={<RecipeArchivePage />} />
       <Route path="/recipe/:recipeId" element={<RecipeSpecific mode="view" />} />
       <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />

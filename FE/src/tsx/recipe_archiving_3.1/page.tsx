@@ -317,7 +317,6 @@ export default function RecipeCreate() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="음식 이름을 입력해주세요"
-          style={{ width: "90%" }}
         />
       </div>
 
@@ -345,9 +344,13 @@ export default function RecipeCreate() {
       <div className={style.line}></div>
 
       {/* 재료 */}
-      <div className={style.ingredientBody}>
+      <div className={style.ingredientSection}>
         <div className={style.ingredientTitle}>재료</div>
-
+        <button className={style.addRowBtn} onClick={addIngredient}>
+          <span className={style.addRowPlus}>+</span>
+          재료 추가하기
+        </button>
+        <div className={style.tableScroll}>
         <table className={style.table}>
           <thead>
             <tr>
@@ -488,11 +491,7 @@ export default function RecipeCreate() {
             ))}
           </tbody>
         </table>
-
-        <button className={style.addRowBtn} onClick={addIngredient}>
-          <span className={style.addRowPlus}>+</span>
-          재료 추가하기
-        </button>
+      </div>
       </div>
 
       <div className={style.line}></div>
@@ -610,7 +609,7 @@ export default function RecipeCreate() {
     <span className={style.addRowPlus}>+</span>
     단계 추가하기
   </button>
-  <div style={{ width: "90%", margin: "30px 0 60px" }}>
+  <div style={{ width: "90%", margin: "30px auto 60px" }}>
   <button
     className={style.actionBtn}
     onClick={onSave}

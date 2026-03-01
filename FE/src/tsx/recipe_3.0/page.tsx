@@ -101,7 +101,7 @@ export default function RecipeMainPage() {
         {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
         {!loading && errMsg && <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>}
         {!loading && !errMsg && recipes.length === 0 && (
-          <div style={{ gridColumn: "1 / -1" }}>등록된 레시피가 없어!</div>
+          <div style={{ gridColumn: "1 / -1" }}>등록된 레시피가 없습니다</div>
         )}
 
         {!loading &&
