@@ -91,11 +91,9 @@ export default function RestaurantSearchPage() {
         <button className={styles.ivory_btn}>식당 검색하기</button>
       </Link>
 
-      <div className={styles.button_wrapper}>
-        <Link to="/restaurant/archive">
-          <button className={styles.red_btn}>식당 아카이빙</button>
-        </Link>
-      </div>
+      <Link to="/restaurant/archive">
+        <button className={styles.red_btn}>식당 아카이빙</button>
+      </Link>
 
       {/* 실데이터 렌더 */}
       <div className={styles.restaurant_container}>
