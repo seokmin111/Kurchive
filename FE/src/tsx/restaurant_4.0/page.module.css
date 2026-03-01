@@ -17,6 +17,14 @@
     padding: 0;
 }
 
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  position: relative;
+  padding: 20px 0;
+}
+
 
 /* 뒤로가기 버튼 */
 .back_btn {
