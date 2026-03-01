@@ -19,7 +19,7 @@ export default function AdminMainPage() {
       <button className={style.memberAdminBtn} onClick={NavigateToMemberManage}>
         <div className={style.kurchive}>커카이브</div>
         <div className={style.memberAdmin}>회원 관리하기</div>
-        <img src="../../public/curson_logo.png" className={style.logo}></img>
+        <img src="/curson_logo.png" className={style.logo}></img>
       </button>
       <button className={style.passwordBtn}>관리자 비밀번호 변경</button>
       <button className={style.adminChange}>관리자 위임하기</button>

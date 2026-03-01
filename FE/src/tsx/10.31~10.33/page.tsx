@@ -50,7 +50,7 @@ export default function MemberSearchResultPage() {
 function Negative(){
   return(
     <div className={style.negativeBody}>
-      <img src="../../public/손사진.png" className={style.handImg}></img>
+      <img src="/손사진.png" className={style.handImg}></img>
       <div className={style.negativeText}>존재하지 않는 회원 정보입니다.</div>
       <div className={style.negativeText}>다시 검색해주세요.</div>
     </div>
