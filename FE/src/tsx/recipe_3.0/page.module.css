@@ -76,6 +76,7 @@
     color: #8B0029;
     font-size: 12px !important;
     font-weight: 600 !important;
+    margin: 0px 0 0 0;
 }
 
 /* =========================
@@ -140,7 +141,7 @@
   white-space: nowrap;
 
   display: block;
-  margin: 100px auto 20px;
+  margin: 50px auto 20px;
 }
 
 .red_btn {
