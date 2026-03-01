@@ -65,7 +65,7 @@ export default function Mypage() {
                     <div className={styles.body__main}>
                         <div className={styles.body__main__picture}>
                             <img
-                                src="/public/curson_logo.png"
+                                src="/curson_logo.png"
                                 alt="커카이브 로고"
                                 className={styles.profile_logo}
                             />
