@@ -75,8 +75,6 @@ export default function RestaurantSearchPage() {
       <div className={styles.header}>
         <Link to="/main">
           <button className={styles.back_btn}>
-            &lt;<br />
-            메인화면으로 <br /> 돌아가기
           </button>
         </Link>
         <br />
