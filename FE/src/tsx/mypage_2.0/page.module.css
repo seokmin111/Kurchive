@@ -12,250 +12,268 @@
     font-display: swap;
 }
 
+/* 1. 메인 컨테이너 (모바일 친화적 반응형 앱 스타일) */
 .nomrg {
+    position: relative;
     overflow: hidden;
-    margin: 0;
-    padding: 20px;
+    margin: 0 auto;
+    padding: 20px 20px 40px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    max-width: 480px; /* 데스크톱에서 앱 크기로 제한 */
+    min-height: 100vh;
+    background-color: white;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05); /* 데스크톱 구분용 그림자 */
 }
 
-.header{
+/* 2. 헤더 영역 */
+.header {
     display: flex;
-    align-items:flex-end;
-    margin-left: 10px;
+    align-items: center;
+    justify-content: space-between; /* 양 끝 배치 */
+    width: 100%;
+    margin-bottom: 30px;
 }
 
-.chevronLeft{
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* 뒤로가기와 타이틀 사이 간격 */
+}
+
+.chevronLeft {
     color: #8B0029;
     font-size: 30px;
     font-weight: 100;
+    cursor: pointer;
 }
 
-.header_title{
+.header_title {
     display: flex;
     flex-direction: column;
-    margin-left: 30px;
-    margin-right: 280px;
 }
 
 .title {
     font-family: 'SlowGothic', sans-serif;
     color: #8B0029;
-    box-sizing: content-box;
-    font-size: 30px !important;
+    font-size: 28px !important;
     font-weight: 500 !important;
-    margin: 0px 3px 0px 0px;
+    margin: 0;
+    line-height: 1;
 }
 
 .sub_title {
     font-family: 'Pretendard', sans-serif;
     color: #8B0029;
-    font-size: 12px !important;
+    font-size: 11px !important;
     font-weight: 600 !important;
-    margin-bottom: -0.1px;
+    margin-bottom: 2px;
 }
 
-.mypage{
+.mypage {
     font-family: var(--font-geist-mono);
     font-weight: 700;
-    position: absolute;
-    right: 25px;
     color: #8B0029;
-    border: 1px solid #8B0029;
-    padding: 15px;
+    border: 1.5px solid #8B0029;
+    padding: 12px;
     border-radius: 50%;
+    font-size: 13px;
+    white-space: nowrap; /* 글자 쪼개짐 방지 */
+    text-align: center;
 }
 
-.info__body{
+/* 3. 인포 카드 영역 (겹침 그림자 효과 완벽 대응) */
+.info {
+    position: relative;
+    width: 85%; /* 카드 너비 */
+    margin-top: 20px;
+}
+
+.info__body {
+    position: relative;
+    z-index: 2; /* 그림자보다 위 */
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
-    z-index: 5;
-    margin-top: 110px;
+    padding: 30px 20px;
     background-color: white;
+    border: 1.5px solid #8B0029;
+    border-radius: 35px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.info__shadow {
+    position: absolute;
+    z-index: 1; /* 카드보다 아래 */
+    top: 15px;  /* 15px 아래로 */
+    left: 15px; /* 15px 우측으로 밀기 */
+    width: 100%;
+    height: 100%;
     border: 1px solid #8B0029;
-    width: 80vw;
-    height: 30vh;
+    background-color: rgba(0, 0, 0, 0.15);
     border-radius: 35px;
 }
 
-.body__title__my{
-    font-family: var(--font-geist-mono);
-    color: #8B0029;
+.body__title {
+    margin-bottom: 20px;
 }
 
-.body__title__curchive{
+.body__title__my, .body__title__card {
+    font-family: var(--font-geist-mono);
+    color: #8B0029;
+    font-weight: 600;
+}
+
+.body__title__curchive {
     color: #8B0029;
     font-family: 'SlowGothic', sans-serif;
-    font-size: 25px;
+    font-size: 22px;
 }
 
-.body__title__card{
-    font-family: var(--font-geist-mono);
-    color: #8B0029;
-}
-
-.body__main{
-    position: relative;
-    z-index: 1;
-    margin-top: 30px;
+/* 카드 내 정보 영역 */
+.body__main {
     display: flex;
-    justify-content: space-around;
     align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 20px; /* 사진과 정보 사이 간격 */
 }
 
 .body__main__picture {
-  width: 140px;
-  height: 140px;
-  border-radius: 16px;          /* 카드 느낌 */
-  background-color: #f5f5f5;    /* 로고 배경 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+    width: 90px;
+    height: 90px;
+    border-radius: 16px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .profile_logo {
-  width: 70%;
-  height: 70%;
-  object-fit: contain;
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
 }
 
-.body__main__info{
-    margin-left: 60px;
+.body__main__info {
     display: flex;
+    gap: 15px;
 }
 
-.body__main__info__title{
-    height: 150px;
-    display: flex;
-    flex-direction: column;
-    align-items: end;
-    justify-content: space-around;
-    font-size: 10px;
-    font-family: var(--font-geist-mono);
-    font-weight: 500;
-    margin-right: 40px;
-}
-
-.body__main__info__info{
+.body__main__info__title, .body__main__info__info {
     display: flex;
     flex-direction: column;
-    height: 150px;
-    justify-content: space-around;
+    gap: 10px;
+    font-size: 13px;
+    font-family: var(--font-geist-mono);
 }
 
-.body__main__date{
-    margin-top: 30px;
+.body__main__info__title {
+    align-items: flex-end;
+    font-weight: 700;
+    color: #8B0029;
+}
+
+.body__main__info__info {
+    font-weight: 400;
+    color: #333;
+}
+
+.body__main__date {
+    margin-top: 25px;
     font-family: var(--font-geist-mono);
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 300;
     color: #898989;
 }
 
-.info__shadow{
-    padding: 20px;
-    z-index: -1;
-    border: 1px solid #8B0029;
-    background-color: rgba(0, 0, 0, 0.2);
-    width: 80vw;
-    height: 30vh;
-    border-radius: 35px;
-    position: absolute;
-    top: 200px;
-    left: 50px;
+/* 4. 수정하기 버튼 (오른쪽 정렬) */
+.info_change {
+    font-family: var(--font-geist-mono);
+    align-self: flex-end; /* 부모(컬럼) 기준 오른쪽 끝으로 */
+    margin-top: 35px;
+    margin-right: 7.5%; /* 카드의 너비 비율과 맞춤 */
+    background-color: #ECEBEA;
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #414141;
+    cursor: pointer;
 }
 
-.info__logo{
-    opacity: 0.1;
-    z-index: 0;
-    right: 50px;
-    bottom: 420px;
-    position: absolute;
-    width: 200px;
-    height: 200px;
-}
-
-.mychoice{
-    margin-top: 90px;
-    border-radius: 50px;
+/* 5. 하단 액션 버튼들 */
+.mychoice {
+    margin-top: 50px;
+    border-radius: 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 60vw;
-    height: 90px;
+    width: 85%; /* 화면에 맞게 % 사용 */
+    padding: 20px 0;
     color: white;
     background-color: #8B0029;
+    box-shadow: 0 4px 10px rgba(139, 0, 41, 0.2);
 }
 
-.mychoice__title{
+.mychoice__title {
     font-family: var(--font-geist-mono);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin-bottom: 10px;
-    text-decoration: none;
+    margin-bottom: 12px;
     color: white;
     cursor: pointer;
 }
 
-.mychoice__restaurant,
-.mychoice__recipe {
+.mychoice__specefic {
+    font-family: var(--font-geist-mono);
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* 항목 간 간격 */
+    width: 100%;
+}
+
+.mychoice__restaurant, .mychoice__recipe {
     cursor: pointer;
 }
 
-.mychoice__specefic{
-    font-family: var(--font-geist-mono);
-    font-size: 10px;
-    font-weight: 400;
-    width: 20vw;
-    display: flex;
-    justify-content: space-evenly;
-    margin-top: 10px 15px;
+.mychoice__bar {
+    opacity: 0.5;
 }
 
-.info_change{
-    font-family: var(--font-geist-mono);
-    margin-top: 30px;
-    margin-left: 320px;
-    background-color: #ECEBEA;
-    border: 1px solid black;
-    border-radius: 10px;
-    padding: 10px;
-    text-decoration: none;
-    color: #414141;
-}
-
-.leave{
+.leave {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 70px;
+    margin-top: 50px;
+    cursor: pointer;
 }
 
-.leave__title{
-    color:#898989;
-    text-decoration: none;
+.leave__title {
+    color: #898989;
+    font-size: 13px;
 }
 
-.leave__bar{
-    width: 120px;
-    border: 1px solid #898989;
+.leave__bar {
+    width: 100%;
+    margin-top: 2px;
+    border-bottom: 1px solid #898989;
 }
 
-.logo{
-    z-index: -1;
-    width: 400px;
+/* 배경 장식 로고 (클릭 방해 안 하게 처리) */
+.logo {
     position: absolute;
-    right: -200px;
-    top: 250px;
-    opacity: 0.2;
-}
-
-.info_change,
-.chevronLeft{
-    cursor : pointer;
+    z-index: 0;
+    width: 300px;
+    right: -100px;
+    top: 300px;
+    opacity: 0.05;
+    pointer-events: none; 
 }
