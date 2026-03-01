@@ -56,7 +56,7 @@ export default function LoginPage() {
 
   return (
     <div className={style.container}>
-      <header className={style.header}>배너 이미지</header>
+      <header className={style.header}>이 웹페이지는 고려대학교 동아리인 커리손으로먹기연구회와 KUCC의 협력으로 제작되었습니다.</header>
       <main className={style.main}>
         <div className={style.logoGroup}>
           <img className={style.logo} src="/curson_logo.png" alt="logo" />
@@ -95,12 +95,13 @@ export default function LoginPage() {
             로그인
           </button>
         </form>
-
+{/*
         <div className={style.linkGroup}>
           <a href="#">아이디를 잊으셨나요?</a>
           <span className={style.separator}>|</span>
           <a href="#">비밀번호를 잊으셨나요?</a>
         </div>
+        */}
       </main>
 
       <footer className={style.footer}>

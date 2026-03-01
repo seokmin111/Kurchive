@@ -77,22 +77,14 @@ export default function RecipeMainPage() {
       </div>
 
       {/* 검색창 제거 / 아이보리 버튼만 */}
-      <Link
-        to="/recipe/search"
-        style={{ textDecoration: "none" }}
-      >
+      <Link to="/recipe/search">
         <button className={styles.ivory_btn}>
           레시피 검색하기
         </button>
       </Link>
-
-
-      {/* ✅ 식당처럼: 그 아래 빨간 아카이빙 버튼 */}
-      <div className={styles.button_wrapper}>
-        <Link to="/recipe/archive">
-          <button className={styles.red_btn}>레시피 아카이빙</button>
-        </Link>
-      </div>
+      <Link to="/recipe/archive">
+        <button className={styles.red_btn}>레시피 아카이빙</button>
+      </Link>
 
       {/* 하단 패널 (카드) */}
       <div className={styles.recipe_container}>

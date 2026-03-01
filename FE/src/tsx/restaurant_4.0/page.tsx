@@ -73,18 +73,17 @@ export default function RestaurantSearchPage() {
   return (
     <main className={styles.nomrg}>
       <div className={styles.header}>
-        <Link to="/main">
-          <button className={styles.back_btn}>
-                      &lt;<br />
-                      메인화면으로 <br /> 돌아가기
-                    </button>
-        </Link>
-        <br />
-        <h1 className={styles.title} style={{ display: "inline" }}>
-          커카이브
-        </h1>
-        <p className={styles.sub_title} style={{ display: "inline" }}>
-          우리만의 미식 지도
+              <button
+                className={styles.back_btn}
+                onClick={() => navigate("/main")}
+                >
+                &lt;
+              </button>
+              <h1 className={styles.title} style={{ display: "inline" }}>
+                커카이브
+              </h1>
+              <p className={styles.sub_title} style={{ display: "inline" }}>
+                우리만의 미식 지도
         </p>
       </div>
 
@@ -92,11 +91,9 @@ export default function RestaurantSearchPage() {
         <button className={styles.ivory_btn}>식당 검색하기</button>
       </Link>
 
-      <div className={styles.button_wrapper}>
-        <Link to="/restaurant/archive">
-          <button className={styles.red_btn}>식당 아카이빙</button>
-        </Link>
-      </div>
+      <Link to="/restaurant/archive">
+        <button className={styles.red_btn}>식당 아카이빙</button>
+      </Link>
 
       {/* 실데이터 렌더 */}
       <div className={styles.restaurant_container}>
