@@ -68,11 +68,19 @@
 }
 
 .title {
-  margin: 0;
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 30px !important;
+    font-weight: 500 !important;
+    margin: 0px 3px 0px 12px;
 }
 
 .sub_title {
-  margin: 0;
+    font-family: 'Pretendard', sans-serif;
+    color: #8B0029;
+    font-size: 12px !important;
+    font-weight: 600 !important;
 }
 
 /* =========================
