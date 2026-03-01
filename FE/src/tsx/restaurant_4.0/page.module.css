@@ -332,7 +332,7 @@
 
   width: 100%;
   height: auto;
-  max-height: 40%;
+  max-height: 80vh;
   padding: 20px;
   box-sizing: border-box;
 
@@ -346,8 +346,7 @@
 
   overflow-y: auto;
 
-  left: 50%;
-  transform: translateX(-50%);
+  margin: 0 auto;
   max-width: 1200px;
 }
 
