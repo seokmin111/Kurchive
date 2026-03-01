@@ -35,21 +35,29 @@
   margin: 0;
 }
 
-.modifyBtn {
-  cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  background: rgba(255, 255, 255, 0.92);
-  color: #8b0028;
-  font-weight: 800;
-  padding: 10px 14px;
-  border-radius: 12px;
-  margin: 0;
-  line-height: 1;
+/* ✅ 우상단 아이콘 버튼들 컨테이너 */
+.rightActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.modifyBtn:hover {
-  background: #fff;
-  border-color: #fff;
+/* ✅ 펜, 하트 버튼 스타일 */
+.actionIconBtn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: transform 0.1s ease;
+}
+
+.actionIconBtn:active {
+  transform: scale(0.9);
 }
 
 /* ===== Titles / Sections ===== */
