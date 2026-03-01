@@ -45,7 +45,7 @@
 ========================= */
 .header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: center;
   position: relative;
   padding: 20px 0;
@@ -68,7 +68,7 @@
     box-sizing: content-box;
     font-size: 30px !important;
     font-weight: 500 !important;
-    margin: 0px 3px 0px 12px;
+    margin: 0;
 }
 
 .sub_title {
@@ -76,7 +76,7 @@
     color: #8B0029;
     font-size: 12px !important;
     font-weight: 600 !important;
-    margin: 0px 0 0 0;
+    margin: 0px 0 0 8;
 }
 
 /* =========================
