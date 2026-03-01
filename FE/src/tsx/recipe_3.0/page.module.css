@@ -44,22 +44,39 @@
     Header
 ========================= */
 .header {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
   position: relative;
+  padding: 20px 0;
+}
+
+/* 뒤로가기 버튼 */
+.back_btn {
+  position: absolute;
+  left: 20px;   /* 왼쪽 고정 */
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #8b0029;
+  cursor: pointer;
 }
 
 .title {
-  font-family: "SlowGothic", sans-serif;
-  color: #8b0029;
-  font-size: 30px;
-  font-weight: 500;
-  margin: 0 3px 0 12px;
+    font-family: 'SlowGothic', sans-serif;
+    color: #8B0029;
+    box-sizing: content-box;
+    font-size: 30px !important;
+    font-weight: 500 !important;
+    margin: 0;
 }
 
 .sub_title {
-  font-family: "Pretendard", sans-serif;
-  color: #8b0029;
-  font-size: 12px;
-  font-weight: 600;
+    font-family: 'Pretendard', sans-serif;
+    color: #8B0029;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin: 0px 0 0 10;
 }
 
 /* =========================
@@ -124,7 +141,7 @@
   white-space: nowrap;
 
   display: block;
-  margin: 100px auto 20px;
+  margin: 50px auto 20px;
 }
 
 .red_btn {
@@ -149,21 +166,6 @@
   margin: 0 auto;
 }
 
-.back_btn {
-  position: absolute;
-  right: 50%;
-  transform: translateX(-60px);
-  background: none;
-  border: none;
-  font-size: 10px;
-  color: #8b0029;
-  line-height: 1.2;
-  cursor: pointer;
-}
-
-.back_btn::first-line {
-  font-size: 45px;
-}
 
 /* =========================
     Recipe Grid Container (4.0 스타일로 통일)

@@ -73,16 +73,17 @@ export default function RestaurantSearchPage() {
   return (
     <main className={styles.nomrg}>
       <div className={styles.header}>
-        <Link to="/main">
-          <button className={styles.back_btn}>
-          </button>
-        </Link>
-        <br />
-        <h1 className={styles.title} style={{ display: "inline" }}>
-          커카이브
-        </h1>
-        <p className={styles.sub_title} style={{ display: "inline" }}>
-          우리만의 미식 지도
+              <button
+                className={styles.back_btn}
+                onClick={() => navigate("/main")}
+                >
+                &lt;
+              </button>
+              <h1 className={styles.title} style={{ display: "inline" }}>
+                커카이브
+              </h1>
+              <p className={styles.sub_title} style={{ display: "inline" }}>
+                우리만의 미식 지도
         </p>
       </div>
 
