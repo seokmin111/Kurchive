@@ -331,8 +331,9 @@
   row-gap: 30px; /*줄간 간격 너무 긴 문제 해결용*/
 
   width: 100%;
-  height: 40%;
-  padding: 5% 10px 5%;
+  height: auto;
+  max-height: 40%;
+  padding: 20px;
   box-sizing: border-box;
 
   background-color: white;
@@ -343,7 +344,7 @@
   bottom: 0;
   z-index: 10;
 
-  overflow: hidden;
+  overflow-y: auto;
 
   left: 50%;
   transform: translateX(-50%);
