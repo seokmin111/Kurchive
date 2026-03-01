@@ -62,11 +62,6 @@
   cursor: pointer;
 }
 
-/* 타이틀 묶음 */
-.title_group {
-  text-align: center;
-}
-
 .title {
     font-family: 'SlowGothic', sans-serif;
     color: #8B0029;

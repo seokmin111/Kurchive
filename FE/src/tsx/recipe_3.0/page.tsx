@@ -68,10 +68,12 @@ export default function RecipeMainPage() {
           >
           &lt;
         </button>
-        <div className={styles.title_group}>
-          <h1 className={styles.title}>커카이브</h1>
-          <p className={styles.sub_title}>우리만의 미식 지도</p>
-        </div>
+        <h1 className={styles.title} style={{ display: "inline" }}>
+          커카이브
+        </h1>
+        <p className={styles.sub_title} style={{ display: "inline" }}>
+          우리만의 미식 지도
+        </p>
       </div>
 
       {/* 검색창 제거 / 아이보리 버튼만 */}
