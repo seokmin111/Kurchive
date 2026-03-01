@@ -95,12 +95,13 @@ export default function LoginPage() {
             로그인
           </button>
         </form>
-
+{/*
         <div className={style.linkGroup}>
           <a href="#">아이디를 잊으셨나요?</a>
           <span className={style.separator}>|</span>
           <a href="#">비밀번호를 잊으셨나요?</a>
         </div>
+        */}
       </main>
 
       <footer className={style.footer}>
