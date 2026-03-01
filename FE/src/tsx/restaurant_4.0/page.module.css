@@ -32,7 +32,8 @@
   left: 20px;   /* 왼쪽 고정 */
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 48px;
+  line-height: 1;
   color: #8b0029;
   cursor: pointer;
 }
@@ -204,26 +205,16 @@
     }
 
     .back_btn {
-        display: flex;
-        align-items: center;
-        position: absolute;
-        right: 50%;               /* 아카이빙 버튼 가운데 기준 */
-        transform: translateX(-50px); /* 아카이빙 버튼 왼쪽으로 이동 */
-        top: 0;
-        background: transparent;
-        border: none;
-        text-align: center;
-        margin : 25px 0px 0px 5px;
-        font-size: 7px;
-        color: #8B0029;
-        line-height: 1.2;
+    position: absolute;
+    left: 20px;   /* 왼쪽 고정 */
+    background: none;
+    border: none;
+    font-size: 48px;
+    inline-size: 48px;
+    color: #8b0029;
+    cursor: pointer;
     }
 
-    .back_btn::first-line {
-        font-size: 30px;
-        display: block;
-        line-height: 1;
-    }
 
     .red_btn {
     font-family: 'SlowGothic', sans-serif;
@@ -261,31 +252,16 @@
     cursor: pointer;
     }  
 
-    .back_btn::first-line {
-    font-size: 45px;
-    display: block;
-    line-height: 1;
-    }
-
     .back_btn {
-        position: absolute;
-        right: 50%;               /* 아카이빙 버튼 가운데 기준 */
-        transform: translateX(-38px); /* 아카이빙 버튼 왼쪽으로 이동 */
-        top: 0;
-        background: transparent;
-        border: none;
-        text-align: center;
-        margin : 18px 0px 0px 5px;
-        font-size: 5px;
-        color: #8B0029;
-        line-height: 1.2;
+    position: absolute;
+    left: 20px;   /* 왼쪽 고정 */
+    background: none;
+    border: none;
+    font-size: 48px;
+    color: #8b0029;
+    cursor: pointer;
     }
 
-    .back_btn::first-line {
-        font-size: 23px;
-        display: block;
-        line-height: 1;
-    }
 
     .title {
     font-family: 'SlowGothic', sans-serif;
