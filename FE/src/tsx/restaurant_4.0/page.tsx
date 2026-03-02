@@ -102,7 +102,6 @@ export default function RestaurantSearchPage() {
           <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>
         )}
         
-
         {!loading &&
           !errMsg &&
           items.map((r) => (
