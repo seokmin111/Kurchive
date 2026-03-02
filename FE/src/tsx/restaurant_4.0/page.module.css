@@ -118,8 +118,6 @@
   width: 100%;
   height: auto;
   max-height: 40%;
-  padding: 20px;
-  box-sizing: border-box;
 
   background-color: white;
   border-top-left-radius: 30px;
@@ -129,7 +127,6 @@
   bottom: 0;
   z-index: 10;
 
-  overflow-y: auto;
 
   left: 50%;
   transform: translateX(-50%);
@@ -361,6 +358,13 @@
 .restaurant_underContainer {
   flex: 1;
   min-width: 0;
+}
+
+.scroll_area {
+  overflow-y: auto;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /*지도*/
