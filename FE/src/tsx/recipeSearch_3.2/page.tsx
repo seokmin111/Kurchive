@@ -89,6 +89,7 @@ export default function RecipeSearchPage() {
       <div className={styles.header}>
         <Link to="/recipe">
           <button className={styles.back_btn}>
+            &lt;
           </button>
         </Link>
 
