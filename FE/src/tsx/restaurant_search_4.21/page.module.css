@@ -20,21 +20,19 @@
     padding: 20px;
 }
 
-.back_btn{
-    position: absolute;
-    right: 50%;               /* 아카이빙 버튼 가운데 기준 */
-    transform: translateX(-60px); /* 아카이빙 버튼 왼쪽으로 이동 */
-    top: 10px;
-    background: transparent;
-    border: none;
-    text-align: center;
-    margin : 15px 80px 0px 5px;
-    width : 20%;
-    max-width: 80px;
-    font-size: 10px;
-    color: #8B0029;
-    line-height: 1.2;
-    cursor : pointer;
+.back_btn {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+
+  background: transparent;
+  border: none;
+
+  font-size: 42px;
+  line-height: 1;
+  color: #8B0029;
+
+  cursor: pointer;
 }
 
 .back_btn span {
