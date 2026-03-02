@@ -368,7 +368,7 @@
 
 
 .mapFab {
-  position: sticky;
+  position: absolute;
   bottom: 28px;
   right: 24px;
 
