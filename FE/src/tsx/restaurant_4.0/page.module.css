@@ -369,7 +369,7 @@
 
 
 .mapFab {
-  position: absolute;
+  position: fixed;
   bottom: 28px;
   right: 24px;
 
