@@ -481,7 +481,7 @@
 
 /* =========================
    Mobile (Carousel)
-========================= */
+========================= 
 @media (max-width: 600px) {
   .restaurant_container {
     grid-template-columns: unset;
@@ -501,6 +501,7 @@
     scroll-snap-align: start;
   }
 }
+  */
 
 .section_subtitle {
   font-family: "Pretendard", sans-serif;
