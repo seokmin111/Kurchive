@@ -1,6 +1,6 @@
 # BE/src/dependencies.py 
 
-from typing import Generator
+from typing import Generator, Optional
 from datetime import datetime, timedelta, timezone
 
 
@@ -104,6 +104,35 @@ async def get_current_user_from_token(
     return user
 
 
+# guest 판별
+async def require_not_guest(
+    current_user: User = Depends(get_current_user_from_token)
+) -> User:
+    if current_user.role == "guest":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Guest user cannot perform this action",
+        )
+    return current_user
+
+async def get_optional_user(
+    token: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_async_db)
+) -> Optional[User]:
+    try:
+        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id: str = payload.get("sub")
+        if not user_id:
+            return None
+
+        result = await db.execute(select(User).filter(User.id == int(user_id)))
+        return result.scalar_one_or_none()
+
+    except Exception:
+        return None
+    '''토큰이 없거나 잘못되어도 에러 대신 None 반환'''
+    
+# 관리자
 
 async def get_current_admin_user(
     current_user: User = Depends(get_current_user_from_token)
