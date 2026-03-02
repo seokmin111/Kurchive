@@ -164,8 +164,7 @@
     grid-auto-columns: 200px;            /* 카드 한 칸 폭 */
     grid-template-columns: unset;
 
-    overflow-x: auto;                    /* 가로 스크롤 */
-    overflow-y: hidden;
+    overflow-y: auto;
 
     -webkit-overflow-scrolling: touch;   /* iOS 부드러운 스크롤 */
     scroll-snap-type: x mandatory;       /* 선택: 스냅 */
