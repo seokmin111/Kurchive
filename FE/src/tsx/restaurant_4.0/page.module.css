@@ -367,7 +367,7 @@
 /* ===== 지도 FAB ===== */
 
 .mapFab {
-  position: fixed;
+  position: sticky;
   bottom: 28px;
   right: 24px;
 
