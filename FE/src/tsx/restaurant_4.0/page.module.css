@@ -157,23 +157,7 @@
     }
 }
 
-@media (max-width: 600px) {
-  .restaurant_container {
-    grid-template-rows: repeat(2, 100px); /* 2줄 고정 */
-    grid-auto-flow: column;              /* 세로 채우고 옆으로 */
-    grid-auto-columns: 200px;            /* 카드 한 칸 폭 */
-    grid-template-columns: unset;
 
-    overflow-y: auto;
-
-    -webkit-overflow-scrolling: touch;   /* iOS 부드러운 스크롤 */
-    scroll-snap-type: x mandatory;       /* 선택: 스냅 */
-  }
-
-  .restaurant_item {
-    scroll-snap-align: start;            /* 선택: 스냅 */
-  }
-}
 
 .restaurant_item {
   height: 100px;
