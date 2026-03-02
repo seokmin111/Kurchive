@@ -9,24 +9,43 @@ import client from "../../api/client";
 export default function MyActivity() {
   const navigate = useNavigate();
   
-  // 최근 저장한 식당 목록 상태
+  // 최근 저장한 항목 (식당 + 레시피 섞어서 최대 3개)
   const [recentItems, setRecentItems] = useState<any[]>([]);
-  // 레시피 찜 개수 상태 추가
+  
+  // 각각의 찜 개수 상태
+  const [restaurantCount, setRestaurantCount] = useState(0);
   const [recipeCount, setRecipeCount] = useState(0);
 
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        // 1. 식당 찜 목록 가져오기 (백엔드에서 이미 최신순 정렬됨)
-        const restRes = await client.get('/mypage/logs/restaurants');
-        // 응답이 배열인지 { data: [...] } 구조인지 안전하게 파싱
-        const restData = Array.isArray(restRes.data) ? restRes.data : (restRes.data?.data || []);
-        setRecentItems(restData);
+        // 1. 식당 & 레시피 찜 목록 동시 가져오기
+        const [restRes, recipeRes] = await Promise.all([
+          client.get('/mypage/logs/restaurants'),
+          client.get('/mypage/logs/favorite-recipes')
+        ]);
 
-        // 2. 레시피 찜 목록 가져오기 (개수 표시용)
-        const recipeRes = await client.get('/mypage/logs/favorite-recipes');
-        const recipeData = Array.isArray(recipeRes.data) ? recipeRes.data : (recipeRes.data?.data || []);
+        // 응답 데이터 안전하게 파싱
+        const restData = Array.isArray(restRes.data) ? restRes.data : (restRes.data?.data ||[]);
+        const recipeData = Array.isArray(recipeRes.data) ? recipeRes.data : (recipeRes.data?.data ||[]);
+
+        // 개수 세팅
+        setRestaurantCount(restData.length);
         setRecipeCount(recipeData.length);
+
+        // 2. 두 배열을 합치기 위해 각 데이터에 type 식별자 추가
+        const restaurantsWithType = restData.map((item: any) => ({ ...item, type: "restaurant" }));
+        const recipesWithType = recipeData.map((item: any) => ({ ...item, type: "recipe" }));
+
+        // 3. 합친 후 최신순(created_at 역순)으로 정렬
+        const combined = [...restaurantsWithType, ...recipesWithType].sort((a, b) => {
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA; // 내림차순(최신순)
+        });
+
+        // 4. 상위 3개만 잘라서 저장
+        setRecentItems(combined.slice(0, 3));
         
       } catch (err) {
         console.error("최근 활동 로딩 실패", err);
@@ -114,12 +133,22 @@ export default function MyActivity() {
           {recentItems.length > 0 ? (
             recentItems.map((item) => (
               <div 
-                key={item.id} 
+                key={`${item.type}-${item.id}`} 
                 className={style.recentCard}
-                onClick={() => navigate(`/restaurant/detail/${item.id}`)}
+                // ✅ 식당인지 레시피인지 type에 따라 주소를 다르게 연결 (detail 안 들어감)
+                onClick={() => navigate(`/${item.type}/${item.id}`)}
               >
-                <div className={style.recentCardName}>{item.name}</div>
-                <div className={style.recentCardRating}>★ {item.rating?.toFixed(1) || "0.0"}</div>
+                {/* ✅ 식당은 name, 레시피는 title을 표시 */}
+                <div className={style.recentCardName}>
+                  {item.type === "restaurant" ? item.name : item.title}
+                </div>
+                
+                {/* ✅ 식당은 별점, 레시피는 인분을 표시 */}
+                <div className={style.recentCardRating}>
+                  {item.type === "restaurant" 
+                    ? `★ ${item.rating?.toFixed(1) || "0.0"}` 
+                    : `기본 ${item.base_serving}인분`}
+                </div>
               </div>
             ))
           ) : (

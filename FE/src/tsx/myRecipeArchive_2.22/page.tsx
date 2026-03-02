@@ -22,7 +22,7 @@ const RecipeCard = ({ recipe, onDelete }: { recipe: FavoriteRecipe; onDelete: (i
   return (
     <div 
       className={styles.restaurantCard} 
-      onClick={() => navigate(`/recipe/detail/${recipe.id}`)}
+      onClick={() => navigate(`/recipe/${recipe.id}`)}
     >
       <div className={styles.cardContent}>
         {/* CSS 클래스명은 기존 구조(restaurantName)를 유지하며 데이터만 레시피 정보로 바인딩합니다 */}
