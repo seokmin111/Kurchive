@@ -26,7 +26,7 @@ MAP_LINK_PREFIXES = (
 
 from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator, conint
+from pydantic import BaseModel, validator, conint, confloat
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import os, re, time
@@ -68,7 +68,7 @@ class RestaurantCreate(BaseModel):
     name: str
     location_link: str
     location_tag_id: int
-    rating: Optional[conint(ge=0, le=5)] = 0
+    rating: Optional[confloat(ge=0, le=5)] = 0.0
     summary: str
     description: str
     price_min: int
@@ -157,7 +157,7 @@ class RestaurantUpdate(BaseModel):
     name: Optional[str] = None
     location_link: Optional[str] = None
     location_tag_id: Optional[int] = None
-    rating: Optional[conint(ge=0, le=5)] = None
+    rating: Optional[confloat(ge=0, le=5)] = None
     summary: Optional[str] = None
     description: Optional[str] = None
     price_min: Optional[int] = None

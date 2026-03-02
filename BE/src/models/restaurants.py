@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean, Numeric
 from sqlalchemy.orm import relationship
 from BE.src.database import Base
 import time
@@ -14,7 +14,7 @@ class Restaurant(Base):
     longitude = Column(Float, nullable=False)
     location_tag_id = Column(Integer, ForeignKey("regions.id"), nullable=False)
     uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
-    rating = Column(Integer, default=0)
+    rating = Column(Numeric(2,1), default=0.0)
     summary = Column(Text)
     description = Column(Text)
     price_min = Column(Integer, nullable=False)
