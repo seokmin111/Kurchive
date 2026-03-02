@@ -97,7 +97,7 @@ export default function RestaurantSearchPage() {
 
       {/* 실데이터 렌더 */}
       <div className={styles.restaurant_container}>
-        <div className="scroll_area">
+        <div className={styles.scroll_area}>
         {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
         {!loading && errMsg && (
           <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>
