@@ -89,8 +89,6 @@ export default function RecipeSearchPage() {
       <div className={styles.header}>
         <Link to="/recipe">
           <button className={styles.back_btn}>
-            &lt;<br />
-            레시피 메인으로 <br /> 돌아가기
           </button>
         </Link>
 
