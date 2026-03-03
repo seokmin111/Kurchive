@@ -92,11 +92,18 @@ export default function RestaurantSpecific() {
       try {
         setLoading(true);
         // 상세 정보와 즐겨찾기 상태를 동시에 가져옴
+        const token = localStorage.getItem("access_token");
+
+        const detailPromise = client.get(`/restaurants/${id}`);
+
+        const favPromise = token
+          ? client.get(`/restaurants/${id}/favorite`)
+          : Promise.resolve({ data: { is_favorite: false } });
+
         const [detailRes, favRes] = await Promise.all([
-          client.get(`/restaurants/${id}`),
-          client.get(`/restaurants/${id}/favorite`).catch(() => ({ data: { is_favorite: false } })) // 에러 무시
+          detailPromise,
+          favPromise
         ]);
-        
         setRestaurant(detailRes.data.data || detailRes.data);
         setIsZzim(favRes.data.is_favorite);
         console.log(detailRes.data);

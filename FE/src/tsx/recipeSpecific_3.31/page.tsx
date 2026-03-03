@@ -131,13 +131,16 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
   // ✅ 2. 찜하기 상태 로드
   useEffect(() => {
-    const id = Number(recipeId);
-    if (!id || Number.isNaN(id)) return;
-    
-    client.get(`/recipe/${id}/favorite`)
-      .then((res) => setIsZzim(res.data.is_favorite))
-      .catch(() => {});
-  }, [recipeId]);
+  const token = localStorage.getItem("access_token");
+  if (!token) return;   // 🔥 이 줄 추가
+
+  const id = Number(recipeId);
+  if (!id || Number.isNaN(id)) return;
+
+  client.get(`/recipe/${id}/favorite`)
+    .then((res) => setIsZzim(res.data.is_favorite))
+    .catch(() => {});
+}, [recipeId]);
 
   // ✅ 3. 즐겨찾기 토글 (하트 누를 때)
   const toggleFavorite = async () => {
