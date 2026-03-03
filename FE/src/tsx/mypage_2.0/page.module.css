@@ -11,7 +11,11 @@
     font-weight: 400;
     font-display: swap;
 }
-
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
 /* 1. 메인 컨테이너 (모바일 친화적 반응형 앱 스타일) */
 .nomrg {
     position: relative;
@@ -107,14 +111,10 @@
 
 .info__shadow {
     position: absolute;
-    z-index: 1; /* 카드보다 아래 */
-    top: 15px;  /* 15px 아래로 */
-    left: 15px; /* 15px 우측으로 밀기 */
-    width: 100%;
-    height: 100%;
-    border: 1px solid #8B0029;
-    background-color: rgba(0, 0, 0, 0.15);
+    inset: 0;
     border-radius: 35px;
+    background: transparent;
+    box-shadow: 8px 8px 0 rgba(139, 0, 41, 0.2);
 }
 
 .body__title {
@@ -272,8 +272,11 @@
     position: absolute;
     z-index: 0;
     width: 300px;
-    right: -100px;
+
+    right: 0;                /* ❌ -100px 제거 */
+    transform: translateX(40%);  /* 대신 이렇게 밀기 */
+
     top: 300px;
     opacity: 0.05;
-    pointer-events: none; 
+    pointer-events: none;
 }
