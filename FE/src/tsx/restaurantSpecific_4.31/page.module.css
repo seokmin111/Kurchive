@@ -332,3 +332,12 @@
   margin-right: 4px;
   color:#8B0029;
 }
+
+/* font size */
+.infoLabel {
+  font-size: 14px;
+}
+
+.infoValue {
+  font-size: 14px;
+}
