@@ -303,10 +303,24 @@
 .tagSearch__tagDel{
     font-size: 10px;
 }
+.tagSearch__submitBtns {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
 
-.tagSearch__submitBtns{
-    display: flex;
-    justify-content: center;
+.tagSearch__apply {
+  flex: 2;
+  height: 52px;
+  border-radius: 20px;
+}
+
+.tagSearch__close {
+  flex: 1;
+  height: 52px;
+  border-radius: 20px;
 }
 
 .tagSearch__apply{
