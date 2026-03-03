@@ -38,8 +38,8 @@ import AdminEntrustCompletePage from './tsx/10.34/page'
 export default function App() {
   return (
     <Routes>
-      {/* 초기 진입 → 로그인 */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* 초기 진입 → 메인 페이지 */}
+      <Route path="/" element={<MainPage />} />
 
       {/* 로그인 */}
       <Route path="/login" element={<Login />} />
@@ -47,8 +47,6 @@ export default function App() {
       {/* 회원가입 */}
        <Route path="/signup" element={<SignupPage />} />
 
-      {/* 메인 이후 페이지들 */}
-      <Route path="/main" element={<MainPage />} />
 
       {/* 레스토랑 */}
       <Route path="/restaurant" element={<RestaurantPage />} />
