@@ -23,6 +23,7 @@
 }
 
 .nav_title{
+    min-width: 0;
     color:#8B0029;
     font-size: 20px;
     font-weight: 600;
@@ -31,6 +32,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     text-align: center;
+}
+
+.rightActions,
+.backBtnWrap {
+    min-width: 0;
 }
 
 
