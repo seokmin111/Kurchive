@@ -1110,9 +1110,29 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
       {/* ✅ 삭제 버튼도 권한(canEdit)이 있는 경우에만 표시되게 개선 */}
       {!isEdit && canEdit && (
-        <button className={style.recipeDelete} onClick={onDelete}>
-          레시피 삭제하기
-        </button>
+        <div
+          style={{
+            marginTop: 30,
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <button
+            style={{
+              padding: "10px 16px",
+              borderRadius: 10,
+              border: "none",
+              background: "#8B0029",
+              color: "white",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+            onClick={onDelete}
+          >
+            삭제하기
+          </button>
+        </div>
       )}
     </div>
   );
