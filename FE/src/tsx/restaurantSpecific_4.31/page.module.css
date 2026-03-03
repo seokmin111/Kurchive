@@ -44,7 +44,7 @@
     display: flex;
     width: 100%;
     gap: 14px;            /* margin-right 대신 */
-    margin-bottom: 12px;
+    min-width: 0;
 }
 
 .leftBox{
@@ -64,6 +64,7 @@
     flex: 1;              /* width:80% 대신 */
     border-radius: 10px;
     padding: 10px 12px;   /* 내용 안쪽 여백 */
+    min-width: 0;
 }
 
 .recommend{
