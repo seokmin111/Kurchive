@@ -1,5 +1,6 @@
 //App.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // pages
 import MainPage from "./MainPage";
@@ -38,67 +39,52 @@ import AdminEntrustCompletePage from './tsx/10.34/page'
 export default function App() {
   return (
     <Routes>
-      {/* 초기 진입 → 메인 페이지 */}
+      {/* 공개 페이지 */}
       <Route path="/" element={<MainPage />} />
-
-      {/* 로그인 */}
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<SignupPage />} />
 
-      {/* 회원가입 */}
-       <Route path="/signup" element={<SignupPage />} />
-
-
-      {/* 레스토랑 */}
+      {/* 레스토랑 조회 (공개) */}
       <Route path="/restaurant" element={<RestaurantPage />} />
-      <Route path="/restaurant/archive" element={<RestaurantArchivePage />} />
       <Route path="/restaurant/search" element={<SearchPage />} />
-      <Route
-        path="/restaurant/search/results"
-        element={<RestaurantSearchResultsPage />} />
+      <Route path="/restaurant/search/results" element={<RestaurantSearchResultsPage />} />
       <Route path="/restaurant/map" element={<MapPage />} />
+      <Route path="/restaurant/:restaurantId" element={<RestaurantDetailPage />} />
 
-      {/* 식당 상세(4.31) */}
-      <Route
-          path="/restaurant/:restaurantId"
-          element={<RestaurantDetailPage/>}
-        />
-
-        <Route
-          path="/restaurant/:restaurantId/edit" element={<RestaurantEditPage />}/>
-
-
-      {/* 404 */}
-      <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404:not found)</div>} />
-
-      {/* 레시피 */}
+      {/* 레시피 조회 (공개) */}
       <Route path="/recipe" element={<RecipeMainPage />} />
-      <Route path="/recipe/search" element={<RecipeSearchPage />} /> 
-      <Route path="/recipe/archive" element={<RecipeArchivePage />} />
+      <Route path="/recipe/search" element={<RecipeSearchPage />} />
       <Route path="/recipe/:recipeId" element={<RecipeSpecific mode="view" />} />
-      <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />
 
+      {/* 🔐 보호 영역 */}
+      <Route element={<ProtectedRoute />}>
+        {/* 식당 작성/수정 */}
+        <Route path="/restaurant/archive" element={<RestaurantArchivePage />} />
+        <Route path="/restaurant/:restaurantId/edit" element={<RestaurantEditPage />} />
 
-      {/* 마이페이지 */}
-      <Route path="/mypage" element={<MyPage />} />
-      <Route path="/myactivity" element={<MyActivityPage />} />
-      <Route path="/my-restaurant-archive" element={<MyRestaurantArchivePage />} />
-      <Route path="/my-recipe-archive" element={<MyRecipeArchivePage />} />
-      <Route path="/infoedit" element={<MyInfoEdit />} />
-      <Route path="/quitpage" element={<QuitPage />} />
+        {/* 레시피 작성/수정 */}
+        <Route path="/recipe/archive" element={<RecipeArchivePage />} />
+        <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />
 
-      {/*관리자 페이지*/}
-      <Route path="/admin" element={<AdminFirstPage></AdminFirstPage>}></Route>
-      <Route path="/admin/main" element={<AdminMainPage></AdminMainPage>}></Route>
-      <Route path="/admin/member" element={<MemberSearchPage></MemberSearchPage>}></Route>
-      <Route path="/admin/member/result" element={<MemberSearchResultPage></MemberSearchResultPage>}></Route>
-      <Route path="/admin/entrust/result" element={<AdminEntrustPage></AdminEntrustPage>}></Route>
-      <Route path="/admin/entrust/complete" element={<AdminEntrustCompletePage/>}></Route>
+        {/* 마이페이지 */}
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/myactivity" element={<MyActivityPage />} />
+        <Route path="/my-restaurant-archive" element={<MyRestaurantArchivePage />} />
+        <Route path="/my-recipe-archive" element={<MyRecipeArchivePage />} />
+        <Route path="/infoedit" element={<MyInfoEdit />} />
+        <Route path="/quitpage" element={<QuitPage />} />
+
+        {/* 관리자 */}
+        <Route path="/admin" element={<AdminFirstPage />} />
+        <Route path="/admin/main" element={<AdminMainPage />} />
+        <Route path="/admin/member" element={<MemberSearchPage />} />
+        <Route path="/admin/member/result" element={<MemberSearchResultPage />} />
+        <Route path="/admin/entrust/result" element={<AdminEntrustPage />} />
+        <Route path="/admin/entrust/complete" element={<AdminEntrustCompletePage />} />
+      </Route>
 
       {/* 404 */}
-      <Route
-        path="*"
-        element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>}
-      />
+      <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
     </Routes>
   );
 }
