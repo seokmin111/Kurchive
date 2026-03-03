@@ -155,8 +155,11 @@
     font-weight: 600;
     background-color: white;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
     display: flex;
     justify-content:center;
+    white-space: nowrap; /* 글자 줄바꿈 방지*/
     z-index: 10;
 }
 
@@ -822,12 +825,12 @@
 }
 
 /* ====== 모바일 꽉참/잘림 방지 오버라이드 (파일 맨 아래에 붙이기) ====== */
-.tagSearch__body,
-.Food__container,
-.Price__container,
+.tagSearch__body, 
+.Food__container, 
+.Price__container, 
 .atmo__carrier {
   height: auto !important;
   min-height: auto !important;
   justify-content: flex-start !important;
-  padding: 56px 0 28px !important;
+  padding: 20px 0 28px !important;   /* 56px → 20px 로 줄이기 */
 }
