@@ -156,7 +156,7 @@
     background-color: white;
     margin-bottom: 20px;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
     display: flex;
     justify-content:center;
     white-space: nowrap; /* 글자 줄바꿈 방지*/
@@ -166,7 +166,7 @@
 .tagSearch__tag{
     font-size: 15px;
     display: flex;
-    margin: 0px 15px;
+    white-space: nowrap;
     background-color: none;
     color: rgb(42, 42, 42);
     border: 1px solid rgb(42, 42, 42);
@@ -833,4 +833,7 @@
   min-height: auto !important;
   justify-content: flex-start !important;
   padding: 20px 0 28px !important;   /* 56px → 20px 로 줄이기 */
+}
+.section_title {
+  top: 0;
 }
