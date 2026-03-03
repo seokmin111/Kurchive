@@ -12,7 +12,7 @@ export default function MainPage() {
       {/* 프로필 이미지 */}
 
       <Link to="/mypage">
-      <img src="../public/kurchive_profile.png" className="mypage"></img>
+      <img src="/kurchive_profile.png" className="mypage"></img>
       </Link>
 
       <div>
