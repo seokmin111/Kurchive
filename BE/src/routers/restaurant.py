@@ -50,6 +50,13 @@ from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
 from BE.src.utils.image_upload import ALLOWED_MIME
 
+# 권한 구조
+async def assert_can_edit_restaurant(restaurant: Restaurant, current_user: User):
+    is_uploader = restaurant.uploaded_by == current_user.id
+    is_privileged = current_user.role == "staff" or current_user.is_admin
+    if not (is_uploader or is_privileged):
+        raise HTTPException(status_code=403, detail="Not authorized")
+
 # ---------------------------
 # 공통 응답 헬퍼
 # ---------------------------
@@ -673,10 +680,7 @@ async def update_restaurant(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    is_uploader = restaurant.uploaded_by == current_user.id
-    is_admin = current_user.is_admin
-    if not (is_uploader or is_admin):
-        raise HTTPException(status_code=403, detail="Not authorized")
+    await assert_can_edit_restaurant(restaurant, current_user)
 
     update_data = payload.dict(exclude_unset=True)
 
@@ -805,11 +809,7 @@ async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_a
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    is_uploader = restaurant.uploaded_by == current_user.id
-    is_admin = current_user.is_admin
-    if not (is_uploader or is_admin):
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-
+    await assert_can_edit_restaurant(restaurant, current_user)
     # 헬퍼 호출
     imgs = (await db.execute(select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id))).scalars().all()
     await cleanup_restaurant_images(imgs)
@@ -848,11 +848,7 @@ async def upload_restaurant_images(
     restaurant = result.scalar_one_or_none()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    is_uploader = restaurant.uploaded_by == current_user.id
-    is_admin = current_user.is_admin
-    if not (is_uploader or is_admin):
-        raise HTTPException(status_code=403, detail="Not authorized to perform this action")
-
+    await assert_can_edit_restaurant(restaurant, current_user)
     if not files:
         raise HTTPException(status_code=422, detail="file(s) is required")
 
