@@ -30,6 +30,7 @@ html, body {
     min-height: 100vh;
     background-color: white;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.05); /* 데스크톱 구분용 그림자 */
+    box-sizing: border-box;
 }
 
 /* 2. 헤더 영역 */
