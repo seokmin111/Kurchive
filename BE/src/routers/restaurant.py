@@ -1092,3 +1092,12 @@ async def toggle_restaurant_favorite(
         db.add(new_fav)
         await db.commit()
         return {"is_favorite": True, "message": "즐겨찾기에 추가되었습니다."}
+    
+'''| API               | 써야 할 함수                      |
+| ----------------- | ---------------------------- |
+| update_restaurant | assert_can_edit_restaurant   |
+| upload 이미지        | assert_can_edit_restaurant   |
+| delete 이미지        | assert_can_edit_restaurant   |
+| 썸네일 업/삭제          | assert_can_edit_restaurant   |
+| delete_restaurant | assert_can_delete_restaurant |
+'''
