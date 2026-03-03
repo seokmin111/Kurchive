@@ -821,3 +821,13 @@
   display: none; /* 아래 JSX 수정에서 section_title로 교체할 것이므로 숨김 */
 }
 
+/* ====== 모바일 꽉참/잘림 방지 오버라이드 (파일 맨 아래에 붙이기) ====== */
+.tagSearch__body,
+.Food__container,
+.Price__container,
+.atmo__carrier {
+  height: auto !important;
+  min-height: auto !important;
+  justify-content: flex-start !important;
+  padding: 56px 0 28px !important;
+}
