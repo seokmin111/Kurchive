@@ -51,7 +51,7 @@ export default function Mypage() {
             <div className={styles.header}>
                 {/* ✅ CSS 정렬을 위해 왼쪽 아이템들을 묶음 */}
                 <div className={styles.headerLeft}>
-                    <div className={styles.chevronLeft} onClick={() => navigate("/main")}>
+                    <div className={styles.chevronLeft} onClick={() => navigate("/")}>
                         <FontAwesomeIcon icon={faChevronLeft}/>
                     </div>
                     <div className={styles.header_title}>

@@ -64,7 +64,7 @@ export default function RecipeMainPage() {
       <div className={styles.header}>
         <button
           className={styles.back_btn}
-          onClick={() => navigate("/main")}
+          onClick={() => navigate("/")}
           >
           &lt;
         </button>
