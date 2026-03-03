@@ -295,7 +295,6 @@ async def create_restaurant(
 async def search_restaurants_by_name(
     q: str,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
 ):
     result = await db.execute(
         select(Restaurant).where(Restaurant.name.like(f"%{q}%")).limit(20)
@@ -321,7 +320,6 @@ async def search_restaurants_by_name(
 async def get_restaurant(
     restaurant_id: int,
     db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
@@ -420,8 +418,7 @@ async def list_restaurants(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Restaurant).distinct()
 
@@ -512,8 +509,7 @@ async def list_restaurants_nearby(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Restaurant).where(
         Restaurant.latitude.is_not(None),
@@ -581,8 +577,7 @@ async def list_restaurants_in_viewport(
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
     limit: int = 200,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_async_db)
 ):
     if min_lat > max_lat:
         min_lat, max_lat = max_lat, min_lat
@@ -1001,8 +996,7 @@ async def delete_restaurant_image(
 @router.get("/restaurants/{restaurant_id}/images", response_model=TList[ImageOut])
 async def list_restaurant_images(
     restaurant_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_async_db)
 ):
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not r:

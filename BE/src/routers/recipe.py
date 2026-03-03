@@ -246,8 +246,7 @@ async def get_or_create_ingredient_api(
 @router.get("/search", response_model=List[RecipeResponseDTO])
 async def search_recipes(
     title: str,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    db: AsyncSession = Depends(get_async_db)
 ):
     result = await db.execute(
         select(Recipe).options(
@@ -261,8 +260,7 @@ async def search_recipes(
 
 @router.get("/list", response_model=List[RecipeResponseDTO])
 async def list_recipes(
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    db: AsyncSession = Depends(get_async_db)
 ):
     result = await db.execute(
         select(Recipe).options(
@@ -277,8 +275,7 @@ async def list_recipes(
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
 async def get_recipe(
     recipe_id: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    db: AsyncSession = Depends(get_async_db)
 ):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
@@ -290,8 +287,7 @@ async def get_recipe(
 async def scale_recipe(
     recipe_id: int,
     servings: int,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    db: AsyncSession = Depends(get_async_db)
 ):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
@@ -308,8 +304,8 @@ async def scale_recipe(
 async def convert_recipe(
     recipe_id: int,
     request: ConvertRequestDTO,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
+    db: AsyncSession = Depends(get_async_db)
+    # current_user: User = Depends(get_current_user_from_token)
 ):
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
