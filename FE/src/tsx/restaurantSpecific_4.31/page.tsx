@@ -126,7 +126,26 @@ export default function RestaurantSpecific() {
       alert("즐겨찾기 상태를 변경할 수 없습니다.");
     }
   };
+  // 삭제
+  const deleteRestaurant = async () => {
+  if (!restaurant) return;
 
+  const ok = window.confirm("정말 삭제할까요? 이 작업은 되돌릴 수 없습니다.");
+  if (!ok) return;
+
+  try {
+    await client.delete(`/restaurants/${restaurant.id}`);
+    alert("삭제되었습니다.");
+    nav("/restaurant"); // 목록 페이지로 이동
+  } catch (e: any) {
+    console.error(e);
+    if (e?.response?.status === 403) {
+      alert("삭제 권한이 없습니다.");
+    } else {
+      alert("삭제에 실패했습니다.");
+    }
+  }
+};
   // 수정 권한 체크
   const canEdit = useMemo(() => {
     if (!currentUser || !restaurant) return false;
@@ -331,6 +350,31 @@ export default function RestaurantSpecific() {
           )}
         </div>
       )}
+      {canEdit && (
+  <div
+    style={{
+      marginTop: 30,
+      width: "100%",
+      display: "flex",
+      justifyContent: "flex-end",
+    }}
+  >
+    <button
+      style={{
+        padding: "10px 16px",
+        borderRadius: 10,
+        border: "none",
+        background: "#8B0029",
+        color: "white",
+        fontWeight: 600,
+        cursor: "pointer",
+      }}
+      onClick={deleteRestaurant}
+    >
+      삭제하기
+    </button>
+  </div>
+)}
     </div>
   );
 }
