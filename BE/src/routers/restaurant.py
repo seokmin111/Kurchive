@@ -57,6 +57,15 @@ async def assert_can_edit_restaurant(restaurant: Restaurant, current_user: User)
     if not (is_uploader or is_privileged):
         raise HTTPException(status_code=403, detail="Not authorized")
 
+async def assert_can_delete_restaurant(
+    restaurant: Restaurant,
+    current_user: User
+):
+    is_uploader = restaurant.uploaded_by == current_user.id
+    is_admin = bool(current_user.is_admin)
+
+    if not (is_uploader or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to delete")
 # ---------------------------
 # 공통 응답 헬퍼
 # ---------------------------
@@ -809,7 +818,7 @@ async def delete_restaurant(restaurant_id: int, db: AsyncSession = Depends(get_a
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    await assert_can_edit_restaurant(restaurant, current_user)
+    await assert_can_delete_restaurant(restaurant, current_user)
     # 헬퍼 호출
     imgs = (await db.execute(select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id))).scalars().all()
     await cleanup_restaurant_images(imgs)
@@ -907,9 +916,8 @@ async def upload_restaurant_thumbnail(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    if restaurant.uploaded_by != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
+    await assert_can_edit_restaurant(restaurant, current_user)
+    
     if file.content_type not in ALLOWED_MIME:
         raise HTTPException(status_code=415, detail="Unsupported file type")
 
@@ -940,8 +948,7 @@ async def delete_restaurant_thumbnail(
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    if restaurant.uploaded_by != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    await assert_can_edit_restaurant(restaurant, current_user)
 
     # 썸네일 없으면 그냥 204로 끝 (멱등)
     if not restaurant.thumbnail_url:
@@ -969,9 +976,8 @@ async def delete_restaurant_image(
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not r:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    if r.uploaded_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to delete images")
-
+    await assert_can_edit_restaurant(r, current_user)
+    
     img = (await db.execute(
         select(RestaurantImage).where(
             RestaurantImage.id == image_id,
@@ -1024,8 +1030,7 @@ async def patch_restaurant_image(
     r = (await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))).scalar_one_or_none()
     if not r:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    if r.uploaded_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    await assert_can_edit_restaurant(r, current_user)
 
     img = (await db.execute(
         select(RestaurantImage).where(
