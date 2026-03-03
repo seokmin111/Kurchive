@@ -840,3 +840,15 @@
 .section_title {
   top: 0;
 }
+
+.Food__mapImg{
+  width: min(420px, 100%);
+}
+
+.Food__tagContainer{
+  width: min(400px, 100%);
+}
+
+.atmo__container{
+  width: min(450px, 100%);
+}
