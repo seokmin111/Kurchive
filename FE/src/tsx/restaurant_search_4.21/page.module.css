@@ -303,6 +303,7 @@
 .tagSearch__tagDel{
     font-size: 10px;
 }
+
 .tagSearch__submitBtns {
   display: flex;
   gap: 12px;
@@ -315,38 +316,23 @@
   flex: 2;
   height: 52px;
   border-radius: 20px;
+  border: none;
+  background-color: #8B0029;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .tagSearch__close {
   flex: 1;
   height: 52px;
   border-radius: 20px;
-}
-
-.tagSearch__apply{
-    border: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 270px;
-    height: 50px;
-    border-radius: 15px;
-    background-color: #8B0029;
-    color: white;
-    margin: 0px 10px;
-}
-
-.tagSearch__close{
-    border: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: black;
-    background-color: #F2ECE5;
-    height: 50px;
-    width: 100px;
-    border-radius: 12px;
-    margin: 0px 10px;
+  border: none;
+  background-color: #F2ECE5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .tagSearch__chevron{
