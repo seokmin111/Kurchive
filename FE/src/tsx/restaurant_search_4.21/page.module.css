@@ -55,7 +55,7 @@
     /* .tagSearch에서 가져온 Flexbox 스타일 (추가) */
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 50px);
+    height: calc(100dvh - 50px);
     width: 100%;
 
     /* (기존) */
@@ -178,9 +178,8 @@
 }
 
 .scrollableContent{
-  height: 70vh;
   flex: 1; /* 헤더와 푸터를 제외한 남은 공간을 모두 차지 */
-  overflow-y: scroll; /* 이 컨테이너 내부에서만 세로 스크롤 발생 */
+  overflow-y: auto; /* 이 컨테이너 내부에서만 세로 스크롤 발생 */
   min-height: 0;
 }
 
