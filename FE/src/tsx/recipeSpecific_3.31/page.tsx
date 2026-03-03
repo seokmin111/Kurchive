@@ -259,6 +259,14 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     })();
   }, [recipe, ingredientsDraft]);
 
+ useEffect(() => {
+  if (!loading && isEdit && !canEdit) {
+    alert("수정 권한이 없습니다.");
+    nav(`/recipe/${recipeId}`);
+  }
+}, [loading, isEdit, canEdit]);
+  // 재료
+
   const onClickBack = () => nav(-1);
 
   const defaultUnitMap: Record<UnitType, string[]> = {
