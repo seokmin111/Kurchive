@@ -1,3 +1,30 @@
+/* ===== 기본 리셋 (레이아웃 영향 거의 없음) ===== */
+
+html, body, #root {
+  height: 100%;
+}
+
 body {
-  overflow: auto;
+  margin: 0;
+  overflow: auto; /* 기존 설정 유지 */
+}
+
+
+/* ===== 모바일 뷰포트 안전 보정 ===== */
+/* 기존 vh 레이아웃은 건드리지 않음 */
+/* 단, dvh를 지원하는 브라우저에서만 보정 */
+
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+
+/* ===== iOS 안전영역 대응 ===== */
+/* sticky 액션바 / 하단 버튼 잘림 방지용 */
+/* 전역 padding은 주지 않음 (레이아웃 깨짐 방지) */
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
