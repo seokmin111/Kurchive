@@ -164,6 +164,13 @@ type SelectedItem = {
 
 //태그로 검색하기 누르면 올라오는 Modal
 function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps) {
+  // 태그 카테고리 위치
+  const regionRef = useRef<HTMLDivElement>(null);
+const foodRef = useRef<HTMLDivElement>(null);
+const priceRef = useRef<HTMLDivElement>(null);
+const atmoRef = useRef<HTMLDivElement>(null);
+
+  // 기본 state
   const navigate = useNavigate();
   const tags: string[] = ["지역", "음식 종류", "가격", "분위기"];
   const [activeTag, setActiveTag] = useState<string>("");
@@ -185,19 +192,23 @@ function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps
 
   //상위 태그 누르면 해당 위치로 이동하는 함수
   const handleScroll = () => {
-    const content = scrollRef.current;
-    if (!content) return;
+  const content = scrollRef.current;
+  if (!content) return;
 
-    if (activeTag === "지역") {
-      content.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    } else if (activeTag === "음식 종류") {
-      content.scrollTo({ top: 740, left: 0, behavior: "smooth" });
-    } else if (activeTag === "가격") {
-      content.scrollTo({ top: 1480, left: 0, behavior: "smooth" });
-    } else if (activeTag === "분위기") {
-      content.scrollTo({ top: 2220, left: 0, behavior: "smooth" });
-    }
-  };
+  let target: HTMLElement | null = null;
+
+  if (activeTag === "지역") target = regionRef.current;
+  if (activeTag === "음식 종류") target = foodRef.current;
+  if (activeTag === "가격") target = priceRef.current;
+  if (activeTag === "분위기") target = atmoRef.current;
+
+  if (target) {
+    content.scrollTo({
+      top: target.offsetTop,
+      behavior: "smooth",
+    });
+  }
+};
 
   //sellectedTags에 아이템 삭제하는 함수
   const handleDeleteItem = (item: SelectedItem) => {
@@ -319,15 +330,26 @@ function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps
         <div className={styles.tagSearch__bar}></div>
 
         <div ref={scrollRef} className={styles.scrollableContent}>
-          <Region handleAddItem={handleAddItem} />
-          <Culture handleAddItem={handleAddItem} />
-          <Price
-            handleAddItem={handleAddItem}
-            sellectedTags={sellectedTags}
-            setSellectedTags={setSellectedTags}
-          />
-          <Atmosphere handleAddItem={handleAddItem} />
-        </div>
+  <div ref={regionRef}>
+    <Region handleAddItem={handleAddItem} />
+  </div>
+
+  <div ref={foodRef}>
+    <Culture handleAddItem={handleAddItem} />
+  </div>
+
+  <div ref={priceRef}>
+    <Price
+      handleAddItem={handleAddItem}
+      sellectedTags={sellectedTags}
+      setSellectedTags={setSellectedTags}
+    />
+  </div>
+
+  <div ref={atmoRef}>
+    <Atmosphere handleAddItem={handleAddItem} />
+  </div>
+</div>
 
         <div className={styles.tagSearch__bar}></div>
         <div className={styles.tagSearch__submit}>

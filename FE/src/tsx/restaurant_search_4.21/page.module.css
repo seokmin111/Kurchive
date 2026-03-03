@@ -829,10 +829,13 @@
 .Food__container, 
 .Price__container, 
 .atmo__carrier {
-  height: auto !important;
-  min-height: auto !important;
-  justify-content: flex-start !important;
-  padding: 56px 0 28px !important;   /* 56px → 20px 로 줄이기 */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 700px;      /* ✅ 예전 큰 간격 유지 */
+    padding-top: 40px;  /* 기존 값 유지 */
 }
 .section_title {
   top: 0;
