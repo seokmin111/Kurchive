@@ -273,11 +273,8 @@ html, body {
     position: absolute;
     z-index: 0;
     width: 300px;
-
-    right: 0;                /* ❌ -100px 제거 */
-    transform: translateX(40%);  /* 대신 이렇게 밀기 */
-
     top: 300px;
+    right: -80px;   /* 살짝만 빼기 */
     opacity: 0.05;
     pointer-events: none;
 }
