@@ -151,7 +151,7 @@ class RestaurantDetailOut(BaseModel):
     longitude: Optional[float] = None
     region: Optional[Any] = None 
     tags: List[Any]
-    rating: int
+    rating: Optional[float]
     summary: str
     description: str
     price_min: int
