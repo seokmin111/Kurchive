@@ -202,13 +202,6 @@ export default function RestaurantFormPage() {
     setMenus((prev) => prev.filter((m) => m !== menu));
   };
 
-  // -------------------------
-  // Rating
-  // -------------------------
-  const ratingInt = useMemo(() => {
-    const r = Math.round(rating);
-    return Math.max(0, Math.min(5, r));
-  }, [rating]);
 
   // -------------------------
   // Submit
@@ -234,7 +227,7 @@ export default function RestaurantFormPage() {
         name: name.trim(),
         location_link: mapLink.trim(),
         location_tag_id: selectedLv2,
-        rating: ratingInt,
+        rating: rating,
         summary: (shortReview ?? "").trim() || " ",
         description,
         price_min: priceMin as number,
