@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // pages
 import MainPage from "./MainPage";
@@ -36,6 +38,7 @@ import AdminEntrustCompletePage from './tsx/10.34/page'
 
 export default function App() {
   return (
+    <>
     <Routes>
 
       {/* 공개 페이지 */}
@@ -208,5 +211,7 @@ export default function App() {
       <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
 
     </Routes>
+    <ToastContainer position="top-center" autoClose={2000} />
+    </>
   );
 }
