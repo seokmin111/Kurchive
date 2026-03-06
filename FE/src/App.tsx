@@ -1,5 +1,4 @@
-//App.tsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // pages
@@ -21,7 +20,6 @@ import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
 import RecipeSpecific from "./tsx/recipeSpecific_3.31/page"
 import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
-
 import MyPage from "./tsx/mypage_2.0/page";
 import MyActivityPage from "./tsx/myactivity_2.2/page";
 import MyRestaurantArchivePage from "./tsx/myRestaurantArchive_2.21/page"; 
@@ -39,6 +37,7 @@ import AdminEntrustCompletePage from './tsx/10.34/page'
 export default function App() {
   return (
     <Routes>
+
       {/* 공개 페이지 */}
       <Route path="/" element={<MainPage />} />
       <Route path="/login" element={<Login />} />
@@ -54,37 +53,160 @@ export default function App() {
       {/* 레시피 조회 (공개) */}
       <Route path="/recipe" element={<RecipeMainPage />} />
       <Route path="/recipe/search" element={<RecipeSearchPage />} />
+      <Route path="/recipe/search/results" element={<RecipeSearchResultsPage />} />
       <Route path="/recipe/:recipeId" element={<RecipeSpecific mode="view" />} />
 
-      {/* 🔐 보호 영역 */}
-      <Route element={<ProtectedRoute />}>
-        {/* 식당 작성/수정 */}
-        <Route path="/restaurant/archive" element={<RestaurantArchivePage />} />
-        <Route path="/restaurant/:restaurantId/edit" element={<RestaurantEditPage />} />
+      {/* 🔐 보호 페이지 */}
 
-        {/* 레시피 작성/수정 */}
-        <Route path="/recipe/archive" element={<RecipeArchivePage />} />
-        <Route path="/recipe/:recipeId/edit" element={<RecipeSpecific mode="edit" />} />
+      <Route
+        path="/restaurant/archive"
+        element={
+          <ProtectedRoute>
+            <RestaurantArchivePage />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* 마이페이지 */}
-        <Route path="/mypage" element={<MyPage />} />
-        <Route path="/myactivity" element={<MyActivityPage />} />
-        <Route path="/my-restaurant-archive" element={<MyRestaurantArchivePage />} />
-        <Route path="/my-recipe-archive" element={<MyRecipeArchivePage />} />
-        <Route path="/infoedit" element={<MyInfoEdit />} />
-        <Route path="/quitpage" element={<QuitPage />} />
+      <Route
+        path="/restaurant/:restaurantId/edit"
+        element={
+          <ProtectedRoute>
+            <RestaurantEditPage />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* 관리자 */}
-        <Route path="/admin" element={<AdminFirstPage />} />
-        <Route path="/admin/main" element={<AdminMainPage />} />
-        <Route path="/admin/member" element={<MemberSearchPage />} />
-        <Route path="/admin/member/result" element={<MemberSearchResultPage />} />
-        <Route path="/admin/entrust/result" element={<AdminEntrustPage />} />
-        <Route path="/admin/entrust/complete" element={<AdminEntrustCompletePage />} />
-      </Route>
+      <Route
+        path="/recipe/archive"
+        element={
+          <ProtectedRoute>
+            <RecipeArchivePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/recipe/:recipeId/edit"
+        element={
+          <ProtectedRoute>
+            <RecipeSpecific mode="edit" />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/mypage"
+        element={
+          <ProtectedRoute>
+            <MyPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/myactivity"
+        element={
+          <ProtectedRoute>
+            <MyActivityPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-restaurant-archive"
+        element={
+          <ProtectedRoute>
+            <MyRestaurantArchivePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-recipe-archive"
+        element={
+          <ProtectedRoute>
+            <MyRecipeArchivePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/infoedit"
+        element={
+          <ProtectedRoute>
+            <MyInfoEdit />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/quitpage"
+        element={
+          <ProtectedRoute>
+            <QuitPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 관리자 */}
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminFirstPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/main"
+        element={
+          <ProtectedRoute>
+            <AdminMainPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/member"
+        element={
+          <ProtectedRoute>
+            <MemberSearchPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/member/result"
+        element={
+          <ProtectedRoute>
+            <MemberSearchResultPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/entrust/result"
+        element={
+          <ProtectedRoute>
+            <AdminEntrustPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/entrust/complete"
+        element={
+          <ProtectedRoute>
+            <AdminEntrustCompletePage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* 404 */}
       <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
+
     </Routes>
   );
 }
