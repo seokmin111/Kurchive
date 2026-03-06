@@ -360,3 +360,11 @@
   cursor: pointer;
   color: #3c2e23;
 }
+
+/* 글자수 */
+.charCount {
+  font-size: 12px;
+  color: #888;
+  text-align: right;
+  margin-top: 4px;
+}

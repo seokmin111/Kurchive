@@ -213,6 +213,7 @@ export default function RestaurantFormPage() {
 
     if (!name.trim()) return alert("식당 이름을 입력해주세요.");
     if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
+    if (shortReview.length > 100) {return alert("한줄평은 100자 이하로 입력해주세요.");}
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
     if (!selectedLv2) return alert("소지역(구/시/군)을 선택해주세요.");
     if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해주세요.");
@@ -316,6 +317,10 @@ export default function RestaurantFormPage() {
                 value={shortReview}
                 onChange={(e) => setShortReview(e.target.value)}
               />
+
+              <div className={styles.charCount}>
+                {shortReview.length}/100
+              </div>
               <label className={styles.photoButton}>
                 {mainImagePreview ? (
                   <img src={mainImagePreview} alt="main" className={styles.photoPreview} />
