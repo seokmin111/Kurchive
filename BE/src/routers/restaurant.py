@@ -26,7 +26,7 @@ MAP_LINK_PREFIXES = (
 
 from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator, conint, confloat
+from pydantic import BaseModel, validator, conint, confloat, constr
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import os, re, time
@@ -85,7 +85,7 @@ class RestaurantCreate(BaseModel):
     location_link: str
     location_tag_id: int
     rating: Optional[confloat(ge=0, le=5)] = 0.0
-    summary: str
+    summary: constr(strip_whitespace=True, min_length=1, max_length=100)
     description: str
     price_min: int
     price_max: int
@@ -101,7 +101,7 @@ class RestaurantCreate(BaseModel):
             raise ValueError("location_link must be a valid URL (start with http/https)")
         return v
 
-    @validator("name", "summary", "description")
+    @validator("name", "description")
     def not_empty(cls, v):
         if not str(v).strip():
             raise ValueError("must not be empty")
@@ -174,7 +174,7 @@ class RestaurantUpdate(BaseModel):
     location_link: Optional[str] = None
     location_tag_id: Optional[int] = None
     rating: Optional[confloat(ge=0, le=5)] = None
-    summary: Optional[str] = None
+    summary: Optional[constr(strip_whitespace=True, min_length=1, max_length=100)] = None
     description: Optional[str] = None
     price_min: Optional[int] = None
     price_max: Optional[int] = None
