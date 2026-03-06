@@ -110,20 +110,35 @@
 .result_container {
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 10px 12px 110px;
+
+  margin: 30px auto 0;
+  padding: 25px 20px 120px;
+
+  background: white;
+  border-radius: 22px 22px 0 0;
+
   box-sizing: border-box;
 
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   grid-auto-rows: 120px;
 
   column-gap: 25px;
-  row-gap: 80px;
+  row-gap: 30px;
 
-  /* 검색 결과 스크롤 */
-  overflow-x: hidden;
-  overflow-y: auto;
+  min-height: 65vh;
+}
+.result_container {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 1200px;
+  margin: 30px auto 0;
+  padding: 25px 20px 120px;
+
+  background: white;
+  border-radius: 22px 22px 0 0;
 }
 
 .msg {
@@ -138,6 +153,7 @@
 /* =========================
    Recipe Card
 ========================= */
+
 .recipe_item {
   display: flex;
   flex-direction: column;
@@ -145,11 +161,13 @@
   padding: 12px 14px;
 
   background: white;
+  background-color: #ffffff;
   border: 1.5px solid #8b0029;
   border-radius: 12px;
 
   text-decoration: none;
   box-sizing: border-box;
+  isolation: isolate; 
 }
 
 .recipe_descriptionContainer {

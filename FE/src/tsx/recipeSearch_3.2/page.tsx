@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import styles from "./page.module.css";
 
-import { searchRecipes } from "../../api/recipe";
+import { listRecipes, searchRecipes } from "../../api/recipe";
 
 type Recipe = {
   id: number;
@@ -37,51 +37,59 @@ export default function RecipeSearchPage() {
     return `${y}.${m}.${day}`;
   };
 
-  const runSearch = async (keyword: string) => {
-    setLoading(true);
-    setErrMsg("");
-    try {
-      const data = await searchRecipes(keyword);
-      const list = Array.isArray(data) ? (data as Recipe[]) : [];
+  const runSearch = async (keyword?: string) => {
+  setLoading(true);
+  setErrMsg("");
 
-      // 최신 우선
-      const sorted = [...list].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-      setItems(sorted);
-    } catch (e: any) {
-      console.error(e);
-      if (e?.response?.status === 401) setErrMsg("로그인이 필요합니다. 다시 로그인해줘!");
-      else setErrMsg("검색 결과를 불러오지 못했어.");
-      setItems([]);
-    } finally {
-      setLoading(false);
+  try {
+    let data;
+
+    if (!keyword) {
+      data = await listRecipes();   // ⭐ 전체 목록
+    } else {
+      data = await searchRecipes(keyword);  // ⭐ 검색
     }
-  };
+
+    const list = Array.isArray(data) ? (data as Recipe[]) : [];
+    const sorted = [...list].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+
+    setItems(sorted);
+  } catch (e: any) {
+    console.error(e);
+    setErrMsg("레시피를 불러오지 못했습니다.");
+    setItems([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const onSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
+  e?.preventDefault();
 
-    const keyword = trimmed;
-    if (!keyword) {
-      setErrMsg("레시피 이름을 입력해주세요");
-      setItems([]);
-      setSp({}, { replace: true });
-      return;
-    }
+  const keyword = trimmed;
 
-    // URL 공유/뒤로가기용 반영
-    setSp({ q: keyword }, { replace: true });
-    await runSearch(keyword);
-  };
+  if (!keyword) {
+    setErrMsg("");
+    setSp({}, { replace: true });
+    await runSearch();   // 전체 목록 다시 로드
+    return;
+  }
+
+  setSp({ q: keyword }, { replace: true });
+  await runSearch(keyword);
+};
 
   // /recipe/search?q=xxx 로 직접 들어온 경우 자동 검색
   useEffect(() => {
-    const urlQ = sp.get("q");
-    if (urlQ && urlQ.trim()) {
-      setQ(urlQ);
-      runSearch(urlQ.trim());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const urlQ = sp.get("q");
+
+  if (urlQ && urlQ.trim()) {
+    setQ(urlQ);
+    runSearch(urlQ.trim());
+  } else {
+    runSearch();  // ⭐ 전체 레시피 로드
+  }
+}, []);
 
   return (
     <main className={styles.nomrg}>
