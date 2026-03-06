@@ -76,7 +76,7 @@ class MyRestaurantDTO(BaseModel):
     id: int
     name: str
     address: Optional[str]
-    rating: Optional[int]
+    rating: Optional[float]
     created_at: Optional[float]
 
     class Config:
