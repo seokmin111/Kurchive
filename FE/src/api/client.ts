@@ -31,7 +31,10 @@ client.interceptors.response.use(
       url.includes("/check_nickname") ||
       url.includes("/signup/check_id");
 
-    if ((status === 401 || status === 403) && !isAuthRequest) {
+    const isOptionalAuth =
+      url.includes("/favorite"); // 예외 처리
+
+    if ((status === 401 || status === 403) && !isAuthRequest && !isOptionalAuth) {
       localStorage.removeItem("access_token");
       window.location.href = "/login";
     }
