@@ -3,7 +3,8 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 // 공개(로그인 없이 접근 허용) 경로만 여기서 관리
 const PUBLIC_PATHS = [
   "/login",
-  // 필요하면 나중에 "/signup", "/health" 같은 것만 추가
+  "/restaurant",
+  "/recipe"
 ];
 
 function isPublicPath(path: string) {
