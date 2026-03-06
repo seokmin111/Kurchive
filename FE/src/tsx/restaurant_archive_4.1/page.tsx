@@ -209,6 +209,8 @@ export default function RestaurantFormPage() {
   const handleSubmit = async () => {
     if (submitting) return;
 
+    console.log("rating state:", rating);
+
     if (!name.trim()) return alert("식당 이름을 입력해주세요.");
     if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
