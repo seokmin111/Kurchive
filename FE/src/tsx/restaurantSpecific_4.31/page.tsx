@@ -28,6 +28,8 @@ type RestaurantDetail = {
   price_max: number;
   thumbnail_url?: string | null;
   images?: Image[];
+
+  recommended_menus?: string[];
 };
 
 function formatPrice(min?: number, max?: number) {
@@ -240,6 +242,37 @@ export default function RestaurantSpecific() {
         <div className={style.rec_point}>추천 정도 {restaurant.rating}점</div>
         <Stars value={restaurant.rating} />
       </div>
+      {/* 추천 메뉴 */}
+{restaurant.recommended_menus && restaurant.recommended_menus.length > 0 && (
+  <div
+    style={{
+      marginTop: 14,
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 8
+    }}
+  >
+    <div style={{ width: "100%", fontWeight: 600, marginBottom: 4 }}>
+      추천 메뉴
+    </div>
+
+    {restaurant.recommended_menus.map((menu, idx) => (
+      <span
+        key={idx}
+        style={{
+          padding: "6px 12px",
+          borderRadius: 20,
+          background: "#f4f4f4",
+          fontSize: 13,
+          color: "#8B0029",
+          fontWeight: 600
+        }}
+      >
+        {menu}
+      </span>
+    ))}
+  </div>
+)}
 
       {/* 맵 링크 */}
       <div className={style.map} style={{ width: "100%" }}>

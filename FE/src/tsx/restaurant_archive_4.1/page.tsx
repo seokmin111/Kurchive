@@ -223,8 +223,7 @@ export default function RestaurantFormPage() {
 
     try {
       setSubmitting(true);
-      const menuLine = menus.length ? `\n\n추천 메뉴: ${menus.join(", ")}` : "";
-      const description = `${detailReview ?? ""}${menuLine}`.trim() || " ";
+      const description = `${detailReview ?? ""}`.trim() || " ";
 
       const payload = {
         name: name.trim(),
@@ -236,6 +235,7 @@ export default function RestaurantFormPage() {
         price_min: priceMin as number,
         price_max: priceMax as number,
         tag_ids: selectedFoodTagIds,
+        recommended_menus: menus
       };
 
       const created = await client.post("/restaurants", payload).then((r) => r.data);
