@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean, Numeric
+from sqlalchemy import Column, Integer, String, Float, Text, ForeignKey, Boolean, Numeric, JSON
 from sqlalchemy.orm import relationship
 from BE.src.database import Base
 import time
@@ -21,6 +21,7 @@ class Restaurant(Base):
     price_max = Column(Integer, nullable=False)
     thumbnail_url = Column(String(500), nullable=True)
     created_at = Column(Float, default=lambda: time.time())
+    recommended_menus = Column(JSON, nullable=True)
 
     # 관계
     tags = relationship("RestaurantTag", back_populates="restaurant")

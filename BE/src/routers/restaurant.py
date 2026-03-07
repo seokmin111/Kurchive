@@ -90,6 +90,7 @@ class RestaurantCreate(BaseModel):
     price_min: int
     price_max: int
     tag_ids: List[int]
+    recommended_menus: Optional[List[str]] = []
 
     @validator("location_link")
     def validate_location_link(cls, v: str):
@@ -179,6 +180,7 @@ class RestaurantUpdate(BaseModel):
     price_min: Optional[int] = None
     price_max: Optional[int] = None
     tag_ids: Optional[List[int]] = None
+    recommended_menus: Optional[List[str]] = None
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
@@ -257,6 +259,7 @@ async def create_restaurant(
             description=payload.description,
             price_min=payload.price_min,
             price_max=payload.price_max,
+            recommended_menus=payload.recommended_menus,
             created_at=datetime.utcnow().timestamp()
         )
         db.add(restaurant)
@@ -388,6 +391,7 @@ async def get_restaurant(
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
         "thumbnail_url": restaurant.thumbnail_url,
+        "recommended_menus": restaurant.recommended_menus,
         "images": image_list
     }
 
@@ -720,6 +724,7 @@ async def update_restaurant(
         "description",
         "price_min",
         "price_max",
+        "recommended_menus"
     ]:
         if field in update_data:
             setattr(restaurant, field, update_data[field])
