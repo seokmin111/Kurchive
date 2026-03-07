@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import client from "../../api/client";
 
+import { MapPin, Utensils, Tag, FileText, Pencil, Heart } from "lucide-react";
+
 type Tag = {
   id: number;
   name: string;
@@ -41,22 +43,32 @@ function formatPrice(min?: number, max?: number) {
   return `${f(a)}원 ~ ${f(b)}원`;
 }
 
-// 기존 Stars 컴포넌트 오류 수정 (매개변수 구조 분해)
 function Stars({ value }: { value: number }) {
-  const v = Math.max(0, Math.min(5, Math.round(value ?? 0)));
+  const percent = (value / 5) * 100;
+
   return (
-    <div style={{ display: "flex", gap: 4 }}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          style={{
-            fontSize: 18,
-            color: i < v ? "#8B0029" : "#e6c6d0",
-          }}
-        >
-          ★
-        </span>
-      ))}
+    <div style={{ position: "relative", display: "inline-block", fontSize: 18 }}>
+      
+      {/* 회색 별 */}
+      <div style={{ color: "#e6c6d0" }}>
+        ★★★★★
+      </div>
+
+      {/* 채워진 별 */}
+      <div
+        style={{
+          color: "#8B0029",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          width: `${percent}%`,
+        }}
+      >
+        ★★★★★
+      </div>
+
     </div>
   );
 }
@@ -196,7 +208,7 @@ export default function RestaurantSpecific() {
               onClick={() => nav(`/restaurant/${restaurant.id}/edit`)}
               title="수정하기"
             >
-              ✏️
+              <Pencil size={20} color="#8B0029" />
             </button>
           )}
           <button
@@ -204,7 +216,11 @@ export default function RestaurantSpecific() {
             onClick={toggleFavorite}
             title="찜하기"
           >
-            {isZzim ? "❤️" : "🤍"}
+            <Heart
+              size={20}
+              color="#8B0029"
+              fill={isZzim ? "#8B0029" : "none"}
+            />
           </button>
         </div>
       </div>
@@ -214,17 +230,19 @@ export default function RestaurantSpecific() {
         <div className={style.leftBox}>
           {coverUrl ? (
             <img
-              src={coverUrl}
-              alt="cover"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
+  src={coverUrl}
+  alt="cover"
+  className={style.coverImage}
+/>
           ) : (
-            <div style={{ textAlign: "center", color: "#8B0029", marginTop: "40%" }}>사진 없음</div>
+            <div className={style.noImage}>
+            사진 없음
+          </div>
           )}
         </div>
 
         <div className={style.rightBox}>
-          <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", rowGap: 14 }}>
+          <div className={style.infoGrid}>
             <div style={{ color: "#8B0029", fontWeight: 800 }}>한줄평</div>
             <div>{restaurant.summary}</div>
 
@@ -238,99 +256,84 @@ export default function RestaurantSpecific() {
       </div>
 
       {/* 별점 */}
-      <div className={style.recommend}>
-        <div className={style.rec_point}>추천 정도 {restaurant.rating}점</div>
-        <Stars value={restaurant.rating} />
+      <div className={style.ratingBox}>
+      <div className={style.ratingScore}>
+        ⭐ {restaurant.rating} / 5
       </div>
-      {/* 추천 메뉴 */}
-{restaurant.recommended_menus && restaurant.recommended_menus.length > 0 && (
-  <div
-    style={{
-      marginTop: 14,
-      display: "flex",
-      flexWrap: "wrap",
-      gap: 8
-    }}
-  >
-    <div style={{ width: "100%", fontWeight: 600, marginBottom: 4 }}>
-      추천 메뉴
-    </div>
 
-    {restaurant.recommended_menus.map((menu, idx) => (
-      <span
-        key={idx}
-        style={{
-          padding: "6px 12px",
-          borderRadius: 20,
-          background: "#f4f4f4",
-          fontSize: 13,
-          color: "#8B0029",
-          fontWeight: 600
-        }}
-      >
-        {menu}
-      </span>
-    ))}
+      <Stars value={restaurant.rating} />
+    </div>
+        
+          <a
+  href={restaurant.location_link}
+  target="_blank"
+  rel="noreferrer"
+  className={style.mapButton}
+>
+  <img src="/map.svg" className={style.mapIcon} />
+  지도 링크 열기
+</a>
+
+
+       {/* 추천 메뉴 */}
+{restaurant.recommended_menus && restaurant.recommended_menus.length > 0 && (
+  <div className={style.section}>
+    <div className={style.sectionTitle}>
+  <Utensils size={18} /> 추천 메뉴
+</div>
+
+    <div className={style.menuRow}>
+      {restaurant.recommended_menus.map((menu, idx) => (
+        <span key={idx} className={style.menuChip}>
+          {menu}
+        </span>
+      ))}
+    </div>
   </div>
 )}
 
-      {/* 맵 링크 */}
-      <div className={style.map} style={{ width: "100%" }}>
-        <div style={{ marginBottom: 6, fontWeight: 600 }}>맵 링크</div>
-        <a
-          href={restaurant.location_link}
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            display: "inline-block",
-            padding: "6px 12px",
-            borderRadius: 20,
-            background: "#f4f4f4",
-            textDecoration: "none",
-            color: "#8B0029",
-            fontWeight: 600,
-            fontSize: 14
-          }}
-        >
-          지도 보러가기 →
-        </a>
-      </div>
-
       {/* 태그 */}
-      <div className={style.tags}>
-        <div className={style.tags_title}>태그</div>
+      <div className={style.section}>
+  <div className={style.sectionTitle}>
+  <Tag size={18} /> 태그
+</div>
 
-        {/* 지역 먼저 */}
-        {restaurant.region && (
-          <div className={style.tags_tag}>
-            {restaurant.region.name}
-          </div>
-        )}
-
-        {/* 음식 태그 */}
-        {restaurant.tags.map((tag) => (
-        <div key={tag.id} className={style.tags_tag}>
-          {tag.parent_name && (
-            <span className={style.parentTag}>
-              {tag.parent_name}
-            </span>
-          )}
-          <span>{tag.name}</span>
-        </div>
-      ))}
-
-        {/* 아무것도 없을 때 */}
-        {!restaurant.region && restaurant.tags.length === 0 && (
-          <div className={style.tags_tag}>태그 없음</div>
-        )}
+  <div className={style.tags}>
+    {restaurant.region && (
+      <div className={style.tags_tag}>
+        {restaurant.region.name}
       </div>
+    )}
+
+    {restaurant.tags.map((tag) => (
+      <div key={tag.id} className={style.tags_tag}>
+        {tag.parent_name && (
+          <span className={style.parentTag}>
+            {tag.parent_name}
+          </span>
+        )}
+        <span>{tag.name}</span>
+      </div>
+    ))}
+
+    {!restaurant.region && restaurant.tags.length === 0 && (
+      <div className={style.tags_tag}>태그 없음</div>
+    )}
+  </div>
+</div>
 
       <div className={style.line}></div>
 
       {/* 상세 후기 */}
-      <div className={style.lower_box}>
-        {restaurant.description}
-      </div>
+     <div className={style.section}>
+     <div className={style.sectionTitle}>
+  <FileText size={18} /> 상세 후기
+</div>
+
+  <div className={style.lower_box}>
+    {restaurant.description}
+  </div>
+</div>
 
       {/* 본문 이미지 갤러리 */}
       {restaurant.images && restaurant.images.length > 0 && (

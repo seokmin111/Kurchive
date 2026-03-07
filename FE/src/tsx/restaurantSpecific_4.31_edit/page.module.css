@@ -199,6 +199,26 @@ input, textarea, button {
   cursor: pointer;
 }
 
+.starsWrapper {
+  position: relative;
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.starsBackground {
+  color: #e6c6d0;
+}
+
+.starsFill {
+  color: #8B0029;
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 /* ===== Menu Chips ===== */
 .menuRow {
   display: flex;
@@ -237,6 +257,51 @@ input, textarea, button {
   background: #f2ece5;
   border: none;
   cursor: pointer;
+}
+
+.menuSectionTitle{
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.menuInputRow{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.menuInput{
+  flex:1;
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+.menuAddButton{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  border:none;
+  background:#8B0029;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.menuRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.menuChip{
+  padding:6px 12px;
+  border-radius:20px;
+  background:#f2ece5;
+  color:#8B0029;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
 }
 
 /* ===== Tag UI ===== */

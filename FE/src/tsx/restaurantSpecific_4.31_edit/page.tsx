@@ -39,6 +39,7 @@ type RestaurantDetail = {
   tags: Tag[];
   images?: Image[];
   thumbnail_url?: string | null;
+  recommended_menus?: string[];
 };
 
 async function safeDeleteRestaurantImage(restaurantId: number, imageId: number) {
@@ -48,6 +49,25 @@ async function safeDeleteRestaurantImage(restaurantId: number, imageId: number) 
     return;
   } catch {}
   await client.delete(`/restaurants/${restaurantId}/images/${imageId}`);
+}
+/* 별 */
+function Stars({ value }: { value: number }) {
+  const percent = Math.max(0, Math.min(100, (value / 5) * 100));
+
+  return (
+    <div className={styles.starsWrapper}>
+      {/* 회색 별 */}
+      <div className={styles.starsBackground}>★★★★★</div>
+
+      {/* 채워진 별 */}
+      <div
+        className={styles.starsFill}
+        style={{ width: `${percent}%` }}
+      >
+        ★★★★★
+      </div>
+    </div>
+  );
 }
 
 export default function RestaurantEditPage() {
@@ -180,6 +200,9 @@ useEffect(() => {
   return regionMap[selectedLv2] ?? null;
 }, [selectedLv2, regionMap]);
 
+const [recommendedMenus, setRecommendedMenus] = useState<string[]>([]);
+const [menuInput, setMenuInput] = useState("");
+
 
 // image
   const [detailInputKey, setDetailInputKey] = useState(0);
@@ -223,6 +246,24 @@ useEffect(() => {
       : [...prev, tag]
   );
 };
+
+const addMenu = () => {
+  const m = menuInput.trim();
+  if (!m) return;
+
+  if (recommendedMenus.includes(m)) {
+    setMenuInput("");
+    return;
+  }
+
+  setRecommendedMenus((prev) => [...prev, m]);
+  setMenuInput("");
+};
+
+const removeMenu = (menu: string) => {
+  setRecommendedMenus((prev) => prev.filter((m) => m !== menu));
+};
+
 
 const clearFoodTags = () => setSelectedFoodTags([]);
 
@@ -323,6 +364,7 @@ useEffect(() => {
       setThumbnailUrl(data.thumbnail_url ?? null);
       setDetailReview((data.description ?? "").toString());
       setSelectedFoodTags(data.tags ?? []);
+      setRecommendedMenus(data.recommended_menus ?? []);
 
       if (data.tags?.length) {
         const firstTag = data.tags[0];
@@ -408,7 +450,8 @@ useEffect(() => {
         description,
         price_min: priceMin as number,
         price_max: priceMax as number,
-        tag_ids: selectedFoodTags.map((t) => t.id)
+        tag_ids: selectedFoodTags.map((t) => t.id),
+        recommended_menus: recommendedMenus
       };
       await client.patch(`/restaurants/${id}`, payload);
 
@@ -587,19 +630,23 @@ setTimeout(() => {
 
           {/* 2) 별점 + 메뉴칩 (아카이브 구조) */}
           <section className={styles.section}>
-            <div className={styles.centerTitle}>
-              추천 정도 <span className={styles.smallText}>(0.5 단위)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <Stars value={rating} />
+              <span style={{ fontWeight: 700, color: "#8B0029" }}>
+                {rating.toFixed(1)}
+              </span>
             </div>
 
+            {/* 클릭용 별 */}
             <div className={styles.ratingStars}>
               {Array.from({ length: 10 }).map((_, idx) => {
                 const stepValue = (idx + 1) * 0.5;
-                const active = rating >= stepValue;
+
                 return (
                   <button
                     key={idx}
                     type="button"
-                    className={active ? styles.starButtonActive : styles.starButtonInactive}
+                    className={styles.starButtonInactive}
                     onClick={() => setRating(stepValue)}
                   >
                     ★
@@ -609,8 +656,50 @@ setTimeout(() => {
             </div>
 
           </section>
+          {/* 3) 추천 메뉴 */}
+          <section className={styles.section}>
+            <div className={styles.menuSectionTitle}>추천 메뉴</div>
 
-          {/* 3) 태그 선택 (아카이브 구조 100% 그대로) */}
+            <div className={styles.menuInputRow}>
+              <input
+                className={styles.menuInput}
+                placeholder="메뉴 입력"
+                value={menuInput}
+                onChange={(e) => setMenuInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addMenu();
+                  }
+                }}
+              />
+
+              <button
+                type="button"
+                className={styles.menuAddButton}
+                onClick={addMenu}
+              >
+                +
+              </button>
+            </div>
+
+            {recommendedMenus.length > 0 && (
+              <div className={styles.menuRow}>
+                {recommendedMenus.map((menu) => (
+                  <button
+                    key={menu}
+                    type="button"
+                    className={styles.menuChip}
+                    onClick={() => removeMenu(menu)}
+                  >
+                    {menu} ×
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* 4) 태그 선택 (아카이브 구조 100% 그대로) */}
           <section className={styles.section}>
             <h3 className={styles.centerTitle}>태그 선택</h3>
 
@@ -678,10 +767,9 @@ setTimeout(() => {
                           type="button"
                           className={selected ? styles.tagButtonSelected : styles.tagButton}
                           onClick={() => {
-  setSelectedLv1(r.id);
-  setSelectedLv2(null);   // 🔥 이거 추가
-}}
-                          
+                          setSelectedLv1(r.id);
+                          setSelectedLv2(null);   
+                        }}
                         >
                           {r.name}
                         </button>
