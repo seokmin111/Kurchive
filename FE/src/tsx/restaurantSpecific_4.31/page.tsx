@@ -217,7 +217,7 @@ export default function RestaurantSpecific() {
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <div style={{ textAlign: "center", color: "#8B0029", marginTop: "50%" }}>사진 없음</div>
+            <div style={{ textAlign: "center", color: "#8B0029", marginTop: "40%" }}>사진 없음</div>
           )}
         </div>
 
@@ -295,10 +295,7 @@ export default function RestaurantSpecific() {
       <div className={style.line}></div>
 
       {/* 상세 후기 */}
-      <div
-        className={style.lower_box}
-        style={{ padding: 16, whiteSpace: "pre-wrap", overflowY: "auto" }}
-      >
+      <div className={style.lower_box}>
         {restaurant.description}
       </div>
 

@@ -236,6 +236,7 @@
   line-height: 1.6;
   color: #333;
   white-space: pre-wrap;
+  text-align: left;
 }
 
 .summary {
@@ -345,4 +346,18 @@
 
 .infoValue {
   font-size: 14px;
+}
+
+/* 상세 설명 */
+.lower_box {
+  width: 100%;
+  height: 300px;
+  border: 1px dotted black;
+  border-radius: 20px;
+
+  padding: 16px;
+  white-space: pre-wrap;
+  overflow-y: auto;
+
+  text-align: left;
 }

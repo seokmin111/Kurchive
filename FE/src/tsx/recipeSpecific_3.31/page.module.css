@@ -317,7 +317,11 @@ select {
   padding: 12px;
   box-sizing: border-box;
   resize: vertical;
+
+  text-align: left;
 }
+
+
 
 .number {
   width: 28px;
