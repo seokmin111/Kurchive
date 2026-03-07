@@ -160,6 +160,7 @@ class RestaurantDetailOut(BaseModel):
     uploaded_by: int
     created_at: float
     images: List[Any]
+    recommended_menus: Optional[List[str]] = []
 
 class ImageOut(BaseModel):
     id: int
@@ -808,6 +809,7 @@ async def update_restaurant(
         "uploaded_by": restaurant.uploaded_by,
         "created_at": restaurant.created_at,
         "thumbnail_url": restaurant.thumbnail_url,
+        "recommended_menus": restaurant.recommended_menus,
         "images": images
     }
     
