@@ -10,7 +10,11 @@ type Recipe = {
   title: string;
   base_serving: number;
   uploader_id: number;
-  created_at: string; // FastAPI datetime -> ISO string
+  uploader?: {
+    id: number;
+    nickname: string;
+  };
+  created_at: string;
   thumbnail_url?: string | null;
 };
 
@@ -114,7 +118,7 @@ export default function RecipeMainPage() {
                 <div className={styles.recipe_descriptionContainer}>
                   <div className={styles.recipe_underContainer}>
                     <div className={styles.recipe_uploader}>
-                      업로더: user_{r.uploader_id}
+                      업로더: {r.uploader?.nickname ?? `user_${r.uploader_id}`}
                     </div>
 
                     <div className={styles.recipe_date}>

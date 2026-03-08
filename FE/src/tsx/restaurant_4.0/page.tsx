@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import client from "../../api/client";
 
 
-import RestaurantFormPage from '../restaurant_archive_4.1/page';
 type Restaurant = {
   id: number;
   name: string;
@@ -18,8 +17,12 @@ type Restaurant = {
   thumbnail_url?: string | null;
   created_at?: number;
   uploaded_by: number;
-};
 
+  uploader?: {
+    id: number;
+    nickname: string;
+  };
+};
 export default function RestaurantSearchPage() {
   const navigate = useNavigate();
   const short = (s?: string | null, n = 24) =>
@@ -125,7 +128,7 @@ export default function RestaurantSearchPage() {
                     <div className={styles.restaurant_reviewer}>⭐ {r.rating ?? 0}</div>
 
                     <div className={styles.restaurant_uploader}>
-                      업로더: user_{r.uploaded_by}
+                      업로더: {r.uploader?.nickname ?? `user_${r.uploaded_by}`}
                     </div>
 
                     <div className={styles.restaurant_address}>
