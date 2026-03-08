@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload 
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -17,70 +16,13 @@ from BE.src.models.restaurants import Restaurant
 from BE.src.models.favorites import Favorite, RecipeFavorite
 from BE.src.models.restaurants import RestaurantImage
 
+from BE.src.dto.mypage_dto import MessageResponse, MyRecipeDTO, MyRestaurantDTO, UserResponseDTO, FavoriteRecipeDTO, FavoriteRestaurantDTO, NicknameUpdateRequest, PasswordUpdateRequest
+
+
 router = APIRouter(prefix="/api/mypage", tags=["MyPage"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# -------- DTO --------
-class MessageResponse(BaseModel):
-    message: str
-
-class UserResponseDTO(BaseModel):
-    id: int            
-    is_admin: bool     
-    name: str
-    nickname: str
-    role: str
-    created_at: Optional[datetime] 
-
-    class Config:
-        from_attributes = True
-
-class NicknameUpdateRequest(BaseModel):
-    nickname: str
-
-class PasswordUpdateRequest(BaseModel):
-    currentPW: str
-    newPW: str
-
-class FavoriteRestaurantDTO(BaseModel):
-    id: int
-    name: str
-    address: Optional[str]
-    rating: Optional[float]
-    thumbnail_url: Optional[str] = None # 썸네일 추가 
-
-    class Config:
-        from_attributes = True
-
-class FavoriteRecipeDTO(BaseModel):
-    id: int
-    title: str
-    base_serving: int
-    thumbnail_url: Optional[str] = None
-    created_at: Optional[datetime]
-
-    class Config:
-        from_attributes = True
-
-class MyRecipeDTO(BaseModel):
-    id: int
-    title: str
-    base_serving: int
-    created_at: Optional[datetime]
-
-    class Config:
-        from_attributes = True
-
-class MyRestaurantDTO(BaseModel):
-    id: int
-    name: str
-    address: Optional[str]
-    rating: Optional[float]
-    created_at: Optional[float]
-
-    class Config:
-        from_attributes = True
 
 # -------- 마이페이지 API --------
 @router.get("", response_model=UserResponseDTO)
@@ -117,36 +59,42 @@ async def update_password(
     await db.commit()
     return {"message": "Password updated successfully"}
 
-@router.get("/logs/restaurants", response_model=List[FavoriteRestaurantDTO])
+@router.get("/logs/favorite-restaurants", response_model=List[FavoriteRestaurantDTO])
 async def get_my_favorite_restaurants(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    # JOIN을 사용하여 찜한 시간 역순으로 정렬
+
     stmt = (
-        select(Restaurant, Favorite.created_at)
+        select(
+            Restaurant.id,
+            Restaurant.name,
+            Restaurant.address,
+            Restaurant.rating,
+            RestaurantImage.image_url
+        )
         .join(Favorite, Favorite.restaurant_id == Restaurant.id)
+        .outerjoin(
+            RestaurantImage,
+            (RestaurantImage.restaurant_id == Restaurant.id)
+            & (RestaurantImage.is_cover == True)
+        )
         .where(Favorite.user_id == current_user.id)
         .order_by(Favorite.created_at.desc())
     )
+
     result = await db.execute(stmt)
-    rows = result.all()
-    
-    response = []
-    for restaurant, fav_time in rows:
-        # 썸네일(대표 이미지) 가져오기
-        img_stmt = select(RestaurantImage).where(RestaurantImage.restaurant_id == restaurant.id).order_by(RestaurantImage.is_cover.desc(), RestaurantImage.id.asc()).limit(1)
-        img = (await db.execute(img_stmt)).scalar_one_or_none()
-        
-        response.append({
-            "id": restaurant.id,
-            "name": restaurant.name,
-            "address": restaurant.address,
-            "rating": restaurant.rating,
-            "thumbnail_url": img.image_url if img else None
-        })
-        
-    return response
+
+    return [
+        FavoriteRestaurantDTO(
+            id=r.id,
+            name=r.name,
+            address=r.address,
+            rating=r.rating,
+            thumbnail_url=r.image_url
+        )
+        for r in result
+    ]
 
 @router.get("/logs/favorite-recipes", response_model=List[FavoriteRecipeDTO])
 async def get_my_favorite_recipes(
@@ -163,7 +111,16 @@ async def get_my_favorite_recipes(
     result = await db.execute(stmt)
     recipes = result.scalars().all()
     
-    return recipes
+    return [
+    FavoriteRecipeDTO(
+        id=r.id,
+        title=r.title,
+        base_serving=r.base_serving,
+        thumbnail_url=r.thumbnail_url,
+        created_at=r.created_at
+    )
+    for r in recipes
+]
 
 @router.delete("/withdrawal", response_model=MessageResponse)
 async def delete_user_account(
@@ -177,26 +134,62 @@ async def delete_user_account(
     return {"message": "회원 탈퇴가 성공적으로 처리되었습니다."}
 
 # 내 활동 기록
-@router.get("/logs/recipes", response_model=List[MyRecipeDTO])
-async def get_my_uploaded_recipes(
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user_from_token)
-):
-    result = await db.execute(
-        select(Recipe)
-        .where(Recipe.uploader_id == current_user.id)
-        .order_by(Recipe.created_at.desc())
-    )
-    return result.scalars().all()
-
-@router.get("/logs/restaurants-uploaded", response_model=List[MyRestaurantDTO])
+@router.get("/logs/uploaded-restaurants", response_model=List[MyRestaurantDTO])
 async def get_my_uploaded_restaurants(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    result = await db.execute(
-        select(Restaurant)
+
+    stmt = (
+        select(
+            Restaurant.id,
+            Restaurant.name,
+            Restaurant.address,
+            Restaurant.rating,
+            Restaurant.created_at
+        )
         .where(Restaurant.uploaded_by == current_user.id)
         .order_by(Restaurant.created_at.desc())
     )
-    return result.scalars().all()
+
+    result = await db.execute(stmt)
+
+    return [
+        MyRestaurantDTO(
+            id=r.id,
+            name=r.name,
+            address=r.address,
+            rating=r.rating,
+            created_at=r.created_at
+        )
+        for r in result
+    ]
+    
+@router.get("/logs/uploaded-recipes", response_model=List[MyRecipeDTO])
+async def get_my_uploaded_recipes(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user_from_token)
+):
+
+    stmt = (
+        select(
+            Recipe.id,
+            Recipe.title,
+            Recipe.base_serving,
+            Recipe.created_at
+        )
+        .where(Recipe.uploader_id == current_user.id)
+        .order_by(Recipe.created_at.desc())
+    )
+
+    result = await db.execute(stmt)
+
+    return [
+        MyRecipeDTO(
+            id=r.id,
+            title=r.title,
+            base_serving=r.base_serving,
+            created_at=r.created_at
+        )
+        for r in result
+    ]
