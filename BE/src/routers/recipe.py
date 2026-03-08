@@ -24,7 +24,7 @@ from BE.src.models.favorites import RecipeFavorite
 from BE.src.utils.units import convert_unit
 from BE.src.utils.image_cleanup import cleanup_recipe_images, cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
-
+from BE.src.utils.user_serializer import build_uploader
 
 
 logger = logging.getLogger("convert")
@@ -94,12 +94,17 @@ class RecipeUpdateDTO(BaseModel):
     ingredients: Optional[List[IngredientUpsertDTO]] = None
     steps: Optional[List[RecipeStepDTO]] = None
 
-
+# 업로더
+class UploaderDTO(BaseModel):
+    id: int
+    nickname: str
+    
 class RecipeResponseDTO(BaseModel):
     id: int
     title: str
     base_serving: int
     uploader_id: int
+    uploader: Optional[UploaderDTO] = None
     created_at: datetime
     thumbnail_url: Optional[str] = None
     description: Optional[str] = None
@@ -112,6 +117,7 @@ class RecipeResponseDTO(BaseModel):
 class RecipeFavoriteToggleResponse(BaseModel):
     is_favorite: bool
     message: str
+
 
 # -------- 공통 --------
 async def assert_can_edit_recipe(recipe: Recipe, current_user: User):
@@ -166,7 +172,7 @@ def _build_recipe_response(recipe: Recipe):
         "thumbnail_url": recipe.thumbnail_url,
         "description": getattr(recipe, "description", None),  # ✅ 추가
         "steps": steps,
-        "ingredients": ingredients,
+        "ingredients": ingredients
     }
 
 
@@ -255,7 +261,17 @@ async def search_recipes(
         ).filter(Recipe.title.contains(title))
     )
     recipes = result.scalars().all()
-    return [_build_recipe_response(r) for r in recipes]
+    out = []
+
+    for r in recipes:
+        data = _build_recipe_response(r)
+
+        user = await db.get(User, r.uploader_id)
+        data["uploader"] = build_uploader(user)
+
+        out.append(data)
+
+    return out
 
 
 @router.get("/list", response_model=List[RecipeResponseDTO])
@@ -269,7 +285,17 @@ async def list_recipes(
         )
     )
     recipes = result.scalars().all()
-    return [_build_recipe_response(r) for r in recipes]
+    out = []
+
+    for r in recipes:
+        data = _build_recipe_response(r)
+
+        user = await db.get(User, r.uploader_id)
+        data["uploader"] = build_uploader(user)
+
+        out.append(data)
+
+    return out
 
 
 @router.get("/{recipe_id}", response_model=RecipeResponseDTO)
@@ -280,7 +306,12 @@ async def get_recipe(
     recipe = await _load_recipe_with_images(db, recipe_id)
     if not recipe:
         raise HTTPException(404, "Recipe not found")
-    return _build_recipe_response(recipe)
+    data = _build_recipe_response(recipe)
+
+    user = await db.get(User, recipe.uploader_id)
+    data["uploader"] = build_uploader(user)
+
+    return data
 
 
 @router.get("/{recipe_id}/scale", response_model=RecipeResponseDTO)
@@ -297,7 +328,12 @@ async def scale_recipe(
     for ri in recipe.ingredients:
         ri.quantity *= factor
 
-    return _build_recipe_response(recipe)
+    data = _build_recipe_response(recipe)
+
+    user = await db.get(User, recipe.uploader_id)
+    data["uploader"] = build_uploader(user)
+
+    return data
 
 
 @router.post("/{recipe_id}/convert", response_model=RecipeResponseDTO)

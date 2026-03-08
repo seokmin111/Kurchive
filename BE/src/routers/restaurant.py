@@ -49,6 +49,7 @@ from BE.AddressLatLong import extract_location_from_link
 from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
 from BE.src.utils.image_upload import ALLOWED_MIME
+from BE.src.utils.user_serializer import build_uploader
 
 from urllib.parse import urlparse
 
@@ -392,6 +393,7 @@ async def search_restaurants_by_name(
         select(Restaurant).where(Restaurant.name.like(f"%{q}%")).limit(20)
     )
     restaurants = result.scalars().all()
+    user = await db.get(User, r.uploaded_by)
 
     out = []
     for r in restaurants:
@@ -403,6 +405,7 @@ async def search_restaurants_by_name(
             "summary": r.summary,
             "price_min": r.price_min,
             "price_max": r.price_max,
+            "uploader": build_uploader(user),
             "thumbnail_url": r.thumbnail_url
         })
     return out
@@ -419,6 +422,7 @@ async def get_restaurant(
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
     ParentTag = aliased(Tag)
+    user = await db.get(User, restaurant.uploaded_by)
 
     tag_rows = await db.execute(
         select(
@@ -478,6 +482,7 @@ async def get_restaurant(
         "price_min": restaurant.price_min,
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
+        "uploader": build_uploader(user),
         "created_at": restaurant.created_at,
         "thumbnail_url": restaurant.thumbnail_url,
         "recommended_menus": restaurant.recommended_menus,
@@ -575,8 +580,12 @@ async def list_restaurants(
     result = await db.execute(stmt)
     restaurants = result.scalars().all()
 
-    return [
-        {
+    out = []
+
+    for r in restaurants:
+        user = await db.get(User, r.uploaded_by)
+
+        out.append({
             "id": r.id,
             "name": r.name,
             "address": r.address,
@@ -587,12 +596,12 @@ async def list_restaurants(
             "price_max": r.price_max,
             "latitude": r.latitude,
             "longitude": r.longitude,
-            "uploaded_by": r.uploaded_by,
+            "uploader": build_uploader(user),
             "created_at": r.created_at,
             "thumbnail_url": r.thumbnail_url
-        }
-        for r in restaurants
-    ]
+        })
+
+    return out
 # 현위치/임의좌표 근접 검색
 @router.get("/restaurants/nearby")
 async def list_restaurants_nearby(
@@ -774,6 +783,7 @@ async def update_restaurant(
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
+    user = await db.get(User, restaurant.uploaded_by)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
@@ -895,6 +905,7 @@ async def update_restaurant(
         "price_min": restaurant.price_min,
         "price_max": restaurant.price_max,
         "uploaded_by": restaurant.uploaded_by,
+        "uploader": build_uploader(user),
         "created_at": restaurant.created_at,
         "thumbnail_url": restaurant.thumbnail_url,
         "recommended_menus": restaurant.recommended_menus,
