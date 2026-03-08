@@ -488,6 +488,7 @@ useEffect(() => {
       "map.kakao.com",
       "kko.kakao.com",
       "place.map.kakao.com",
+      "kko.to",
       "naver.me",
       "map.naver.com",
       "m.place.naver.com",
