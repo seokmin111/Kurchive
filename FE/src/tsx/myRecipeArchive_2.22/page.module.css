@@ -53,19 +53,15 @@
 .myPageButton {
   background-color: #fff;
   border: 1.5px solid #8B0029;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
   color: #8B0029;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.myPageButton:hover {
-  background-color: #8B0029;
-  color: #fff;
-}
 
 /* 페이지 제목 */
 .pageTitle {

@@ -52,14 +52,15 @@
 }
 
 .myPageButton {
+  background-color: #fff;
   border: 1.5px solid #8B0029;
   border-radius: 20px;
   padding: 0.4rem 0.9rem;
   font-size: 0.8rem;
   color: #8B0029;
   font-weight: 600;
-  background: white;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 /* ===== Page Title ===== */
