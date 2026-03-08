@@ -70,6 +70,62 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+function RatingInput({
+  value,
+  onChange
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    const percent = x / rect.width;
+
+    const raw = percent * 5;
+    const step = Math.round(raw * 2) / 2;
+
+    onChange(Math.min(5, Math.max(0, step)));
+  };
+
+  const percent = (value / 5) * 100;
+
+  return (
+    <div
+      onClick={handleClick}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        fontSize: 28,
+        cursor: "pointer",
+        userSelect: "none",
+        lineHeight: 1
+      }}
+    >
+      {/* 회색 별 */}
+      <div style={{ color: "#ddd" }}>
+        ★★★★★
+      </div>
+
+      {/* 채워진 별 */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: `${percent}%`,
+          overflow: "hidden",
+          color: "#8B0029"
+        }}
+      >
+        ★★★★★
+      </div>
+    </div>
+  );
+}
+
 export default function RestaurantEditPage() {
   const nav = useNavigate();
   const { restaurantId } = useParams();
@@ -422,6 +478,30 @@ useEffect(() => {
   // =========================================================
   // 저장
   // =========================================================
+  function isValidMapLink(url: string) {
+  try {
+    const u = new URL(url);
+
+    const host = u.hostname;
+
+    const allowed = [
+      "map.kakao.com",
+      "kko.kakao.com",
+      "place.map.kakao.com",
+      "naver.me",
+      "map.naver.com",
+      "m.place.naver.com",
+      "maps.app.goo.gl",
+      "www.google.com",
+      "google.com",
+      "goo.gl"
+    ];
+
+    return allowed.some((d) => host.includes(d));
+  } catch {
+    return false;
+  }
+}
   const handleSubmit = async () => {
     if (submitting) return;
 
@@ -429,6 +509,9 @@ useEffect(() => {
     if (!name.trim()) return alert("식당 이름을 입력해주세요.");
     if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
+    if (!isValidMapLink(mapLink.trim())) {
+  return alert("지원되는 지도 링크가 아닙니다.");
+}
     if (!selectedLv2) return alert("소지역(구/시/군)을 선택해주세요.");
     if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해주세요.");
     if (Number.isNaN(priceMin) || Number.isNaN(priceMax)) return alert("가격은 숫자만 입력해주세요.");
@@ -548,11 +631,14 @@ setTimeout(() => {
 
       {/* ===== 배너 아래 콘텐츠는 아카이브 폼 그대로 ===== */}
       <div style={{ width: "100%", padding: "0 0 30px" }}>
+        <p className={styles.requiredGuide}>
+  <span className={styles.required}>*</span> 표시된 항목은 비워둘 수 없습니다.
+</p>
         <main className={styles.main} style={{ marginTop: 12 }}>
           {/* 1) 이름 + 한줄평 + 대표사진(아카이브 구조) */}
           <section className={styles.section}>
             <div className={styles.formRow}>
-              <span className={styles.formLabel}>식당 이름</span>
+              <span className={styles.formLabel}>식당 이름<span className={styles.required}>*</span></span>
             </div>
 
             <input
@@ -616,7 +702,7 @@ setTimeout(() => {
           )}
 
             <div className={styles.labelRow}>
-              <span className={styles.label}>식당 맵 링크 :</span>
+              <span className={styles.label}>식당 맵 링크 <span className={styles.required}>*</span></span>
               <input
                 className={styles.mapInput}
                 placeholder="https://..."
@@ -630,29 +716,15 @@ setTimeout(() => {
 
           {/* 2) 별점 + 메뉴칩 (아카이브 구조) */}
           <section className={styles.section}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Stars value={rating} />
-              <span style={{ fontWeight: 700, color: "#8B0029" }}>
+            <div className={styles.ratingBox}>
+              <RatingInput
+                value={rating}
+                onChange={(v) => setRating(v)}
+              />
+
+              <span className={styles.ratingScore}>
                 {rating.toFixed(1)}
               </span>
-            </div>
-
-            {/* 클릭용 별 */}
-            <div className={styles.ratingStars}>
-              {Array.from({ length: 10 }).map((_, idx) => {
-                const stepValue = (idx + 1) * 0.5;
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    className={styles.starButtonInactive}
-                    onClick={() => setRating(stepValue)}
-                  >
-                    ★
-                  </button>
-                );
-              })}
             </div>
 
           </section>
@@ -701,7 +773,7 @@ setTimeout(() => {
 
           {/* 4) 태그 선택 (아카이브 구조 100% 그대로) */}
           <section className={styles.section}>
-            <h3 className={styles.centerTitle}>태그 선택</h3>
+            <h3 className={styles.centerTitle}>태그 선택 <span className={styles.required}>*</span></h3>
 
             <div className={styles.tagTabs}>
               <button
@@ -854,7 +926,7 @@ setTimeout(() => {
             {/* 가격: min/max 입력 */}
             {activeGroup === "price" && (
               <div className={styles.labelRow}>
-                <span className={styles.label}>가격 범위 :</span>
+                <span className={styles.label}>가격 범위 <span className={styles.required}>*</span></span>
 
                 <input
                   className={styles.mapInput}
@@ -878,7 +950,7 @@ setTimeout(() => {
           {/* 4) 상세 후기 + 상세 이미지(아카이브 구조) */}
           <section className={styles.section}>
             <div className={styles.Row}>
-              <span className={styles.label}>자세한 후기 입력</span>
+              <span className={styles.label}>자세한 후기 입력 <span className={styles.required}>*</span></span>
             </div>
 
             <textarea

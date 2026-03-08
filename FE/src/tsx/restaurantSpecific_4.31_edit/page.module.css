@@ -182,6 +182,18 @@ input, textarea, button {
   gap: 6px;
   margin-bottom: 14px;
 }
+.ratingBox{
+display:flex;
+align-items:center;
+gap:10px;
+margin:16px 0;
+}
+
+.ratingScore{
+font-size:18px;
+font-weight:700;
+color:#8B0029;
+}
 
 .starButtonActive {
   background: none;
@@ -504,4 +516,10 @@ input, textarea, button {
   20% { opacity: 1; transform: translate(-50%, 0); }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+.required {
+  color: #B00020;
+  margin-left: 4px;
+  font-weight: 600;
 }
