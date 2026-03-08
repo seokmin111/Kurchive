@@ -329,22 +329,22 @@ export default function RestaurantFormPage() {
 
         <main className={styles.main}>
           <section className={styles.section}>
-            <p className={styles.guideText}>식당 이름 입력<span className={styles.required}>*</span></p>
-            <input
+            <p className={styles.guideText}><span className={styles.required}>*</span> 표시된 항목은 필수 항목입니다.</p>
+            <span className={styles.required}>* </span><input
               className={styles.nameInput}
               placeholder="식당 이름"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
 
-            <div className={styles.row}>
+            <div className={styles.row}><span className={styles.required}>* </span>
               <textarea
                 className={styles.shortReview}
                 maxLength={100}
                 placeholder="한줄평: 100자 이내로 적어주세요"
                 value={shortReview}
                 onChange={(e) => setShortReview(e.target.value)}
-              /><span className={styles.required}>*</span>
+              />
 
               <div className={styles.charCount}>
                 {shortReview.length}/100
