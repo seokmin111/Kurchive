@@ -50,6 +50,24 @@ from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
 from BE.src.utils.image_upload import ALLOWED_MIME
 
+from urllib.parse import urlparse
+
+ALLOWED_MAP_DOMAINS = {
+    # Kakao
+    "map.kakao.com",
+    "kko.kakao.com",
+    "place.map.kakao.com",
+    # Naver
+    "naver.me",
+    "map.naver.com",
+    "m.place.naver.com",
+    # Google
+    "maps.app.goo.gl",
+    "www.google.com",
+    "google.com",
+    "goo.gl",
+}
+
 # 권한 구조
 async def assert_can_edit_restaurant(restaurant: Restaurant, current_user: User):
     is_uploader = restaurant.uploaded_by == current_user.id
@@ -94,12 +112,24 @@ class RestaurantCreate(BaseModel):
 
     @validator("location_link")
     def validate_location_link(cls, v: str):
+
         if not isinstance(v, str) or not v.strip():
             raise ValueError("location_link must be a non-empty string")
-        v = v.strip() # 공백제거
-        # 최소한의 URL 형식만 체크 (http로 시작하는지)
+
+        v = v.strip()
+
         if not re.match(r"^https?://", v):
-            raise ValueError("location_link must be a valid URL (start with http/https)")
+            raise ValueError("location_link must start with http or https")
+
+        parsed = urlparse(v)
+        domain = parsed.netloc.lower()
+
+        if domain not in ALLOWED_MAP_DOMAINS:
+            raise ValueError(
+                "지원하지 않는 지도 링크입니다.\n"
+                "카카오맵 / 네이버맵 / 구글맵 링크만 입력 가능합니다."
+            )
+
         return v
 
     @validator("name", "description")
@@ -182,6 +212,64 @@ class RestaurantUpdate(BaseModel):
     price_max: Optional[int] = None
     tag_ids: Optional[List[int]] = None
     recommended_menus: Optional[List[str]] = None
+    
+    @validator("name", "description")
+    def not_empty(cls, v):
+        if v is None:
+            return v
+        if not str(v).strip():
+            raise ValueError("must not be empty")
+        return v
+    
+    @validator("tag_ids")
+    def at_least_one_tag(cls, v):
+        if v is None:
+            return v
+        if not v:
+            raise ValueError("at least one tag is required")
+        return v
+
+    @validator("price_min", "price_max")
+    def non_negative(cls, v):
+        if v is None:
+            return v
+        if v < 0:
+            raise ValueError("price must be >= 0")
+        return v
+    
+    @validator("price_max")
+    def check_price_range(cls, v, values):
+        if v is None:
+            return v
+        pm = values.get("price_min")
+        if pm is not None and v < pm:
+            raise ValueError("price_max must be >= price_min")
+        return v
+    
+    @validator("location_link")
+    def validate_location_link(cls, v):
+
+        if v is None:
+            return v
+
+        if not isinstance(v, str) or not v.strip():
+            raise ValueError("location_link must be a non-empty string")
+
+        v = v.strip()
+
+        if not re.match(r"^https?://", v):
+            raise ValueError("location_link must start with http or https")
+
+        parsed = urlparse(v)
+        domain = parsed.netloc.lower()
+
+        if domain not in ALLOWED_MAP_DOMAINS:
+            raise ValueError(
+                "지원하지 않는 지도 링크입니다.\n"
+                "카카오맵 / 네이버맵 / 구글맵 링크만 입력 가능합니다."
+            )
+
+        return v
 # ---------------------------
 # API 엔드포인트
 # ---------------------------
@@ -693,9 +781,9 @@ async def update_restaurant(
 
     update_data = payload.dict(exclude_unset=True)
 
-    # ✅ 아무것도 안 바뀌었으면 그냥 기존 데이터 반환
+    # 아무것도 안 바뀌었으면 그냥 기존 데이터 반환
     if not update_data:
-        return await get_restaurant(restaurant_id, db, current_user)
+        return await get_restaurant(restaurant_id, db)
 
     # -------------------------
     # 주소 재추출 필요한 경우
