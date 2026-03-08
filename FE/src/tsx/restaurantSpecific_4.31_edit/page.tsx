@@ -649,7 +649,7 @@ setTimeout(() => {
 
 
             <div className={styles.formRow}>
-              <span className={styles.formLabel}>한줄평</span>
+              <span className={styles.formLabel}>한줄평 <span className={styles.required}>*</span></span>
             </div>
             <div className={styles.row}>
             <textarea

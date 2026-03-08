@@ -344,7 +344,7 @@ export default function RestaurantFormPage() {
                 placeholder="한줄평: 100자 이내로 적어주세요"
                 value={shortReview}
                 onChange={(e) => setShortReview(e.target.value)}
-              />
+              /><span className={styles.required}>*</span>
 
               <div className={styles.charCount}>
                 {shortReview.length}/100
