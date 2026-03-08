@@ -6,6 +6,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import { getIngredientUnitsByName, searchIngredients } from "../../api/ingredient";
 
+import { Pencil, Heart } from "lucide-react";
+
 import {
   getRecipeDetail,
   updateRecipe,
@@ -601,34 +603,40 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     <div className={style.container}>
       {/* ===== 헤더 및 우측 버튼 ===== */}
       <div className={style.banner}>
-        <img
-          src="/backstep_white_white_background.png"
-          className={style.backstep}
-          alt="back"
-          onClick={onClickBack}
-        />
+  <img
+    src="/backstep_white_white_background.png"
+    className={style.backstep}
+    alt="back"
+    onClick={onClickBack}
+  />
 
-        {!isEdit && (
-          <div className={style.rightActions}>
-            {canEdit && (
-              <button
-                className={style.actionIconBtn}
-                onClick={() => nav(`/recipe/${recipeId}/edit`)}
-                title="수정하기"
-              >
-                ✏️
-              </button>
-            )}
-            <button
-              className={style.actionIconBtn}
-              onClick={toggleFavorite}
-              title="찜하기"
-            >
-              {isZzim ? "❤️" : "🤍"}
-            </button>
-          </div>
-        )}
-      </div>
+  <div className={style.rightActions}>
+  {canEdit && (
+    <button
+      className={style.actionIconBtn}
+      onClick={() => nav(`/recipe/${recipeId}/edit`)}
+      title="수정하기"
+      type="button"
+    >
+      <Pencil size={18} color="#8B0029" />
+    </button>
+  )}
+
+  <button
+    className={`${style.actionIconBtn} ${isZzim ? style.activeHeartBtn : ""}`}
+    onClick={toggleFavorite}
+    title="찜하기"
+    type="button"
+  >
+    <Heart
+      size={18}
+      color={isZzim ? "#8B0029" : "#8B0029"}
+      fill={isZzim ? "#8B0029" : "none"}
+    />
+  </button>
+</div>
+</div>
+
 
       {/* 제목 */}
       {!isEdit ? (

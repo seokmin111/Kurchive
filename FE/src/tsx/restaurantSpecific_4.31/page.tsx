@@ -230,10 +230,10 @@ export default function RestaurantSpecific() {
         <div className={style.leftBox}>
           {coverUrl ? (
             <img
-  src={coverUrl}
-  alt="cover"
-  className={style.coverImage}
-/>
+              src={coverUrl}
+              alt="cover"
+              className={style.coverImage}
+            />
           ) : (
             <div className={style.noImage}>
             사진 없음
