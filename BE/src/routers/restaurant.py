@@ -393,10 +393,12 @@ async def search_restaurants_by_name(
         select(Restaurant).where(Restaurant.name.like(f"%{q}%")).limit(20)
     )
     restaurants = result.scalars().all()
-    user = await db.get(User, r.uploaded_by)
 
     out = []
+
     for r in restaurants:
+        user = await db.get(User, r.uploaded_by)
+
         out.append({
             "id": r.id,
             "name": r.name,
@@ -408,6 +410,7 @@ async def search_restaurants_by_name(
             "uploader": build_uploader(user),
             "thumbnail_url": r.thumbnail_url
         })
+
     return out
 
 # 식당 상세 조회
