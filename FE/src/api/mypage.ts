@@ -39,6 +39,7 @@ export interface FavoriteRestaurant {
   name: string;
   address?: string;
   rating?: number;
+  thumbnail_url?: string | null;
 }
 
 export interface MessageResponse {

@@ -21,7 +21,7 @@ export default function MyActivity() {
       try {
         // 1. 식당 & 레시피 찜 목록 동시 가져오기
         const [restRes, recipeRes] = await Promise.all([
-          client.get('/mypage/logs/restaurants'),
+          client.get('/mypage/logs/favorite-restaurants'),
           client.get('/mypage/logs/favorite-recipes')
         ]);
 
@@ -99,7 +99,7 @@ export default function MyActivity() {
               <div className={style.heartCount}>
                 <span className={style.heartIcon}>♡</span>
                 {/* 찜한 식당 개수 표시 */}
-                <span>{recentItems.length}</span>
+                <span>{restaurantCount}</span>
               </div>
             </div>
             <span className={style.arrow}>›</span>
@@ -146,7 +146,7 @@ export default function MyActivity() {
                 {/* ✅ 식당은 별점, 레시피는 인분을 표시 */}
                 <div className={style.recentCardRating}>
                   {item.type === "restaurant" 
-                    ? `★ ${item.rating?.toFixed(1) || "0.0"}` 
+                    ? `★ ${item.rating != null ? item.rating.toFixed(1) : "0.0"}` 
                     : `기본 ${item.base_serving}인분`}
                 </div>
               </div>
