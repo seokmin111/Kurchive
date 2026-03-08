@@ -25,6 +25,8 @@ type Tag = {
 
 export default function RestaurantFormPage() {
   const navigate = useNavigate();
+  // 상세 설명
+  const [showMapHelp, setShowMapHelp] = useState(false);
 
   // -------------------------
   // 기본 입력
@@ -206,6 +208,31 @@ export default function RestaurantFormPage() {
   // -------------------------
   // Submit
   // -------------------------
+  const isValidMapLink = (url: string) => {
+  try {
+    const u = new URL(url);
+
+    const domain = u.hostname.replace("www.", "");
+
+    const allowed = [
+      "map.kakao.com",
+      "kko.kakao.com",
+      "place.map.kakao.com",
+
+      "naver.me",
+      "map.naver.com",
+      "m.place.naver.com",
+
+      "maps.app.goo.gl",
+      "google.com",
+      "goo.gl",
+    ];
+
+    return allowed.includes(domain);
+  } catch {
+    return false;
+  }
+};
   const handleSubmit = async () => {
     if (submitting) return;
 
@@ -215,6 +242,7 @@ export default function RestaurantFormPage() {
     if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
     if (shortReview.length > 100) {return alert("한줄평은 100자 이하로 입력해주세요.");}
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
+    if (!isValidMapLink(mapLink)) return alert("카카오맵 / 네이버맵 / 구글맵 링크만 입력 가능합니다.");
     if (!selectedLv2) return alert("소지역(구/시/군)을 선택해주세요.");
     if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해주세요.");
     if (Number.isNaN(priceMin) || Number.isNaN(priceMax)) return alert("가격은 숫자만 입력해주세요.");
@@ -301,7 +329,7 @@ export default function RestaurantFormPage() {
 
         <main className={styles.main}>
           <section className={styles.section}>
-            <p className={styles.guideText}>식당 이름을 입력해주세요.</p>
+            <p className={styles.guideText}>식당 이름 입력<span className={styles.required}>*</span></p>
             <input
               className={styles.nameInput}
               placeholder="식당 이름"
@@ -340,14 +368,43 @@ export default function RestaurantFormPage() {
             </div>
 
             <div className={styles.labelRow}>
-              <span className={styles.label}>식당 맵 링크 :</span>
-              <input
-                className={styles.mapInput}
-                placeholder="https://..."
-                value={mapLink}
-                onChange={(e) => setMapLink(e.target.value)}
-              />
+            <span className={styles.label}>
+              식당 맵 링크 <span className={styles.required}>*</span>
+            </span>
+
+            <button
+              type="button"
+              className={styles.helpButton}
+              onClick={() => setShowMapHelp((v) => !v)}
+            >
+              ?
+            </button>
+          </div>
+
+          <input
+            className={styles.mapInput}
+            placeholder="카카오맵 / 네이버맵 / 구글맵 링크 입력"
+            value={mapLink}
+            onChange={(e) => setMapLink(e.target.value)}
+          />
+
+          {showMapHelp && (
+            <div className={styles.mapHelpBox}>
+              <div className={styles.mapHelpTitle}>지원 지도 링크</div>
+
+              <div>• 카카오맵 (map.kakao.com / kko.kakao.com)</div>
+              <div>• 네이버맵 (naver.me / map.naver.com)</div>
+              <div>• 구글맵 (maps.app.goo.gl / google.com/maps)</div>
+
+              <div className={styles.mapHelpExample}>
+                예시:
+                <br />
+                https://naver.me/xxxxx
+                <br />
+                https://kko.kakao.com/xxxxx
+              </div>
             </div>
+          )}
           </section>
 
           <hr className={styles.divider} />
@@ -409,7 +466,9 @@ export default function RestaurantFormPage() {
           </section>
 
           <section className={styles.section}>
-            <h3 className={styles.centerTitle}>태그 선택</h3>
+            <h3 className={styles.centerTitle}>태그 선택
+              <span className={styles.required}>*</span>
+            </h3>
 
             <div className={styles.tagTabs}>
               <button
@@ -545,7 +604,7 @@ export default function RestaurantFormPage() {
             {/* 가격: min/max 입력 */}
             {activeGroup === "price" && (
               <div className={styles.labelRow}>
-                <span className={styles.label}>가격 범위 :</span>
+                <span className={styles.label}>가격 범위 <span className={styles.required}>*</span> :</span>
 
                 <input
                   className={styles.mapInput}
@@ -572,11 +631,11 @@ export default function RestaurantFormPage() {
 
           <section className={styles.section}>
             <div className={styles.labelRow}>
-              <span className={styles.label}>자세한 후기 입력 :</span>
+              <span className={styles.label}>자세한 후기 입력<span className={styles.required}>*</span></span>
             </div>
             <textarea
               className={styles.detailTextarea}
-              placeholder="입력해주세요"
+              placeholder="후기를 입력해주세요"
               value={detailReview}
               onChange={(e) => setDetailReview(e.target.value)}
             />

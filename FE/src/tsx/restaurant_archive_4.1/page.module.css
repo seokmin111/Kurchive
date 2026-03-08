@@ -120,13 +120,74 @@
   color: #4a3b30;
   white-space: nowrap;
 }
-
+/* 지도 */
 .mapInput {
   flex: 1;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid #e0d6c8;
   font-size: 13px;
+}
+.mapGuide {
+  font-size: 12px;
+  text-align: left;
+  color: #666;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.mapExample {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+}
+.helpButton {
+  margin-left: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+
+  border: none;
+  background: #d8d1c7;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.helpButton:hover {
+  background: #bfb6aa;
+}
+
+.mapHelpBox {
+  margin-top: 8px;
+  padding: 12px;
+
+  border-radius: 10px;
+  background: #f7f5f2;
+  border: 1px solid #ece7e1;
+
+  font-size: 12px;
+  line-height: 1.5;
+  color: #555;
+
+}
+
+.mapHelpTitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+  align-content: left;
+}
+
+.mapHelpExample {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #777;
 }
 
 .divider {
@@ -146,6 +207,7 @@
   color: #8c8275;
 }
 
+/* 별점 */
 .ratingStars {
   display: flex;
   justify-content: center;
@@ -170,6 +232,7 @@
   color: #ddd3c6;
 }
 
+/* 추천 메뉴 */
 .menuRow {
   display: flex;
   align-items: center;
@@ -367,4 +430,11 @@
   color: #888;
   text-align: right;
   margin-top: 4px;
+}
+
+/* 필수*/
+.required {
+  color: #c53030;
+  margin-left: 4px;
+  font-weight: 600;
 }
