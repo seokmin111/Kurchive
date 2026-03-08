@@ -318,6 +318,7 @@ select {
   resize: vertical;
 
   text-align: left;
+  white-space: pre-wrap;
 }
 
 

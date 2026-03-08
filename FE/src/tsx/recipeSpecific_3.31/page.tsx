@@ -611,7 +611,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
   />
 
   <div className={style.rightActions}>
-  {canEdit && (
+  {!isEdit && canEdit && (
     <button
       className={style.actionIconBtn}
       onClick={() => nav(`/recipe/${recipeId}/edit`)}
@@ -622,18 +622,20 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     </button>
   )}
 
-  <button
-    className={`${style.actionIconBtn} ${isZzim ? style.activeHeartBtn : ""}`}
-    onClick={toggleFavorite}
-    title="찜하기"
-    type="button"
-  >
-    <Heart
-      size={18}
-      color={isZzim ? "#8B0029" : "#8B0029"}
-      fill={isZzim ? "#8B0029" : "none"}
-    />
-  </button>
+  {!isEdit && (
+    <button
+      className={`${style.actionIconBtn} ${isZzim ? style.activeHeartBtn : ""}`}
+      onClick={toggleFavorite}
+      title="찜하기"
+      type="button"
+    >
+      <Heart
+        size={18}
+        color="#8B0029"
+        fill={isZzim ? "#8B0029" : "none"}
+      />
+    </button>
+  )}
 </div>
 </div>
 
