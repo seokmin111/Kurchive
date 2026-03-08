@@ -58,6 +58,7 @@ ALLOWED_MAP_DOMAINS = {
     "map.kakao.com",
     "kko.kakao.com",
     "place.map.kakao.com",
+    "kko.to",
     # Naver
     "naver.me",
     "map.naver.com",
