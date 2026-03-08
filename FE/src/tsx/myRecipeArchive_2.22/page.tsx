@@ -123,24 +123,34 @@ export default function RecipeArchivePage() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* 헤더 */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <button className={styles.backButton} onClick={() => navigate(-1)}>{'<'}</button>
-          <div className={styles.logoSection}>
-            <span className={styles.logoSubtitle}>우리만의 미식 지도</span>
-            <span className={styles.logo}>커카이브</span>
-          </div>
-        </div>
-        <button className={styles.myPageButton} onClick={() => navigate('/mypage')}>
-          마이페이지
-        </button>
-      </header>
+        <div className={styles.container}>
+          {/* --- 기존 마크업과 동일 --- */}
+          <header className={styles.header}>
+  <div className={styles.headerLeft}>
+    <img
+      src="/backstep_white_background.png"
+      alt="뒤로가기"
+      className={styles.backButton}
+      onClick={() => navigate(-1)}
+    />
+
+    <div className={styles.logoSection}>
+      <span className={styles.logoSubtitle}>우리만의 미식 지도</span>
+      <span className={styles.logo}>커카이브</span>
+    </div>
+  </div>
+
+  <button
+    className={styles.myPageButton}
+    onClick={() => navigate("/mypage")}
+  >
+    마이페이지
+  </button>
+</header>
 
       {/* 페이지 제목 */}
       <div className={styles.pageTitle}>
-              <span className={styles.username}>{user?.nickname || "사용자"}</span> 님이 찜한 레시피
+              <span className={styles.username}>{user?.nickname || "사용자"}</span> 님 찜한 레시피
        </div>
 
       {/* 검색바 */}

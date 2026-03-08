@@ -13,23 +13,20 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background-color: #fff;
+  background: #fff;
   border-bottom: 1px solid #eee;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .backButton {
-  background: none;
-  border: none;
+  height: 22px;
+  width: auto;
   cursor: pointer;
-  color: #8B0029;
-  font-size: 1.25rem;
-  padding: 0.25rem;
 }
 
 .logoSection {
@@ -44,8 +41,8 @@
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   color: #8B0029;
   letter-spacing: -1px;
 }
@@ -162,6 +159,15 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   display: flex;
   position: relative;
+  cursor: pointer;
+}
+.restaurantCard {
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+}
+.restaurantCard:active {
+  transform: scale(0.98);
+  background: #f3f3f3;
 }
 
 .cardContent {

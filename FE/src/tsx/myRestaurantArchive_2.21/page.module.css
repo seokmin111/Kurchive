@@ -16,33 +16,31 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  background-color: #fff;
+  background: #fff;
   border-bottom: 1px solid #eee;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .backButton {
-  cursor: pointer;
-  height: 24px;
+  height: 22px;
   width: auto;
+  cursor: pointer;
 }
 
 .logoSection {
   display: flex;
   flex-direction: column;
-  margin-left: 8px;
 }
 
 .logoSubtitle {
   font-size: 0.6rem;
   color: #8B0029;
   letter-spacing: 0.5px;
-  line-height: 1.2;
 }
 
 .logo {
@@ -50,7 +48,6 @@
   font-weight: 800;
   color: #8B0029;
   letter-spacing: -1px;
-  line-height: 1;
 }
 
 .myPageButton {
@@ -172,6 +169,15 @@
   position: relative;
   height: 130px;
   cursor: pointer;
+}
+
+.restaurantCard {
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+}
+.restaurantCard:active {
+  transform: scale(0.98);
+  background: #f3f3f3;
 }
 
 .cardContent {
