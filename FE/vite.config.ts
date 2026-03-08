@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/uploads": {
-        target: "http://146.56.117.219:8000",
+        target: "https://api.kurchive.com",
         changeOrigin: true,
       },
     },
