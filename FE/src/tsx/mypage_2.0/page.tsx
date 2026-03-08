@@ -107,19 +107,61 @@ export default function Mypage() {
             <div className={styles.info_change} onClick={() => navigate("/infoedit")}>
                 사용자 정보 수정하기 
             </div>
+                                    
+            <div className={styles.bigButtonSplit}>
 
-            <div className={styles.mychoice}>
-                <div className={styles.mychoice__title} onClick={() => navigate("/myactivity")}>
-                    나의 찜목록 보러가기
-                </div>
+            <div
+                className={styles.splitItem}
+            >
+                <div className={styles.buttonTitle}
+                >나의 찜목록</div>
+                <div className={styles.buttonSubRow}>
+                    <span
+                        className={styles.subItem}
+                        onClick={() => navigate("/my-restaurant-favorite")}
+                    >
+                        식당
+                    </span>
 
-                <div className={styles.mychoice__specefic}>
-                    <span className={styles.mychoice__restaurant} onClick={() => navigate("/my-restaurant-archive")}>식당</span>
-                    <span className={styles.mychoice__bar}>|</span>
-                    <span className={styles.mychoice__recipe} onClick={() => navigate("/my-recipe-archive")}>레시피</span>
+                    <span className={styles.subDivider}>|</span>
+
+                    <span
+                        className={styles.subItem}
+                        onClick={() => navigate("/my-recipe-favorite")}
+                    >
+                        레시피
+                    </span>
                 </div>
             </div>
 
+            <div className={styles.divider}></div>
+
+            <div
+                className={styles.splitItem}
+                >
+                <div className={styles.buttonTitle}>내 활동기록</div>
+
+                <div className={styles.buttonSubRow}>
+                    <span
+                    className={styles.subItem}
+                    onClick={() => navigate("/my-restaurant-activity")}
+                    >
+                    식당
+                    </span>
+
+                    <span className={styles.subDivider}>|</span>
+
+                    <span
+                    className={styles.subItem}
+                    onClick={() => navigate("/my-recipe-activity")}
+                    >
+                    레시피
+                    </span>
+                </div>
+                </div>
+
+            </div>
+            
             <div className={styles.leave} onClick={() => navigate("/quitpage")}>
                 <div className={styles.leave__title}>회원 탈퇴하기</div>
                 <div className={styles.leave__bar}></div>

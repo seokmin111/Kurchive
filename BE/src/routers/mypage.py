@@ -146,7 +146,13 @@ async def get_my_uploaded_restaurants(
             Restaurant.name,
             Restaurant.address,
             Restaurant.rating,
-            Restaurant.created_at
+            Restaurant.created_at,
+            RestaurantImage.image_url
+        )
+        .outerjoin(
+            RestaurantImage,
+            (RestaurantImage.restaurant_id == Restaurant.id)
+            & (RestaurantImage.is_cover == True)
         )
         .where(Restaurant.uploaded_by == current_user.id)
         .order_by(Restaurant.created_at.desc())
@@ -156,12 +162,13 @@ async def get_my_uploaded_restaurants(
 
     return [
         MyRestaurantDTO(
-            id=r.id,
-            name=r.name,
-            address=r.address,
-            rating=r.rating,
-            created_at=r.created_at
-        )
+        id=r.id,
+        name=r.name,
+        address=r.address,
+        rating=r.rating,
+        created_at=r.created_at,
+        thumbnail_url=r.image_url
+    )
         for r in result
     ]
     

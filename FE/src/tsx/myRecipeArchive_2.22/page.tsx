@@ -6,6 +6,9 @@ import styles from "./page.module.css";
 import client from "../../api/client"; 
 import { getMyPage, MyPageUser } from "../../api/mypage";
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+
 // 백엔드 반환 DTO 형태에 맞춘 FavoriteRecipe 인터페이스
 interface FavoriteRecipe {
   id: number;
@@ -137,7 +140,7 @@ export default function RecipeArchivePage() {
 
       {/* 페이지 제목 */}
       <div className={styles.pageTitle}>
-              <span className={styles.username}>{user?.nickname || "사용자"}</span> 님의 식당 아카이브
+              <span className={styles.username}>{user?.nickname || "사용자"}</span> 님이 찜한 레시피
        </div>
 
       {/* 검색바 */}
@@ -150,7 +153,7 @@ export default function RecipeArchivePage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <span className={styles.searchIcon}>🔍</span>
+          <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />
         </div>
       </div>
 

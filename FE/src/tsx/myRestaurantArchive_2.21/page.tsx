@@ -6,6 +6,8 @@ import styles from "./page.module.css";
 import client from "../../api/client"; 
 import { getMyPage, getMyFavoriteRestaurants, FavoriteRestaurant, MyPageUser } from "../../api/mypage";
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 // 백엔드 DTO(FavoriteRestaurant)에는 UI에 필요한 일부 필드(이미지 등)가 없을 수 있으므로 확장
 interface ExtendedRestaurant extends FavoriteRestaurant {
   summary?: string; 
@@ -36,7 +38,7 @@ const RestaurantCard = ({ restaurant, onDelete }: { restaurant: ExtendedRestaura
   return (
     <div 
       className={styles.restaurantCard} 
-      onClick={() => navigate(`/restaurant/detail/${restaurant.id}`)}
+      onClick={() => navigate(`/restaurant/${restaurant.id}`)}
     >
       <div className={styles.cardContent}>
         <h3 className={styles.restaurantName}>{restaurant.name}</h3>
@@ -98,7 +100,7 @@ export default function RestaurantArchivePage() {
 
       const [userData, favRes] = await Promise.all([
         getMyPage(),
-        client.get('/mypage/logs/restaurants')
+        client.get('/mypage/logs/favorite-restaurants')
       ]);
 
       setUser(userData);
@@ -112,7 +114,7 @@ export default function RestaurantArchivePage() {
     } catch (error: any) {
       console.error("데이터 로딩 실패:", error);
     } finally {
-      setLoading(false);   // 👈 이게 빠져 있었다
+      setLoading(false);  
     }
   };
 
@@ -164,7 +166,7 @@ export default function RestaurantArchivePage() {
       </header>
 
       <div className={styles.pageTitle}>
-        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님의 식당 아카이브
+        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님이 찜한 식당
       </div>
 
       <div className={styles.searchSection}>
@@ -176,7 +178,7 @@ export default function RestaurantArchivePage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <span className={styles.searchIcon}>🔍</span>
+          <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />
         </div>
       </div>
 

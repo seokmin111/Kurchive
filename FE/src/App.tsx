@@ -23,9 +23,12 @@ import RecipeSpecific from "./tsx/recipeSpecific_3.31/page"
 import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
 import MyPage from "./tsx/mypage_2.0/page";
-import MyActivityPage from "./tsx/myactivity_2.2/page";
-import MyRestaurantArchivePage from "./tsx/myRestaurantArchive_2.21/page"; 
-import MyRecipeArchivePage from "./tsx/myRecipeArchive_2.22/page"; 
+import MyFavoritePage from "./tsx/myactivity_2.2/page";
+import MyRestaurantFavoritePage from "./tsx/myRestaurantArchive_2.21/page"; 
+import MyRecipeFavoritePage from "./tsx/myRecipeArchive_2.22/page"; 
+import MyActivityRestaurant from "./tsx/myActivityRestaurant_2.31/page";
+import MyActivityRecipe from "./tsx/myActivityRecipe_2.32/page";
+
 import MyInfoEdit from "./tsx/myInfoEdit_2.1/page";
 import QuitPage from "./tsx/quitpage_2.3/page";
 
@@ -107,32 +110,48 @@ export default function App() {
       />
 
       <Route
-        path="/myactivity"
+        path="/myfavorites"
         element={
           <ProtectedRoute>
-            <MyActivityPage />
+            <MyFavoritePage />
           </ProtectedRoute>
         }
       />
 
       <Route
-        path="/my-restaurant-archive"
+        path="/my-restaurant-favorite"
         element={
           <ProtectedRoute>
-            <MyRestaurantArchivePage />
+            <MyRestaurantFavoritePage />
           </ProtectedRoute>
         }
       />
 
       <Route
-        path="/my-recipe-archive"
+        path="/my-recipe-favorite"
         element={
           <ProtectedRoute>
-            <MyRecipeArchivePage />
+            <MyRecipeFavoritePage />
           </ProtectedRoute>
         }
       />
 
+      <Route
+        path="/my-restaurant-activity"
+        element={
+          <ProtectedRoute>
+            <MyActivityRestaurant />
+          </ProtectedRoute>
+        }
+      />
+    <Route
+        path="/my-recipe-activity"
+        element={
+          <ProtectedRoute>
+            <MyActivityRecipe />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/infoedit"
         element={

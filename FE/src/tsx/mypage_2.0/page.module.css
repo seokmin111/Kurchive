@@ -278,3 +278,73 @@ html, body {
     opacity: 0.05;
     pointer-events: none;
 }
+.bigButtonSplit{
+  width: 80%;
+  display:flex;
+  background:#8B0029;
+  color:white;
+  border-radius:40px;
+  overflow:hidden;
+  margin-top:20px;
+}
+
+.splitItem{
+  flex:1;
+  padding:22px 10px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.splitItem:hover{
+  background:rgba(255,255,255,0.08);
+}
+
+.divider{
+  width:1px;
+  background:rgba(255,255,255,0.3);
+}
+
+.buttonTitle{
+  font-size:18px;
+  font-weight:700;
+}
+
+.buttonSub{
+  margin-top:6px;
+  font-size:14px;
+  opacity:0.9;
+}
+
+.buttonSubRow{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-top:6px;
+}
+
+.buttonSub{
+  cursor:pointer;
+}
+
+/* 식당 | 레시피 줄 */
+.buttonSubRow{
+  margin-top:6px;
+  font-size:14px;
+  opacity:0.9;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;              /* ← 간격 조절 */
+  font-family: var(--font-geist-mono);
+}
+
+/* 식당 / 레시피 텍스트 */
+.subItem{
+  cursor:pointer;
+}
+
+/* | */
+.subDivider{
+  opacity:0.7;
+  margin:0 2px;
+}

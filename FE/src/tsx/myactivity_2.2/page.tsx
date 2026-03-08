@@ -92,7 +92,7 @@ export default function MyActivity() {
           {/* 식당 목록 카드 */}
           <div 
             className={style.listItem} 
-            onClick={() => navigate('/my-restaurant-archive')} 
+            onClick={() => navigate('/my-restaurant-favorite')} 
           >
             <span className={style.listText}>식당 목록</span>
             <div className={style.listRight}>
@@ -108,7 +108,7 @@ export default function MyActivity() {
           {/* 레시피 목록 카드 */}
           <div 
             className={style.listItem2} 
-            onClick={() => navigate('/my-recipe-archive')} 
+            onClick={() => navigate('/my-recipe-favorite')} 
           >
             <span className={style.listText}>레시피 목록</span>
             <div className={style.listRight}>
