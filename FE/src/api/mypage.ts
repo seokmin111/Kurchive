@@ -10,18 +10,18 @@ export const updatePassword = (currentPW: string, newPW: string) =>
   client.put("/mypage/info/password", { currentPW, newPW });
 
 export const getMyFavoriteRestaurants = (): Promise<FavoriteRestaurant[]> =>
-  client.get("/mypage/logs/restaurants").then(r => r.data);
+  client.get("/mypage/logs/favorite-restaurants").then(r => r.data);
 
 export const withdrawal = (): Promise<MessageResponse> =>
   client.delete("/mypage/withdrawal").then(r => r.data);
 
 // 내가 업로드한 레시피 조회
 export const getMyUploadedRecipes = (): Promise<MyRecipeLog[]> =>
-  client.get("/mypage/logs/recipes").then(r => r.data);
+  client.get("/mypage/logs/uploaded-recipes").then(r => r.data);
 
 // 내가 업로드한 식당 조회
 export const getMyUploadedRestaurants = (): Promise<MyRestaurantLog[]> =>
-  client.get("/mypage/logs/restaurants-uploaded").then(r => r.data);
+  client.get("/mypage/logs/uploaded-restaurants").then(r => r.data);
 
 
 
