@@ -123,10 +123,9 @@ export default function RestaurantArchivePage() {
 
 
   // 검색 기능
-  const filteredRestaurants = restaurants.filter((r) => 
-    r.name.includes(searchQuery) || 
-    (r.address && r.address.includes(searchQuery))
-  );
+  const filteredRestaurants = restaurants.filter((r) =>
+  r.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+);
 
   // 삭제 핸들러 
   const handleDeleteItem = async (id: number) => {
@@ -181,7 +180,7 @@ export default function RestaurantArchivePage() {
           <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />
         </div>
       </div>
-
+{/*
       <div className={styles.filterSection}>
         <span className={styles.filterLabel}>
           식당 아카이브에<br />필터 적용하기
@@ -189,6 +188,7 @@ export default function RestaurantArchivePage() {
         <button className={styles.filterDropdown}>지역 <span>▼</span></button>
         <button className={styles.filterDropdown}>음식 종류 <span>▼</span></button>
       </div>
+      */}
 
       <div className={styles.restaurantList}>
         {loading ? (

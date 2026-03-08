@@ -125,9 +125,8 @@ export default function RestaurantArchivePage() {
   }, []);
 
   const filteredRestaurants = restaurants.filter((r) =>
-    r.name.includes(searchQuery) ||
-    (r.address && r.address.includes(searchQuery))
-  );
+  r.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+);
 
   return (
     <div className={styles.container}>
