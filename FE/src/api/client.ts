@@ -1,10 +1,13 @@
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: false,
   timeout: 10000,
 });
+
+const navigate = useNavigate();
 
 // 요청 인터셉터: 토큰 자동 첨부
 client.interceptors.request.use((config) => {
@@ -36,7 +39,7 @@ client.interceptors.response.use(
 
     if ((status === 401 || status === 403) && !isAuthRequest && !isOptionalAuth) {
       localStorage.removeItem("access_token");
-      window.location.href = "/login";
+      navigate("/login")
     }
 
     return Promise.reject(err);
