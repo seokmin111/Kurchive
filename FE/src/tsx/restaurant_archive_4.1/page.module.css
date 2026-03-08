@@ -123,6 +123,7 @@
 /* 지도 */
 .mapInput {
   flex: 1;
+  width: 60%;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid #e0d6c8;
@@ -230,6 +231,47 @@
 
 .starButtonInactive {
   color: #ddd3c6;
+}
+.ratingBox{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:6px;
+margin:16px 0;
+}
+
+.ratingScore{
+font-size:17px;
+font-weight:500;
+color: #8a0d2a;
+margin-left:8px;
+}
+
+.ratingBox{
+display:flex;
+align-items:center;
+gap:6px;
+margin:16px 0;
+justify-content:center;
+}
+
+.star{
+cursor:pointer;
+font-size:28px;
+}
+
+.starActive{
+color:#e0a700;
+}
+
+.starHalf{
+background:linear-gradient(90deg,#e0a700 50%,#ddd3c6 50%);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.starInactive{
+color:#ddd3c6;
 }
 
 /* 추천 메뉴 */

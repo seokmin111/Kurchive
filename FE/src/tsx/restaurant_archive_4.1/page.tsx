@@ -413,22 +413,40 @@ export default function RestaurantFormPage() {
             <div className={styles.centerTitle}>
               추천 정도 <span className={styles.smallText}>(0.5 단위)</span>
             </div>
-            <div className={styles.ratingStars}>
-              {Array.from({ length: 10 }).map((_, idx) => {
-                const stepValue = (idx + 1) * 0.5;
-                const active = rating >= stepValue;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    className={active ? styles.starButtonActive : styles.starButtonInactive}
-                    onClick={() => setRating(stepValue)}
-                  >
-                    ★
-                  </button>
-                );
-              })}
-            </div>
+            <div className={styles.ratingBox}>
+  {Array.from({ length: 5 }).map((_, i) => {
+    const starValue = i + 1;
+
+    return (
+      <div
+        key={i}
+        className={styles.star}
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const half = x < rect.width / 2;
+
+          const value = half ? starValue - 0.5 : starValue;
+          setRating(value);
+        }}
+      >
+        <span
+          className={
+            rating >= starValue
+              ? styles.starActive
+              : rating >= starValue - 0.5
+              ? styles.starHalf
+              : styles.starInactive
+          }
+        >
+          ★
+        </span>
+      </div>
+    );
+  })}
+
+  <span className={styles.ratingScore}>{rating.toFixed(1)}</span>
+</div>
 
             <div className={styles.menuRow}>
               <span className={styles.label}>추천 메뉴 :</span>
