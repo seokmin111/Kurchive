@@ -24,7 +24,7 @@ services:
     env_file:
       - .dev.env
     environment:
-      DATABASE_URL: "mysql+pymysql://kurchive_user:kurchive_pass@db:3306/kurchive?charset=utf8mb4"
+      DATABASE_URL: "mysql+pymysql://kurchive_user:kurchive_pass@mysql:3306/kurchive"
     ports:
       - "8000:8000"
     volumes:
