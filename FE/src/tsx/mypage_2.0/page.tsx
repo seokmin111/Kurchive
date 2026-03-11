@@ -13,6 +13,7 @@ config.autoAddCss = false;
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
+
 export default function Mypage() {
     const navigate = useNavigate();
     let today = new Date();   // 날짜 구하기
@@ -26,6 +27,13 @@ export default function Mypage() {
         if (user.role === "staff") return "운영진";
         return "일반 회원";
     };
+
+    // logout
+    
+    function logout() {
+    localStorage.removeItem("access_token");
+    navigate("/");
+    }
 
     useEffect(() => {
         document.body.style.overflowX = 'hidden';
