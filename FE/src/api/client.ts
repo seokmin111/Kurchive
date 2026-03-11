@@ -22,19 +22,9 @@ client.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err?.response?.status;
-    const url = err?.config?.url || "";
+    const token = localStorage.getItem("access_token");
 
-    const isAuthRequest =
-      url.includes("/login") ||
-      url.includes("/signup") ||
-      url.includes("/validate_code") ||
-      url.includes("/check_nickname") ||
-      url.includes("/signup/check_id");
-
-    const isOptionalAuth =
-      url.includes("/favorite"); // 예외 처리
-
-    if ((status === 401 || status === 403) && !isAuthRequest && !isOptionalAuth) {
+    if ((status === 401 || status === 403) && token) {
       localStorage.removeItem("access_token");
       window.location.href = "/login";
     }
