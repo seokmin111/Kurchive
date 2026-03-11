@@ -558,15 +558,20 @@ function Culture({ handleAddItem }: ModalType) {
         })}
       </div>
 
-      <div className={styles.Food__foodTags}>
-        {smallCultureTags.map((item) => {
-          return (
-            <div key={item.id} onClick={() => handleAddItem({ type: "tag", id: item.id, name: item.name })}>
-              {item.name}
-            </div>
-          );
-        })}
+      {smallCultureTags.length > 0 && (
+  <div className={styles.Food__foodTags}>
+    {smallCultureTags.map((item) => (
+      <div
+        key={item.id}
+        onClick={() =>
+          handleAddItem({ type: "tag", id: item.id, name: item.name })
+        }
+      >
+        {item.name}
       </div>
+    ))}
+  </div>
+)}
     </div>
   );
 }
