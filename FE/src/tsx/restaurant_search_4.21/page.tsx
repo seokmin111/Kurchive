@@ -204,9 +204,9 @@ const atmoRef = useRef<HTMLDivElement>(null);
 
   if (target) {
     content.scrollTo({
-      top: target.offsetTop,
-      behavior: "smooth",
-    });
+  top: target.offsetTop - content.offsetTop,
+  behavior: "smooth",
+});
   }
 };
 
