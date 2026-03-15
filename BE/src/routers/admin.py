@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel
 from typing import List
+from passlib.context import CryptContext
 
 from BE.src.database import get_async_db
 from BE.src.dependencies import get_current_admin_user
@@ -19,12 +20,21 @@ from BE.src.models.users import User
 router = APIRouter(
     prefix="/api/admin",
     tags=["Admin Management"],
-    dependencies=[Depends(get_current_admin_user)],
 )
 
 # --------------------
 # DTO
 # --------------------
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 관리자 로그인
+class AdminLoginRequest(BaseModel):
+    userid: str
+    password: str
+
+class AdminLoginResponse(BaseModel):
+    message: str
+    userid: str
+# 회원 관리
 class MemberStatus(BaseModel):
     userid: str
     role: str  # 'staff' | 'member'
@@ -42,6 +52,35 @@ class MemberInfoResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# =============== 라우터 ====================
+# 로그인
+@router.post("/login", summary="관리자 로그인", dependencies=[])
+async def admin_login(
+    payload: AdminLoginRequest,
+    db: AsyncSession = Depends(get_async_db)
+):
+
+    # 유저 조회
+    result = await db.execute(
+        select(User).where(User.userid == payload.userid)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="아이디 또는 비밀번호 오류")
+
+    # 비밀번호 검증
+    if not pwd_context.verify(payload.password, user.password):
+        raise HTTPException(status_code=401, detail="아이디 또는 비밀번호 오류")
+
+    # 관리자 확인
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="관리자 권한이 없습니다")
+
+    return AdminLoginResponse(
+        message="관리자 로그인 성공",
+        userid=user.userid
+    )
 # --------------------
 # 회원 관리
 # --------------------
