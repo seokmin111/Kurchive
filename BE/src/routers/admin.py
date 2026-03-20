@@ -10,12 +10,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel
+from enum import Enum
 from typing import List
 from passlib.context import CryptContext
 
 from BE.src.database import get_async_db
-from BE.src.dependencies import get_current_admin_user
+from BE.src.dependencies import get_current_admin_user, create_access_token
 from BE.src.models.users import User
+
+
 
 router = APIRouter(
     prefix="/api/admin",
@@ -51,6 +54,11 @@ class MemberInfoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        
+# 권한
+class RoleEnum(str, Enum):
+    staff = "staff"
+    member = "member"
 
 # =============== 라우터 ====================
 # 로그인
@@ -77,63 +85,80 @@ async def admin_login(
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="관리자 권한이 없습니다")
 
-    return AdminLoginResponse(
-        message="관리자 로그인 성공",
-        userid=user.userid
-    )
+    token = create_access_token(
+    sub=str(user.id),
+    scope="admin"       
+)
+
+    return {
+        "message": "관리자 로그인 성공",
+        "access_token": token,
+        "token_type": "bearer"
+    }
 # --------------------
 # 회원 관리
 # --------------------
+# 회원 조회
 @router.get(
     "/members",
     response_model=List[MemberInfoResponse],
     summary="전체 회원 목록 조회",
 )
-async def get_all_members(db: AsyncSession = Depends(get_async_db)):
+async def get_all_members(db: AsyncSession = Depends(get_async_db),
+                          current_admin: User = Depends(get_current_admin_user)):
     result = await db.execute(select(User).order_by(User.id))
     return result.scalars().all()
 
-
+# 회원 권한 관리
 @router.patch(
     "/members/status",
-    status_code=204,
     summary="다수 회원의 임원진 상태(role) 일괄 변경",
 )
 async def update_members_status(
     payload: MemberStatusUpdateRequest,
     db: AsyncSession = Depends(get_async_db),
+    current_admin: User = Depends(get_current_admin_user)
 ):
-    """
-    NOTE
-    - 현재 이 엔드포인트는 role만 변경한다.
-    - '관리자는 탈퇴 불가' 요구사항을 이 파일 범위에서 확실히 지키기 위해:
-      * admin 계정에 대해서는 role을 'member'로 내리는 행위를 금지(관리자 강등/탈퇴 루트 방지)
-    """
+    updated_users = []
+
     for member_update in payload.members:
+
+        # 1. role 검증
         if member_update.role not in ["staff", "member"]:
-            continue
-
-        result = await db.execute(select(User).filter(User.userid == member_update.userid))
-        user = result.scalar_one_or_none()
-        if not user:
-            continue
-
-        # ✅ 관리자 보호: 관리자는 (간접적으로라도) 탈퇴/강등 불가
-        if user.is_admin and member_update.role != "staff":
             raise HTTPException(
-                status_code=403,
-                detail="관리자는 role을 member로 변경할 수 없습니다. (관리자 탈퇴/강등 불가)",
+                status_code=400,
+                detail=f"잘못된 role 값: {member_update.role}"
             )
 
+        # 2. 유저 조회
+        result = await db.execute(
+            select(User).where(User.userid == member_update.userid)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail=f"존재하지 않는 유저: {member_update.userid}"
+            )
+
+        # 3. 관리자 보호
+        if user.is_admin:
+            raise HTTPException(
+                status_code=403,
+                detail=f"{user.userid}는 관리자라 변경 불가"
+            )
+
+        # 4. 변경
         user.role = member_update.role
-
-        # role 변경 시 관리자 권한 자동 해제
-        if member_update.role != "admin":
-            user.is_admin = False
-
+        updated_users.append(user.userid)
 
     await db.commit()
 
+    return {
+        "message": "회원 권한 변경 완료",
+        "updated": updated_users
+    }
 
 # --------------------
 # 관리자 위임 (최대 2명 제한)
@@ -141,12 +166,7 @@ async def update_members_status(
 @router.put(
     "/delegate/{userid}",
     response_model=MemberInfoResponse,
-    summary="다른 회원에게 관리자 권한 위임 (관리자 최대 2명)",
-)
-@router.put(
-    "/delegate/{userid}",
-    response_model=MemberInfoResponse,
-    summary="관리자 권한 위임 (본인 기준 교체)",
+    summary="관리자 권한 위임 (교체 방식)",
 )
 async def delegate_admin_role(
     userid: str,
@@ -161,11 +181,10 @@ async def delegate_admin_role(
         )
 
     # 대상 유저 조회
-    user_to_promote = (
-        await db.execute(
-            select(User).where(User.userid == userid)
-        )
-    ).scalar_one_or_none()
+    result = await db.execute(
+        select(User).where(User.userid == userid)
+    )
+    user_to_promote = result.scalar_one_or_none()
 
     if not user_to_promote:
         raise HTTPException(
@@ -173,12 +192,18 @@ async def delegate_admin_role(
             detail="위임할 회원을 찾을 수 없습니다."
         )
 
-    # 현재 관리자(본인) 권한 해제
-    current_admin.is_admin = False
-    # role은 유지하거나 staff로 내리기
-    current_admin.role = "staff"
+    # 관리자 수 체크
+    admin_count = await db.scalar(
+        select(func.count()).select_from(User).where(User.is_admin == True)
+    )
 
-    # 대상에게 관리자 권한 부여
+    # 이미 2명이라면 "교체 방식"으로 진행
+    if admin_count >= 2:
+        # 현재 관리자(본인) 해제
+        current_admin.is_admin = False
+        current_admin.role = "staff"
+
+    # 새 관리자 지정
     user_to_promote.is_admin = True
     user_to_promote.role = "staff"
 
