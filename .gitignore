@@ -30,3 +30,5 @@ BE/keys.py
 node_modules
 node_modules
 node_modules/
+
+kurchive_backup.sql
