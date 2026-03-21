@@ -293,6 +293,17 @@
     flex-shrink: 0;
     padding: 4px;
 }
+.tagSearch__trashcan {
+    display: flex;              /* 🔥 핵심 */
+    align-items: center;        /* 세로 중앙 */
+    justify-content: center;    /* 가로 중앙 */
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+    border: 2px solid rgb(97, 97, 97);
+}
 
 .tagSearch__selectedTag{
     margin: 0px 5px;
