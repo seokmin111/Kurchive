@@ -3,7 +3,8 @@ load_dotenv()  # .env 파일의 환경변수를 로드
 
 import os
 import logging
-
+import logging
+logging.warning(f"DATABASE_URL = {os.getenv('DATABASE_URL')}")
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
