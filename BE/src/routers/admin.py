@@ -163,24 +163,25 @@ async def update_members_status(
 # --------------------
 # 관리자 위임 (최대 2명 제한)
 # --------------------
+
 @router.put(
     "/delegate/{userid}",
     response_model=MemberInfoResponse,
-    summary="관리자 권한 위임 (교체 방식)",
+    summary="관리자 권한 위임 (본인 → 다른 사용자로 교체)",
 )
 async def delegate_admin_role(
     userid: str,
     db: AsyncSession = Depends(get_async_db),
     current_admin: User = Depends(get_current_admin_user),
 ):
-    # 자기 자신에게 위임 금지
+    # 1. 자기 자신에게 위임 금지
     if current_admin.userid == userid:
         raise HTTPException(
             status_code=400,
             detail="자기 자신에게 관리자 권한을 위임할 수 없습니다."
         )
 
-    # 대상 유저 조회
+    # 2. 대상 유저 조회
     result = await db.execute(
         select(User).where(User.userid == userid)
     )
@@ -192,21 +193,29 @@ async def delegate_admin_role(
             detail="위임할 회원을 찾을 수 없습니다."
         )
 
-    # 관리자 수 체크
+    # 3. 현재 관리자 수 확인
     admin_count = await db.scalar(
         select(func.count()).select_from(User).where(User.is_admin == True)
     )
 
-    # 이미 2명이라면 "교체 방식"으로 진행
-    if admin_count >= 2:
-        # 현재 관리자(본인) 해제
-        current_admin.is_admin = False
-        current_admin.role = "staff"
+    # 4. 관리자 수 제한 체크
+    # - 이미 admin인 경우는 그냥 통과 (중복 위임 방지)
+    # - 새로운 admin 추가 상황이면 제한 적용
+    if not user_to_promote.is_admin and admin_count >= 2:
+        raise HTTPException(
+            status_code=400,
+            detail="관리자는 최대 2명까지만 지정할 수 있습니다."
+        )
 
-    # 새 관리자 지정
+    # 5. 현재 관리자 권한 해제
+    current_admin.is_admin = False
+    current_admin.role = "staff"
+
+    # 6. 대상 유저에게 관리자 권한 부여
     user_to_promote.is_admin = True
     user_to_promote.role = "staff"
 
+    # 7. 저장
     await db.commit()
     await db.refresh(user_to_promote)
 
