@@ -1,58 +1,53 @@
-@font-face {
-    font-family: 'SlowGothic';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
-    font-weight: normal;
-    font-display: swap;
-}
-
-.container{
+.container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 812px;
+
+  min-height: 100vh; /* ⭐ 핵심: 화면 꽉 채움 */
   width: 375px;
-  background-color: #ffffff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-  margin: 0 auto; /* 중앙 정렬 */
+
+  margin: 0 auto;
+
   background: linear-gradient(to bottom, #6F0121 30%, #ffffff 60%);
-    
-    /* 배경 반복 방지 */
-    background-repeat: no-repeat;
+  background-repeat: no-repeat;
 }
 
-.adiminPage{
-  margin-top: 200px;
+.adiminPage {
+  margin-top: 120px; /* 줄임 */
   margin-bottom: 10px;
-  font-family: 'SlowGothic', sans-serif; /* 등록한 이름 그대로 사용 */
+  font-family: 'SlowGothic', sans-serif;
   font-size: 15px;
-  color: #ffffff; /* 흰색 글씨 */
+  color: #ffffff;
 }
 
-.kurchive{
-  font-family: 'SlowGothic', sans-serif; /* 등록한 이름 그대로 사용 */
+.kurchive {
+  font-family: 'SlowGothic', sans-serif;
   font-size: 40px;
-  color: #ffffff; /* 흰색 글씨 */
-  margin-bottom: 60px;
+  color: #ffffff;
+  margin-bottom: 40px;
 }
 
-.password{
+.password {
   color: white;
   font-weight: 200;
+  margin-bottom: 5px;
 }
 
-.inputBox{
-  height: 40px;
+.inputBox {
+  height: 45px;
   width: 80%;
   border: none;
-  border-radius: 5px;
-  margin-bottom: 170px;
+  border-radius: 10px;
+  margin-bottom: 20px; /* ⭐ 정상값 */
+  padding: 0 10px;
 }
 
-.loginBtn{
+.loginBtn {
   width: 80%;
   background-color: #360404;
   color: white;
   padding: 15px 0px;
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
+  margin-top: 20px;
 }
