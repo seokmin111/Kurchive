@@ -48,6 +48,7 @@ class MemberStatusUpdateRequest(BaseModel):
 class MemberInfoResponse(BaseModel):
     id: int
     userid: str
+    name: str
     nickname: str
     role: str
     is_admin: bool

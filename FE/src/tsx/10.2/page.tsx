@@ -4,13 +4,29 @@ import React, { useState, useEffect } from "react";
 import style from "./page.module.css";
 import { getAllMembers, MemberInfo } from "../../api/admin";
 
+
+
 export default function MemberSearchPage() {
   // 1. 상태 변수 선언 (함수 컴포넌트 내부 최상단)
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+ // 2. 검색 변수
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filteredMembers, setFilteredMembers] = useState<MemberInfo[]>([]);
+  const [isSearched, setIsSearched] = useState(false);
 
-  // 2. 회원 목록 조회 로직
+  // 검색 로직
+  const handleSearch = () => {
+  if (!searchKeyword.trim()) return;
+
+  const result = members.filter((m) =>
+    m.userid.includes(searchKeyword)
+  );
+
+  setFilteredMembers(result);
+  setIsSearched(true);
+};
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -49,10 +65,14 @@ export default function MemberSearchPage() {
       {/* 검색 섹션 */}
       <div className={style.memberSearch}>회원 조회하기</div>
       <div className={style.memberSearchBody}>
-        <input
-          placeholder="회원 아이디를 입력해주세요"
-          className={style.memberSearchInput}
-        />
+          <input
+    placeholder="회원 아이디를 입력해주세요"
+    className={style.memberSearchInput}
+    value={searchKeyword}
+    onChange={(e) => setSearchKeyword(e.target.value)}
+  />
+
+  <button onClick={handleSearch}>검색</button>
       </div>
 
       {/* 테이블 섹션 */}
@@ -73,7 +93,7 @@ export default function MemberSearchPage() {
               </tr>
             </thead>
             <tbody>
-              {/* API에서 받아온 실제 members 데이터를 매핑합니다. */}
+              {/* API에서 받아온 실제 members 데이터를 매핑 */}
               {members.map((member) => (
                 <tr key={member.id}>
                   {/* MemberInfo 타입의 nickname 필드 사용 */}
