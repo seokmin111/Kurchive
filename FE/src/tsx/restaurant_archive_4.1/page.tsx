@@ -34,6 +34,7 @@ export default function RestaurantFormPage() {
   const [name, setName] = useState("");
   const [shortReview, setShortReview] = useState("");
   const [mapLink, setMapLink] = useState("");
+  const [address, setAddress] = useState("");
   const [rating, setRating] = useState(0); 
 
   const [menuInput, setMenuInput] = useState("");
@@ -47,7 +48,7 @@ export default function RestaurantFormPage() {
   const [detailImageFile, setDetailImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [detailImagePreview, setDetailImagePreview] = useState<string | null>(null);
-
+  
   const handleMainImageChange = (file: File | null) => {
     if (!file) return;
     setMainImageFile(file);
@@ -368,18 +369,18 @@ export default function RestaurantFormPage() {
             </div>
 
             <div className={styles.labelRow}>
-            <span className={styles.label}>
-              식당 맵 링크 <span className={styles.required}>*</span>
-            </span>
+              <span className={styles.label}>
+                식당 맵 링크 <span className={styles.required}>*</span>
+              </span>
 
-            <button
-              type="button"
-              className={styles.helpButton}
-              onClick={() => setShowMapHelp((v) => !v)}
-            >
-              ?
-            </button>
-          </div>
+              <button
+                type="button"
+                className={styles.helpButton}
+                onClick={() => setShowMapHelp((v) => !v)}
+              >
+                ?
+              </button>
+            </div>
 
           <input
             className={styles.mapInput}
@@ -407,6 +408,18 @@ export default function RestaurantFormPage() {
           )}
           </section>
 
+          <div className={styles.labelRow}>
+          <span className={styles.label}>
+            식당 위치 주소 <span className={styles.required}>*</span>
+          </span>
+        </div>
+
+        <input
+          className={styles.addressInput}
+          placeholder="도로명주소 입력"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
           <hr className={styles.divider} />
 
           <section className={styles.section}>
