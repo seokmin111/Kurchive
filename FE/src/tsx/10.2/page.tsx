@@ -99,8 +99,20 @@ export default function MemberSearchPage() {
                   {/* MemberInfo 타입의 nickname 필드 사용 */}
                   <td className={style.userName}>{member.nickname}</td>
                   {/* role이 'staff'인 경우 관리자 스타일 적용 */}
-                  <td className={member.role === "staff" ? style.adminRole : style.userRole}>
-                    {member.role === "staff" ? "관리자" : "일반 회원"}
+                  <td
+                    className={
+                      member.role === "staff" && member.is_admin
+                        ? style.adminRole
+                        : member.role === "staff" && !member.is_admin
+                        ? style.staffRole
+                        : style.userRole
+                    }
+                  >
+                    {member.role === "staff" && member.is_admin
+                      ? "관리자"
+                      : member.role === "staff" && !member.is_admin
+                      ? "임원진"
+                      : "일반 회원"}
                   </td>
                   <td>
                     <button className={style.editBtnLight}>
