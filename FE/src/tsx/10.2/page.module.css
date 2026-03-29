@@ -125,7 +125,10 @@
   color: #8B0029; /* 관리자는 버건디색 */
   font-weight: 700;
 }
-
+.staffRole {
+  color: #f59e0b; /* 예시: 주황색 */
+  font-weight: 600;
+}
 .userRole {
   color: #898989;
 }
