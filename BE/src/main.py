@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
-load_dotenv()  # .env 파일의 환경변수를 로드
-
+# load_dotenv()  # .env 파일의 환경변수를 로드
+load_dotenv(".dev.env") # 개발용
 import os
 import logging
 import logging
@@ -22,7 +22,7 @@ import BE.src.models
 
 from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
-from BE.src.routers import user, map, recipe, mypage, restaurant, admin, admin_auth, ingredient, comment
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment
 from BE.src.errors import register_exception_handlers
 
 
@@ -72,5 +72,4 @@ app.include_router(mypage.router)
 app.include_router(restaurant.router, prefix = "/api", tags=["Restaurants"])
 app.include_router(comment.router)
 app.include_router(ingredient.router)
-app.include_router(admin_auth.router)
 app.include_router(admin.router)

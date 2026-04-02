@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -175,54 +176,53 @@ export default function App() {
       <Route
         path="/admin"
         element={
-          <ProtectedRoute>
             <AdminFirstPage />
-          </ProtectedRoute>
+    
         }
       />
 
       <Route
         path="/admin/main"
         element={
-          <ProtectedRoute>
+          <AdminProtectedRoute>
             <AdminMainPage />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       />
 
       <Route
         path="/admin/member"
         element={
-          <ProtectedRoute>
+          <AdminProtectedRoute>
             <MemberSearchPage />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       />
 
       <Route
         path="/admin/member/result"
         element={
-          <ProtectedRoute>
+          <AdminProtectedRoute>
             <MemberSearchResultPage />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       />
 
       <Route
         path="/admin/entrust/result"
         element={
-          <ProtectedRoute>
+          <AdminProtectedRoute>
             <AdminEntrustPage />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       />
 
       <Route
         path="/admin/entrust/complete"
         element={
-          <ProtectedRoute>
+          <AdminProtectedRoute>
             <AdminEntrustCompletePage />
-          </ProtectedRoute>
+          </AdminProtectedRoute>
         }
       />
 
