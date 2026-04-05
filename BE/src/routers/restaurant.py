@@ -338,7 +338,23 @@ async def create_restaurant(
             print("⚠️ 주소 추출 실패 (결과 없음)")
     except Exception as e:
         print(f"❌ 주소 추출 중 에러 발생: {e}")
+        
+    if lat is None or lon is None:
+        print("⚠️ 위치 없음 → 중복 체크 스킵")
+    else:
+        candidates = await find_duplicate_candidates(
+        db=db,
+        name=payload.name,
+        lat=lat,
+        lon=lon
+    )
 
+        if candidates:
+            return {
+                "ok": False,
+                "message": "중복 식당 후보 존재",
+                "candidates": candidates
+            }
     try:
         restaurant = Restaurant(
             name=payload.name,
@@ -370,6 +386,8 @@ async def create_restaurant(
     except Exception as e:
         await db.rollback()
         return JSONResponse(status_code=400, content={"ok": False, "message": f"Tag insert error: {e}"})
+    
+    
 
     return {
         "ok": True,
