@@ -26,6 +26,7 @@ type RestaurantDetail = {
   id: number;
   name: string;
   location_link: string;
+  address: string;
   region?: {
     id: number;
     name: string;
@@ -144,6 +145,9 @@ export default function RestaurantEditPage() {
   const [name, setName] = useState("");
   const [shortReview, setShortReview] = useState("");
   const [mapLink, setMapLink] = useState("");
+  const [address, setAddress] = useState("");
+  const [isAddressValid, setIsAddressValid] = useState<boolean | null>(null);
+  const [addressMessage, setAddressMessage] = useState("");
   const [rating, setRating] = useState(0);
 
   const [detailReview, setDetailReview] = useState("");
@@ -413,6 +417,7 @@ useEffect(() => {
       setName(data.name ?? "");
       setShortReview((data.summary ?? "").toString());
       setMapLink((data.location_link ?? "").toString());
+      setAddress((data.address ?? "").toString());
       setRating(Number(data.rating ?? 0));
       setPriceMin(data.price_min ?? "");
       setPriceMax(data.price_max ?? "");
@@ -502,17 +507,30 @@ useEffect(() => {
   } catch {
     return false;
   }
-}
+  }
+
+  const handleValidateAddress = () => {
+    if (!address.trim()) {
+      setIsAddressValid(false);
+      setAddressMessage("주소를 입력해주세요.");
+      return;
+    }
+
+    setIsAddressValid(null);
+    setAddressMessage("주소 검증 요청 중... (백엔드 연결 예정)");
+  };
+
   const handleSubmit = async () => {
     if (submitting) return;
 
     // 아카이브와 동일한 검증 흐름
     if (!name.trim()) return alert("식당 이름을 입력해주세요.");
     if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
-    if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
-    if (!isValidMapLink(mapLink.trim())) {
-  return alert("지원되는 지도 링크가 아닙니다.");
-}
+    if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다."); 
+    if (!isValidMapLink(mapLink.trim())) {return alert("지원되는 지도 링크가 아닙니다.");}
+    if (!address.trim()) return alert("주소를 입력해주세요.");
+    if (isAddressValid === null) {const ok = window.confirm("주소 검증을 하지 않았습니다. 계속 진행할까요?"); if (!ok) return;}
+    // 백엔드 붙고 나면 if (isAddressValid !== true) return alert("주소 검증을 완료해주세요."); 로 변경.
     if (!selectedLv2) return alert("소지역(구/시/군)을 선택해주세요.");
     if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해주세요.");
     if (Number.isNaN(priceMin) || Number.isNaN(priceMax)) return alert("가격은 숫자만 입력해주세요.");
@@ -528,6 +546,7 @@ useEffect(() => {
       const payload = {
         name: name.trim(),
         location_link: mapLink.trim(),
+        address: address.trim(),
         location_tag_id: selectedLv2,
         rating: ratingStep,
         summary: (shortReview ?? "").trim() || " ",
@@ -702,6 +721,31 @@ setTimeout(() => {
             </div>
           )}
 
+            {/* 주소 추가 */}
+            <div className={styles.labelRow}>
+              <span className={styles.label}>식당 주소 <span className={styles.required}>*</span></span>
+
+              <div className={styles.inputWithButton}>
+                <input
+                  className={styles.mapInput}
+                  placeholder="도로명주소 입력"
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    setIsAddressValid(null);
+                    setAddressMessage("");
+                  }}
+                />
+                <button type="button" className={styles.validateButton} onClick={handleValidateAddress}>검증</button>
+              </div>
+            </div>
+
+            {addressMessage && (
+              <div className={styles.addressMessage}>
+                {addressMessage}
+              </div>
+            )}
+
             <div className={styles.labelRow}>
               <span className={styles.label}>식당 맵 링크 <span className={styles.required}>*</span></span>
               <input
@@ -711,6 +755,7 @@ setTimeout(() => {
                 onChange={(e) => setMapLink(e.target.value)}
               />
             </div>
+
           </section>
 
           <hr className={styles.divider} />

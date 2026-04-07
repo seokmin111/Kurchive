@@ -876,7 +876,7 @@
 	position: fixed;
 	right: 4vw;
 	bottom: 20vh;
-	z-index: 20;
+	z-index: 25;
 
 	display: inline-flex;
 	align-items: center;

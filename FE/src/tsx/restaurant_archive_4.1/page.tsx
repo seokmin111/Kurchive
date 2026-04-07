@@ -35,6 +35,10 @@ export default function RestaurantFormPage() {
   const [shortReview, setShortReview] = useState("");
   const [mapLink, setMapLink] = useState("");
   const [address, setAddress] = useState("");
+  const [isAddressLocked, setIsAddressLocked] = useState(true);
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [addressSource, setAddressSource] = useState<"auto" | "manual" | null>(null);
+  const [addressMessage, setAddressMessage] = useState("");
   const [rating, setRating] = useState(0); 
 
   const [menuInput, setMenuInput] = useState("");
@@ -234,6 +238,66 @@ export default function RestaurantFormPage() {
     return false;
   }
 };
+
+  const handleFetchAddress = async () => {
+    if (!mapLink.trim()) {
+      setAddressMessage("먼저 식당 맵 링크를 입력해주세요.");
+      return;
+    }
+
+    if (!isValidMapLink(mapLink)) {
+      setAddressMessage("지원되는 지도 링크만 가능합니다.");
+      return;
+    }
+
+    try {
+      setIsFetchingAddress(true);
+      setAddressMessage("주소를 불러오는 중입니다...");
+
+      const res = await client.post("/address/resolve", {
+        location_link: mapLink.trim(),
+      });
+
+      const resolvedAddress = res.data?.address;
+
+      if (!resolvedAddress) {
+        setAddress("");
+        setIsAddressLocked(false);
+        setAddressSource(null);
+        setAddressMessage("주소를 자동으로 불러오지 못했습니다. 직접 입력해주세요.");
+        return;
+      }
+
+      setAddress(resolvedAddress);
+      setIsAddressLocked(true);
+      setAddressSource("auto");
+      setAddressMessage("지도 링크를 기반으로 주소를 불러왔습니다.");
+    } catch (e) {
+      console.error(e);
+      setAddress("");
+      setIsAddressLocked(false);
+      setAddressMessage("주소를 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsFetchingAddress(false);
+    }
+  };
+
+  const handleEditAddress = () => {
+    setIsAddressLocked(false);
+    setAddressMessage("주소를 수정한 뒤 적용 버튼을 눌러주세요.");
+  };
+
+  const handleApplyAddress = () => {
+    if (!address.trim()) {
+      setAddressMessage("주소를 입력해주세요.");
+      return;
+    }
+
+    setIsAddressLocked(true);
+    setAddressSource("manual");
+    setAddressMessage("수정한 주소가 반영되었습니다.");
+  };
+
   const handleSubmit = async () => {
     if (submitting) return;
 
@@ -241,6 +305,8 @@ export default function RestaurantFormPage() {
 
     if (!name.trim()) return alert("식당 이름을 입력해주세요.");
     if (!mapLink.trim()) return alert("맵 링크를 입력해주세요.");
+    if (!address.trim()) return alert("주소를 입력해주세요.");
+    if (!isAddressLocked) return alert("주소 수정 중입니다. 적용 버튼을 눌러주세요.");
     if (shortReview.length > 100) {return alert("한줄평은 100자 이하로 입력해주세요.");}
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다.");
     if (!isValidMapLink(mapLink)) return alert("카카오맵 / 네이버맵 / 구글맵 링크만 입력 가능합니다.");
@@ -257,6 +323,7 @@ export default function RestaurantFormPage() {
       const payload = {
         name: name.trim(),
         location_link: mapLink.trim(),
+        address: address.trim(),
         location_tag_id: selectedLv2,
         rating: rating,
         summary: (shortReview ?? "").trim() || " ",
@@ -386,8 +453,25 @@ export default function RestaurantFormPage() {
             className={styles.mapInput}
             placeholder="카카오맵 / 네이버맵 / 구글맵 링크 입력"
             value={mapLink}
-            onChange={(e) => setMapLink(e.target.value)}
+            onChange={(e) => {
+              setMapLink(e.target.value);
+              setAddress("");
+              setIsAddressLocked(true);
+              setAddressSource(null);
+              setAddressMessage("");
+            }}
           />
+
+          <div className={styles.addressFetchRow}>
+            <button
+              type="button"
+              className={styles.fetchAddressButton}
+              onClick={handleFetchAddress}
+              disabled={isFetchingAddress}
+            >
+              {isFetchingAddress ? "불러오는 중..." : "주소 불러오기"}
+            </button>
+          </div>
 
           {showMapHelp && (
             <div className={styles.mapHelpBox}>
@@ -409,17 +493,54 @@ export default function RestaurantFormPage() {
           </section>
 
           <div className={styles.labelRow}>
-          <span className={styles.label}>
-            식당 위치 주소 <span className={styles.required}>*</span>
-          </span>
-        </div>
+            <span className={styles.label}>
+              식당 위치 주소 <span className={styles.required}>*</span>
+            </span>
+          </div>
 
-        <input
-          className={styles.addressInput}
-          placeholder="도로명주소 입력"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
+          <div className={styles.addressRow}>
+            <input
+              className={
+                isAddressLocked
+                  ? styles.addressInputReadonly
+                  : styles.addressInputEditable
+              }
+              placeholder={
+                isAddressLocked
+                  ? "주소 불러오기 버튼을 눌러주세요"
+                  : "도로명주소를 입력해주세요"
+              }
+              value={address}
+              readOnly={isAddressLocked}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+
+            {isAddressLocked ? (
+              <button
+                type="button"
+                className={styles.addressActionButton}
+                onClick={handleEditAddress}
+                disabled={!address.trim()}
+              >
+                수정
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.addressActionButton}
+                onClick={handleApplyAddress}
+              >
+                적용
+              </button>
+            )}
+          </div>
+
+          {addressMessage && (
+            <div className={styles.addressMessage}>
+              {addressMessage}
+            </div>
+          )}
+
           <hr className={styles.divider} />
 
           <section className={styles.section}>
