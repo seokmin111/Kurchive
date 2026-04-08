@@ -88,9 +88,84 @@ div {
     bottom: 0;        /* 아래쪽 붙이기 */
     left: 0;          /* 왼쪽 끝 */
     width: 100%; 
-    height: 30%;
+    box-sizing: border-box;
+    
+    display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+    
+	padding: 0 6vw 3vh;
+    color: #8B0029;
     background: linear-gradient(to top, 
                                 rgba(139,0,41,0.3) 0%,    /* 아래 0% */
-                                #F2ECE5 50%,             /* 중간 50% */
+                                #F2ECE5 60%,             /* 중간 50% */
                                 rgba(139,0,41,0) 100%);  /* 위 100% */
+    
+}
+.contactButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+
+	padding: 0.7rem 1.1rem;
+	border: 1px solid rgba(139, 0, 41, 0.18);
+	border-radius: 999px;
+	background-color: rgba(255, 255, 255, 0.35);
+
+	color: #8b0029;
+	text-decoration: none;
+	font-family: "Pretendard", sans-serif;
+	font-size: 0.95rem;
+	font-weight: 600;
+
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.contactButton:hover {
+	background-color: rgba(255, 255, 255, 0.55);
+	transform: translateY(-0.08rem);
+}
+
+.contactIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.9rem;
+	line-height: 1;
+}
+
+.contactButtonText {
+	line-height: 1;
+}
+
+.footerDivider {
+	width: 18%;
+	min-width: 5rem;
+	height: 1px;
+	margin: 1.1rem 0 1rem;
+	background-color: rgba(139, 0, 41, 0.16);
+}
+
+.footerDescription,
+.footerCredit {
+	margin: 0;
+	font-family: "Pretendard", sans-serif;
+	text-align: center;
+}
+
+.footerDescription {
+	color: #8b0029;
+	font-size: 0.95rem;
+	font-weight: 500;
+	line-height: 1.5;
+}
+
+.footerCredit {
+	margin-top: 0.45rem;
+	color: rgba(139, 0, 41, 0.82);
+	font-size: 0.92rem;
+	font-weight: 400;
+	line-height: 1.5;
 }
