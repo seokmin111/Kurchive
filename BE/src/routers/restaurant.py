@@ -52,6 +52,9 @@ from BE.src.utils.image_upload import ALLOWED_MIME
 from BE.src.utils.user_serializer import build_uploader
 from BE.src.utils.tags import expand_tag_ids
 
+# 유틸 함수
+from BE.src.utils.duplicate_det import find_duplicate_candidates
+
 from urllib.parse import urlparse
 
 ALLOWED_MAP_DOMAINS = {
@@ -62,8 +65,8 @@ ALLOWED_MAP_DOMAINS = {
     "kko.to",
     # Naver
     "naver.me",
-    "map.naver.com",
-    "m.place.naver.com",
+    #"map.naver.com",
+    #"m.place.naver.com",
     # Google
     "maps.app.goo.gl",
     "www.google.com",
