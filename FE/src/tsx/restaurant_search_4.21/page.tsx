@@ -126,23 +126,6 @@ export default function SearchPage() {
           </ul>
         )}
       </div>
-      
-      {/* 지도로 보기 버튼 */}
-      {!isTagSearchOpen && (
-        <button
-          type="button"
-          className={styles.mapSearchFab}
-          onClick={() => navigate("/restaurant/map")}
-          aria-label="지도로 보기"
-        >
-          <img
-            src="/map.svg"
-            alt=""
-            className={styles.mapSearchFabIcon}
-          />
-          <span className={styles.mapSearchFabText}>지도로 보기</span>
-        </button>
-      )}
 
       {/* 항상 보이는 하단 하얀 박스(핸들) */}
       {!isTagSearchOpen && (
