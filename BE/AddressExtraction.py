@@ -1,18 +1,12 @@
 import sys
 import os
-#BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
+import sys, os
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, BASE_DIR)
-print(BASE_DIR)
+
 from set_path import *  
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
-# .env 로드
-from dotenv import load_dotenv
-ENV_PATH = os.path.join(BASE_DIR, ".env")
-load_dotenv(ENV_PATH)
-# .env 로드
 
 import requests
 import re
@@ -260,8 +254,8 @@ def main():
     print("NAVER_CLIENT_ID:", bool(os.environ.get("NAVER_CLIENT_ID")))
     print("NAVER_CLIENT_SECRET:", bool(os.environ.get("NAVER_CLIENT_SECRET")))
 
-    urls = [ # 예시링크들 , 네이버 도란도란은 오류 뜨는 케이스
-        "https://naver.me/xHEC0k3d",       
+    urls = [ # 예시링크들 
+        "https://naver.me/GubwElwt",       
         "https://place.map.kakao.com/26338954",  
     ]
 
