@@ -406,14 +406,15 @@
 
 
 .mapFab {
-  position: absolute;
-  bottom: 28px;
-  right: 24px;
+  position: fixed;
+  bottom: 4vh;
+  right: 2.5vh;
 
   width: 76px;
   height: 76px;
 
   background-color: #ffffff;
+  border: 2px solid #8B0029;
   border-radius: 50%;
 
   display: flex;
@@ -421,7 +422,6 @@
   align-items: center;
   justify-content: center;
 
-  border: none;
   cursor: pointer;
   z-index: 999;
 
