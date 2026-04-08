@@ -5,9 +5,8 @@ from datetime import datetime, timedelta, timezone
 
 
 from fastapi import Depends, HTTPException, status
-
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
-# from sqlalchemy.orm import Session
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import os
 
@@ -33,8 +32,7 @@ JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-security = HTTPBearer() # 수정 
-
+admin_security = HTTPBearer()
 '''
 def get_current_user(
     token: HTTPAuthorizationCredentials = Depends(security), 
@@ -75,34 +73,31 @@ def create_access_token(sub: str, expires_in_seconds: int = 3600, scope: str = "
 from .database import get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-
 async def get_current_user_from_token(
-    token: HTTPAuthorizationCredentials = Depends(security),
+    token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_async_db)
 ) -> User:
-    credentials_exception = HTTPException(status_code=401, detail="Could not validate credentials")
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials"
+    )
+    print("TOKEN:", token)
+
     try:
-        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-        
-        
-        token_data = {"sub": user_id, "scope": payload.get("scope", "user")}
-
     except JWTError:
         raise credentials_exception
 
-    result = await db.execute(select(User).filter(User.id == int(token_data["sub"])))
+    result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
 
     if user is None:
         raise credentials_exception
-    
-    
-    user._token_scope = token_data["scope"]
-    return user
 
+    return user
 
 # guest 판별
 async def require_not_guest(
@@ -116,30 +111,49 @@ async def require_not_guest(
     return current_user
 
 async def get_optional_user(
-    token: HTTPAuthorizationCredentials = Depends(security),
+    token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_async_db)
 ) -> Optional[User]:
     try:
-        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id: str = payload.get("sub")
         if not user_id:
             return None
 
-        result = await db.execute(select(User).filter(User.id == int(user_id)))
+        result = await db.execute(select(User).where(User.id == int(user_id)))
         return result.scalar_one_or_none()
 
     except Exception:
         return None
-    '''토큰이 없거나 잘못되어도 에러 대신 None 반환'''
-    
 # 관리자
 
 async def get_current_admin_user(
-    current_user: User = Depends(get_current_user_from_token)
+    token: HTTPAuthorizationCredentials = Depends(admin_security),
+    db: AsyncSession = Depends(get_async_db)
 ) -> User:
-    if not (getattr(current_user, "_token_scope", None) == "admin" and current_user.is_admin):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials"
+    )
+
+    try:
+        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise credentials_exception
+
+    if not user.is_admin:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required",
+            status_code=403,
+            detail="Admin access required"
         )
-    return current_user
+
+    return user

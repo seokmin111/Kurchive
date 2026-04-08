@@ -10,8 +10,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 812px;
-  width: 375px;
+  min-height: 100vh;
+  width: 100%;
   background-color: #ffffff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   margin: 0 auto; /* 중앙 정렬 */
@@ -125,7 +125,10 @@
   color: #8B0029; /* 관리자는 버건디색 */
   font-weight: 700;
 }
-
+.staffRole {
+  color: #f59e0b; /* 예시: 주황색 */
+  font-weight: 600;
+}
 .userRole {
   color: #898989;
 }

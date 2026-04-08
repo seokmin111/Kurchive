@@ -169,7 +169,43 @@ def get_naver_address(url: str) -> str | None:
     except Exception as e:
         print("네이버 placeId API 실패:", e)
         return None
+# 역지오코딩
+def reverse_geocode(lat: str, lon: str) -> str | None:
+    url = "https://dapi.kakao.com/v2/local/geo/coord2address.json"
 
+    headers = {
+        "Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"
+    }
+
+    params = {
+        "x": lon,  # 경도
+        "y": lat   # 위도
+    }
+
+    try:
+        res = requests.get(url, headers=headers, params=params, timeout=7)
+        res.raise_for_status()
+
+        data = res.json()
+        docs = data.get("documents", [])
+
+        if not docs:
+            print("역지오 결과 없음:", lat, lon)
+            return None
+
+        addr = docs[0]
+
+        # 도로명 우선
+        road = addr.get("road_address")
+        if road:
+            return road.get("address_name")
+
+        # fallback: 지번
+        return addr.get("address", {}).get("address_name")
+
+    except Exception as e:
+        print("역지오 실패:", e)
+        return None
 
 #------------------------------------------------------------------------
 

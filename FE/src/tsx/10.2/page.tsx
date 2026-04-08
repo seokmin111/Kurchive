@@ -2,30 +2,89 @@
 
 import React, { useState, useEffect } from "react";
 import style from "./page.module.css";
-import { getAllMembers, MemberInfo } from "../../api/admin";
+import {
+  getAllMembers,
+  MemberInfo,
+  updateMembersStatus,
+} from "../../api/admin";
 
 export default function MemberSearchPage() {
-  // 1. 상태 변수 선언 (함수 컴포넌트 내부 최상단)
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 2. 회원 목록 조회 로직
+  // 검색
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filteredMembers, setFilteredMembers] = useState<MemberInfo[]>([]);
+  const [isSearched, setIsSearched] = useState(false);
+
+  // 🔥 수정 상태
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingRole, setEditingRole] = useState<"staff" | "member">("member");
+
+  // 검색
+  const handleSearch = () => {
+    if (!searchKeyword.trim()) return;
+
+    const result = members.filter((m) =>
+      m.userid.includes(searchKeyword)
+    );
+
+    setFilteredMembers(result);
+    setIsSearched(true);
+  };
+
+  // 🔥 수정 버튼 클릭
+  const handleEditClick = (member: MemberInfo) => {
+    if (editingUserId === member.userid) {
+      // 저장
+      handleSave(member);
+    } else {
+      // 수정 모드 진입
+      setEditingUserId(member.userid);
+      setEditingRole(member.role);
+    }
+  };
+
+  // 🔥 저장
+  const handleSave = async (member: MemberInfo) => {
+    try {
+      // 변경 없으면 그냥 종료
+      if (editingRole === member.role) {
+        setEditingUserId(null);
+        return;
+      }
+
+      await updateMembersStatus({
+        members: [
+          {
+            userid: member.userid,
+            role: editingRole,
+          },
+        ],
+      });
+
+      alert("변경 완료");
+
+      setEditingUserId(null);
+
+      // 다시 불러오기
+      const data = await getAllMembers();
+      setMembers(data);
+
+    } catch (err) {
+      console.error(err);
+      alert("변경 실패");
+    }
+  };
+
   useEffect(() => {
     const fetchMembers = async () => {
       try {
         setIsLoading(true);
-        /** * client.ts의 요청 인터셉터가 localStorage에서 토큰을 꺼내 
-         * Authorization 헤더에 Bearer 토큰을 자동으로 넣어줍니다.
-         */
         const data = await getAllMembers();
         setMembers(data);
       } catch (err: any) {
-        /**
-         * 401(인증 만료) 또는 403(권한 없음) 에러가 발생하면
-         * client.ts의 응답 인터셉터가 자동으로 /login으로 리다이렉트하므로
-         * 여기서는 일반적인 네트워크 에러 등만 처리하면 됩니다.
-         */
         console.error("데이터 로딩 실패:", err);
         if (err.response?.status !== 401 && err.response?.status !== 403) {
           setError("데이터를 불러오는 중 오류가 발생했습니다.");
@@ -38,27 +97,33 @@ export default function MemberSearchPage() {
     fetchMembers();
   }, []);
 
+  // 🔥 표시할 데이터 (검색 반영)
+  const displayMembers = isSearched ? filteredMembers : members;
+
   return (
     <div className={style.container}>
-      {/* 상단 타이틀 섹션 */}
+      {/* 타이틀 */}
       <div className={style.pageTitle}>
         <div className={style.kurchive}>커카이브</div>
         <div className={style.adminPage}>관리자 페이지</div>
       </div>
 
-      {/* 검색 섹션 */}
+      {/* 검색 */}
       <div className={style.memberSearch}>회원 조회하기</div>
       <div className={style.memberSearchBody}>
         <input
           placeholder="회원 아이디를 입력해주세요"
           className={style.memberSearchInput}
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
         />
+        <button onClick={handleSearch}>검색</button>
       </div>
 
-      {/* 테이블 섹션 */}
+      {/* 테이블 */}
       <div className={style.tableBody}>
         <div className={style.memberList}>회원 목록</div>
-        
+
         {isLoading ? (
           <div className={style.loadingStatus}>데이터를 불러오는 중...</div>
         ) : error ? (
@@ -73,18 +138,55 @@ export default function MemberSearchPage() {
               </tr>
             </thead>
             <tbody>
-              {/* API에서 받아온 실제 members 데이터를 매핑합니다. */}
-              {members.map((member) => (
+              {displayMembers.map((member) => (
                 <tr key={member.id}>
-                  {/* MemberInfo 타입의 nickname 필드 사용 */}
-                  <td className={style.userName}>{member.nickname}</td>
-                  {/* role이 'staff'인 경우 관리자 스타일 적용 */}
-                  <td className={member.role === "staff" ? style.adminRole : style.userRole}>
-                    {member.role === "staff" ? "관리자" : "일반 회원"}
+                  <td className={style.userName}>
+                    {member.nickname}
                   </td>
+
+                  {/* 🔥 권한 */}
                   <td>
-                    <button className={style.editBtnLight}>
-                      수정하기
+                    {editingUserId === member.userid ? (
+                      <select
+                        value={editingRole}
+                        onChange={(e) =>
+                          setEditingRole(
+                            e.target.value as "staff" | "member"
+                          )
+                        }
+                      >
+                        <option value="member">일반 회원</option>
+                        <option value="staff">임원진</option>
+                      </select>
+                    ) : (
+                      <span
+                        className={
+                          member.role === "staff" && member.is_admin
+                            ? style.adminRole
+                            : member.role === "staff"
+                            ? style.staffRole
+                            : style.userRole
+                        }
+                      >
+                        {member.role === "staff" && member.is_admin
+                          ? "관리자"
+                          : member.role === "staff"
+                          ? "임원진"
+                          : "일반 회원"}
+                      </span>
+                    )}
+                  </td>
+
+                  {/* 🔥 버튼 */}
+                  <td>
+                    <button
+                      className={style.editBtnLight}
+                      onClick={() => handleEditClick(member)}
+                      disabled={member.is_admin}
+                    >
+                      {editingUserId === member.userid
+                        ? "저장"
+                        : "권한 수정"}
                     </button>
                   </td>
                 </tr>
