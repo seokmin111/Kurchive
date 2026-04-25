@@ -19,3 +19,4 @@ class User(Base):
     # 관계 설정
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="user")

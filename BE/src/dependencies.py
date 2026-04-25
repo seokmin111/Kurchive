@@ -73,19 +73,20 @@ def create_access_token(sub: str, expires_in_seconds: int = 3600, scope: str = "
 from .database import get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+user_security = HTTPBearer()
+
 async def get_current_user_from_token(
-    token: str = Depends(oauth2_scheme),
+    token: HTTPAuthorizationCredentials = Depends(user_security),
     db: AsyncSession = Depends(get_async_db)
 ) -> User:
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials"
     )
-    print("TOKEN:", token)
 
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id: str = payload.get("sub")
+        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception
     except JWTError:
@@ -110,13 +111,18 @@ async def require_not_guest(
         )
     return current_user
 
+optional_user_security = HTTPBearer(auto_error=False)
+
 async def get_optional_user(
-    token: str = Depends(oauth2_scheme),
+    token: Optional[HTTPAuthorizationCredentials] = Depends(optional_user_security),
     db: AsyncSession = Depends(get_async_db)
 ) -> Optional[User]:
+    if token is None:
+        return None
+
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id: str = payload.get("sub")
+        payload = jwt.decode(token.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
         if not user_id:
             return None
 
