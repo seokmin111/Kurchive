@@ -12,6 +12,7 @@ export type Review = {
   content: string;
   rating: number;
   user_id: number | null;
+  nickname?: string;
   menus: string[];
   created_at: string;
   like_count?: number;
