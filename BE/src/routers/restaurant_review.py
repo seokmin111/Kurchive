@@ -27,6 +27,7 @@ class ReviewOut(BaseModel):
     content: str
     rating: float
     user_id: Optional[int]
+    nickname: Optional[str]  
     menus: List[str]
     created_at: datetime
 
@@ -89,13 +90,16 @@ async def get_reviews(
     db: AsyncSession = Depends(get_async_db),
 ):
     result = await db.execute(
-        select(Review).where(Review.restaurant_id == restaurant_id)
-    )
-    reviews = result.scalars().all()
+    select(Review, User.nickname) # 리뷰와 닉네임 같이 뽑기
+    .join(User, Review.user_id == User.id)
+    .where(Review.restaurant_id == restaurant_id)
+)
+
+    rows = result.all()  
 
     out = []
 
-    for r in reviews:
+    for r, nickname in rows:  # 리뷰, 닉네임 분리
         menu_rows = await db.execute(
             select(ReviewMenu.name).where(ReviewMenu.review_id == r.id)
         )
@@ -106,11 +110,14 @@ async def get_reviews(
             "content": r.content,
             "rating": r.rating,
             "user_id": r.user_id,
+            "nickname": nickname,  
             "menus": menus,
             "created_at": r.created_at,
             "like_count": r.like_count,
             "dislike_count": r.dislike_count
         })
+
+
 
     return out
 
