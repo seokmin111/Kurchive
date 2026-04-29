@@ -238,7 +238,7 @@ const createReview = async () => {
 
     await fetchReviews();
   } catch (err: any) {
-    console.error("리뷰 작성 실패:", err);
+    console.error("리뷰 작성 실패: 로그인이 필요합니다.", err);
     alert(err.response?.data?.detail ?? "리뷰 작성 실패");
   } finally {
     setReviewSubmitting(false);
