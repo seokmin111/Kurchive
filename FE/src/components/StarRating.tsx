@@ -31,7 +31,7 @@ export default function StarRating({ value, onChange }: Props) {
             style={{
               cursor: "pointer",
               fontSize: "24px",
-              color: "#FFD700",
+              color: "#8B0029",  // 크림슨
               position: "relative",
             }}
           >
