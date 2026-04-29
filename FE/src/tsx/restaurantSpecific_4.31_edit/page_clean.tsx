@@ -521,39 +521,39 @@ useEffect(() => {
     return allowed.some((d) => host.includes(d));
   } catch {
     return false;
-  }
-}
-
-const handleValidateAddress = async () => {
-  if (!address.trim()) {
-    setIsAddressValid(false);
-    setAddressMessage("주소를 입력해주세요.");
-    return;
-  }
-
-  try {
-    setIsValidatingAddress(true);
-    setAddressMessage("주소 검증 중...");
-    
-    const res = await geocodeAddress(address.trim());
-    
-    if (!res.ok) {
+  }async () => {
+    if (!address.trim()) {
       setIsAddressValid(false);
-      setAddressMessage("주소 검증에 실패했습니다. 정확한 주소를 입력해주세요.");
+      setAddressMessage("주소를 입력해주세요.");
       return;
     }
 
-    setLatitude(res.lat ?? null);
-    setLongitude(res.lng ?? null);
-    setIsAddressValid(true);
-    setAddressMessage("주소 검증 완료!");
-  } catch (e) {
-    setIsAddressValid(false);
-    setAddressMessage("주소 검증 중 오류가 발생했습니다.");
-  } finally {
-    setIsValidatingAddress(false);
-  }
-};
+    try {
+      setIsValidatingAddress(true);
+      setAddressMessage("주소 검증 중...");
+      
+      const res = await geocodeAddress(address.trim());
+      
+      if (!res.ok) {
+        setIsAddressValid(false);
+        setAddressMessage("주소 검증에 실패했습니다. 정확한 주소를 입력해주세요.");
+        return;
+      }
+
+      setLatitude(res.lat ?? null);
+      setLongitude(res.lng ?? null);
+      setIsAddressValid(true);
+      setAddressMessage("주소 검증 완료!");
+    } catch (e) {
+      setIsAddressValid(false);
+      setAddressMessage("주소 검증 중 오류가 발생했습니다.");
+    } finally {
+      setIsValidatingAddress(false);
+    }
+
+    setIsAddressValid(null);
+    setAddressMessage("주소 검증 요청 중... (백엔드 연결 예정)");
+  };
 
   const handleSubmit = async () => {
     if (submitting) return;
