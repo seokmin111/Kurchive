@@ -316,7 +316,7 @@ const submitEditReview = async (reviewId: number) => {
 // -----------------------------
 const getReviewWriter = (review: RestaurantReview) => {
   if (!review.user_id) return "탈퇴한 사용자";
-  return `사용자 ${review.nickname}`;
+  return `${review.nickname}`;
 };
 
 // -----------------------------
