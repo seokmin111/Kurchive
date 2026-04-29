@@ -797,4 +797,41 @@ color:#8B0029;
   align-items: center;
   gap: 4px;
   cursor: pointer;
+  transition: all 0.12s ease; /* 🔥 추가 */
+}
+.reviewMenuLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.reviewMenuLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: #222;
+  margin-right: 2px;
+}
+
+.reviewMenuChip {
+  background: #f3f3f3;
+  color: #8B0029;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reviewDeleteButton:hover {
+  background: #8B0029;   /* 색 반전 */
+  color: white;
+  border-color: #8B0029;
+  transform: scale(0.96); /* 눌리는 느낌 */
+}
+.reviewDeleteButton:active {
+  background: #8B0029;   /* 색 반전 */
+  color: white;
+  border-color: #8B0029;
+  transform: scale(0.96); /* 눌리는 느낌 */
 }

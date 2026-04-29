@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import client from "../../api/client";
+import StarRating from "../../components/StarRating";
 
 import {
   getRestaurantReviews,
@@ -61,7 +62,10 @@ type RestaurantReview = {
   user_nickname?: string;
   nickname?: string;
   writer_name?: string;
+  menus: string[];
 };
+
+
 
 function formatPrice(min?: number, max?: number) {
   const a = min ?? 0;
@@ -101,6 +105,7 @@ function Stars({ value }: { value: number }) {
     </div>
   );
 }
+
 
 export default function RestaurantSpecific() {
   const nav = useNavigate();
@@ -587,22 +592,11 @@ const canManageReview = (review: RestaurantReview) => {
     <div className={style.reviewFormTitle}>이 식당은 어땠나요?</div>
 
     <div className={style.reviewRatingSelect}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          className={
-            star <= reviewRating
-              ? style.reviewStarActive
-              : style.reviewStarInactive
-          }
-          onClick={() => setReviewRating(star)}
-        >
-          ★
-        </button>
-      ))}
-      <span className={style.reviewRatingText}>{reviewRating}.0</span>
-    </div>
+  <StarRating value={reviewRating} onChange={setReviewRating} />
+  <span className={style.reviewRatingText}>
+    {reviewRating.toFixed(1)}
+  </span>
+</div>
     <input
   className={style.reviewInput}
   value={reviewMenus}
@@ -614,7 +608,7 @@ const canManageReview = (review: RestaurantReview) => {
       className={style.reviewTextarea}
       value={reviewContent}
       onChange={(e) => setReviewContent(e.target.value)}
-      placeholder="이 식당에 대한 리뷰를 남겨주세요."
+      placeholder="이 식당에 대한 리뷰를 남겨주세요. 500자내로 남겨주세요."
       maxLength={500}
     />
 
@@ -680,12 +674,23 @@ const canManageReview = (review: RestaurantReview) => {
           <div className={style.reviewContent}>
             {review.content}
           </div>
+          {review.menus && review.menus.length > 0 && (
+          <div className={style.reviewMenuLine}>
+            <span className={style.reviewMenuLabel}>추천 메뉴</span>
+
+            {review.menus.map((menu, idx) => (
+              <span key={idx} className={style.reviewMenuChip}>
+                {menu}
+              </span>
+            ))}
+          </div>
+        )}
 
           {canManageReview(review) && (
             <div className={style.reviewActions}>
               <button
                 className={style.reviewDeleteButton}
-                onClick={() => deleteReview(review.id)}
+                onClick={() => removeReview(review.id)}
               >
                 <Trash2 size={14} />
                 삭제
