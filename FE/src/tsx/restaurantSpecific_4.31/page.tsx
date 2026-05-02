@@ -126,13 +126,16 @@ export default function RestaurantSpecific() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewMenus, setReviewMenus] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
-
+ // 리뷰 수정 관련 상태
   const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
   const [editReviewContent, setEditReviewContent] = useState("");
   const [editReviewRating, setEditReviewRating] = useState(5);
   const [editReviewMenus, setEditReviewMenus] = useState("");
 
-  // ✅ 찜하기 상태
+  
+
+
+  // 찜하기 상태
   const [isZzim, setIsZzim] = useState(false);
 
   // 내 정보 로드
@@ -209,10 +212,6 @@ const fetchReviews = async () => {
   }
 };
 
-useEffect(() => {
-  fetchReviews();
-}, [restaurantId]);
-
 // -----------------------------
 // 리뷰 작성
 // -----------------------------
@@ -249,6 +248,11 @@ const createReview = async () => {
     setReviewSubmitting(false);
   }
 };
+
+// -----------------------------
+// 리뷰 수정
+// -----------------------------
+
 
 // -----------------------------
 // 리뷰 삭제
@@ -671,32 +675,80 @@ const canManageReview = (review: RestaurantReview) => {
             </div>
           </div>
 
-          <div className={style.reviewContent}>
-            {review.content}
-          </div>
-          {review.menus && review.menus.length > 0 && (
-          <div className={style.reviewMenuLine}>
-            <span className={style.reviewMenuLabel}>추천 메뉴</span>
+          {editingReviewId === review.id ? (
+  <div className={style.reviewEditBox}>
+    <textarea
+      className={style.reviewTextarea}
+      value={editReviewContent}
+      onChange={(e) => setEditReviewContent(e.target.value)}
+      placeholder="리뷰 내용을 입력하세요"
+    />
 
-            {review.menus.map((menu, idx) => (
-              <span key={idx} className={style.reviewMenuChip}>
-                {menu}
-              </span>
-            ))}
-          </div>
-        )}
+    <input
+      className={style.reviewInput}
+      value={editReviewMenus}
+      onChange={(e) => setEditReviewMenus(e.target.value)}
+      placeholder="추천 메뉴를 쉼표로 구분해서 입력"
+    />
 
-          {canManageReview(review) && (
-            <div className={style.reviewActions}>
-              <button
-                className={style.reviewDeleteButton}
-                onClick={() => removeReview(review.id)}
-              >
-                <Trash2 size={14} />
-                삭제
-              </button>
-            </div>
-          )}
+    <div className={style.reviewActions}>
+      <button
+        type="button"
+        className={style.reviewSubmitButton}
+        onClick={() => submitEditReview(review.id)}
+        disabled={reviewSubmitting}
+      >
+        저장
+      </button>
+
+      <button
+        type="button"
+        className={style.reviewEditButton}
+        onClick={cancelEditReview}
+        disabled={reviewSubmitting}
+      >
+        취소
+      </button>
+    </div>
+  </div>
+) : (
+  <>
+    <div className={style.reviewContent}>
+      {review.content}
+    </div>
+
+    {review.menus && review.menus.length > 0 && (
+      <div className={style.reviewMenuLine}>
+        <span className={style.reviewMenuLabel}>추천 메뉴</span>
+        {review.menus.map((menu, idx) => (
+          <span key={idx} className={style.reviewMenuChip}>
+            {menu}
+          </span>
+        ))}
+      </div>
+    )}
+
+    {canManageReview(review) && (
+      <div className={style.reviewActions}>
+        <button
+          type="button"
+          className={style.reviewEditButton}
+          onClick={() => startEditReview(review)}
+        >
+          수정
+        </button>
+
+        <button
+          type="button"
+          className={style.reviewDeleteButton}
+          onClick={() => removeReview(review.id)}
+        >
+          삭제
+        </button>
+      </div>
+    )}
+  </>
+)}
         </div>
       ))}
     </div>

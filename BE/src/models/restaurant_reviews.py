@@ -36,12 +36,6 @@ class Review(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # 한 유저는 한 식당에 하나만 리뷰
-    __table_args__ = (
-        UniqueConstraint("user_id", "restaurant_id", name="unique_user_restaurant"),
-    )
-
-    # relationships
     restaurant = relationship("Restaurant", back_populates="reviews")
     user = relationship("User", back_populates="reviews")
 
