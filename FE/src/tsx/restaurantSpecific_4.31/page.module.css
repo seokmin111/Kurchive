@@ -784,6 +784,7 @@ color:#8B0029;
   margin-top: 14px;
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 .reviewDeleteButton {
@@ -834,4 +835,25 @@ color:#8B0029;
   color: white;
   border-color: #8B0029;
   transform: scale(0.96); /* 눌리는 느낌 */
+}
+
+.reviewEditButton {
+  border: 1px solid #ead7dd;
+  background: white;
+  color: #444; /* 삭제보다 덜 강하게 */
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.reviewEditButton:hover {
+  background: #444;
+  color: white;
+  border-color: #444;
+  transform: scale(0.96);
 }
