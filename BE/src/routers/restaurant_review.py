@@ -47,7 +47,7 @@ async def create_review(
     if not restaurant:
         raise HTTPException(404, "식당 없음")
 
-    # 2. 중복 리뷰 체크
+    '''# 2. 중복 리뷰 체크
     result = await db.execute(
         select(Review).where(
             Review.restaurant_id == restaurant_id,
@@ -56,6 +56,7 @@ async def create_review(
     )
     if result.scalar_one_or_none():
         raise HTTPException(400, "이미 리뷰 작성함")
+    '''
 
     # 3. 리뷰 생성
     review = Review(
