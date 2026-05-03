@@ -8,7 +8,7 @@ from datetime import datetime
 from BE.src.dependencies import get_async_db, get_current_user_from_token
 from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant
-from BE.src.models.restaurant_reviews import Review, ReviewMenu
+from BE.src.models.restaurant_reviews import Review, ReviewMenu, ReviewImage
 
 router = APIRouter()
 
@@ -16,19 +16,22 @@ router = APIRouter()
 # ---------------------------
 # DTO
 # ---------------------------
+# 리뷰 생성
 class ReviewCreate(BaseModel):
     content: str = Field(max_length=300)
     rating: float
-    menus: List[str] = []
+    menus: List[str] = [] # 추천 메뉴
+    images: List[str] = [] # 이미지
 
-
+# 조회 응답
 class ReviewOut(BaseModel):
     id: int
     content: str
     rating: float
     user_id: Optional[int]
-    nickname: Optional[str]  
-    menus: List[str]
+    nickname: Optional[str]
+    menus: List[str] # 추천 메뉴
+    images: List[str] # 이미지
     created_at: datetime
 
 
@@ -77,6 +80,14 @@ async def create_review(
     for m in payload.menus:
         db.add(ReviewMenu(review_id=review.id, name=m))
 
+    # 5. 이미지 저장
+    for i, image_url in enumerate(payload.images):
+        db.add(ReviewImage(
+            review_id=review.id,
+            image_url=image_url,
+            sort_order=i
+        ))
+
     await db.commit()
 
     return {"ok": True, "review_id": review.id}
@@ -100,19 +111,27 @@ async def get_reviews(
 
     out = []
 
-    for r, nickname in rows:  # 리뷰, 닉네임 분리
+    for r, nickname in rows:
         menu_rows = await db.execute(
             select(ReviewMenu.name).where(ReviewMenu.review_id == r.id)
         )
         menus = menu_rows.scalars().all()
+
+        image_rows = await db.execute(
+            select(ReviewImage.image_url)
+            .where(ReviewImage.review_id == r.id)
+            .order_by(ReviewImage.sort_order)
+        )
+        images = image_rows.scalars().all()
 
         out.append({
             "id": r.id,
             "content": r.content,
             "rating": r.rating,
             "user_id": r.user_id,
-            "nickname": nickname,  
+            "nickname": nickname,
             "menus": menus,
+            "images": images,
             "created_at": r.created_at,
             "like_count": r.like_count,
             "dislike_count": r.dislike_count
@@ -146,14 +165,23 @@ async def update_review(
     review.rating = payload.rating
     review.updated_at = datetime.utcnow()
 
-    # 기존 메뉴 삭제
     await db.execute(
         ReviewMenu.__table__.delete().where(ReviewMenu.review_id == review_id)
     )
 
-    # 새 메뉴 추가
     for m in payload.menus:
         db.add(ReviewMenu(review_id=review.id, name=m))
+
+    await db.execute(
+        ReviewImage.__table__.delete().where(ReviewImage.review_id == review_id)
+    )
+
+    for i, image_url in enumerate(payload.images):
+        db.add(ReviewImage(
+            review_id=review.id,
+            image_url=image_url,
+            sort_order=i
+        ))
 
     await db.commit()
 
