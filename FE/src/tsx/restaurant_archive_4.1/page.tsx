@@ -398,12 +398,14 @@ export default function RestaurantFormPage() {
         <main className={styles.main}>
           <section className={styles.section}>
             <p className={styles.guideText}><span className={styles.required}>*</span> 표시된 항목은 필수 항목입니다.</p>
-            <span className={styles.required}>* </span><input
+            <div className={styles.nameFieldRow}>
+            <span className={styles.required}>*</span><input
               className={styles.nameInput}
               placeholder="식당 이름"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
+            </div>
 
             <div className={styles.row}><span className={styles.required}>* </span>
               <textarea
@@ -449,6 +451,7 @@ export default function RestaurantFormPage() {
               </button>
             </div>
 
+          <div className={styles.mapLinkRow}>
           <input
             className={styles.mapInput}
             placeholder="카카오맵 / 네이버맵 / 구글맵 링크 입력"
@@ -462,7 +465,6 @@ export default function RestaurantFormPage() {
             }}
           />
 
-          <div className={styles.addressFetchRow}>
             <button
               type="button"
               className={styles.fetchAddressButton}
@@ -492,6 +494,7 @@ export default function RestaurantFormPage() {
           )}
           </section>
 
+          <section className={styles.section}>
           <div className={styles.labelRow}>
             <span className={styles.label}>
               식당 위치 주소 <span className={styles.required}>*</span>
@@ -540,6 +543,7 @@ export default function RestaurantFormPage() {
               {addressMessage}
             </div>
           )}
+          </section>
 
           <hr className={styles.divider} />
 

@@ -612,10 +612,11 @@ setTimeout(() => {
 
   return (
     <div className={styles.container}>
-      {/* ===== 레시피와 동일한 배너(인라인) ===== */}
       <div
         style={{
-          width: "100%",
+          width: "calc(100% + 40px)",
+          marginLeft: -20,
+          marginRight: -20,
           height: 150,
           backgroundColor: "#8b0028",
           display: "flex",
@@ -649,27 +650,23 @@ setTimeout(() => {
         </button>
       </div>
 
-      {/* ===== 배너 아래 콘텐츠는 아카이브 폼 그대로 ===== */}
       <div style={{ width: "100%", padding: "0 0 30px" }}>
         <p className={styles.requiredGuide}>
-  <span className={styles.required}>*</span> 표시된 항목은 비워둘 수 없습니다.
-</p>
+          <span className={styles.required}>*</span> 표시된 항목은 비워둘 수 없습니다.
+        </p>
         <main className={styles.main} style={{ marginTop: 12 }}>
-          {/* 1) 이름 + 한줄평 + 대표사진(아카이브 구조) */}
           <section className={styles.section}>
             <div className={styles.formRow}>
-              <span className={styles.formLabel}>식당 이름<span className={styles.required}>*</span></span>
+              <span className={styles.fieldTitle}>식당 이름<span className={styles.required}>*</span></span>
             </div>
-
             <input
               className={styles.nameInput}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
 
-
             <div className={styles.formRow}>
-              <span className={styles.formLabel}>한줄평 <span className={styles.required}>*</span></span>
+              <span className={styles.fieldTitle}>한줄평 <span className={styles.required}>*</span></span>
             </div>
             <div className={styles.row}>
             <textarea
@@ -680,7 +677,6 @@ setTimeout(() => {
             />
 
 
-              {/* 대표 이미지: 기존 cover 또는 새 preview */}
               <label className={styles.photoButton}>
                 {mainImagePreview ? (
                   <img src={mainImagePreview} alt="main" className={styles.photoPreview} />
@@ -700,28 +696,24 @@ setTimeout(() => {
                    onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       handleMainImageChange(file);
-
-                      //이 줄 추가
                       e.currentTarget.value = "";
                     }}
                 />
               </label>
             </div>
 
-            {/* 대표 이미지가 서버에 있고, 삭제도 제공(아카이브 구조: 삭제 가능) */}
             {coverUrl && !mainImagePreview && (
             <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
               <button
                 type="button"
                 className={styles.trashButton}
-                onClick={deleteThumbnail}   // ✅ 여기
+                onClick={deleteThumbnail}
               >
                 대표 이미지 삭제
               </button>
             </div>
           )}
 
-            {/* 주소 추가 */}
             <div className={styles.labelRow}>
               <span className={styles.label}>식당 주소 <span className={styles.required}>*</span></span>
 
@@ -760,7 +752,6 @@ setTimeout(() => {
 
           <hr className={styles.divider} />
 
-          {/* 2) 별점 + 메뉴칩 (아카이브 구조) */}
           <section className={styles.section}>
             <div className={styles.ratingBox}>
               <RatingInput
@@ -774,7 +765,6 @@ setTimeout(() => {
             </div>
 
           </section>
-          {/* 3) 추천 메뉴 */}
           <section className={styles.section}>
             <div className={styles.menuSectionTitle}>추천 메뉴</div>
 
@@ -817,7 +807,6 @@ setTimeout(() => {
             )}
           </section>
 
-          {/* 4) 태그 선택 (아카이브 구조 100% 그대로) */}
           <section className={styles.section}>
             <h3 className={styles.centerTitle}>태그 선택 <span className={styles.required}>*</span></h3>
 
@@ -844,10 +833,8 @@ setTimeout(() => {
                 가격
               </button>
             </div>
-            {/* 선택된 태그 목록 및 삭제 버튼 */}
               <div className={styles.selectedChips}>
 
-              {/* 지역 */}
               {selectedRegion && (
                 <button
                   type="button"
@@ -858,7 +845,6 @@ setTimeout(() => {
                 </button>
               )}
 
-              {/* 음식 */}
               {selectedFoodTags.map((tag) => (
                 <button
                   key={tag.id}
@@ -871,7 +857,6 @@ setTimeout(() => {
               ))}
             </div>
 
-            {/* 지역: 2단계 */}
             {activeGroup === "region" && (
               <>
                 <div className={styles.tagSection}>
@@ -921,10 +906,8 @@ setTimeout(() => {
             )}
 
 
-            {/* 음식 태그: 2단계 (대분류 -> 소분류) */}
             {activeGroup === "food" && (
             <>
-              {/* 상위 태그 컨테이너 */}
               <div className={styles.tagSection}>
                 <div className={styles.tagSectionTitle}>음식 대분류</div>
                 <div className={styles.tagGrid}>
@@ -944,7 +927,6 @@ setTimeout(() => {
                 </div>
               </div>
 
-              {/* 하위 태그 컨테이너 */}
               <div className={styles.tagSection}>
                 <div className={styles.tagSectionTitle}>음식 소분류</div>
                 <div className={styles.tagGrid}>
@@ -969,7 +951,6 @@ setTimeout(() => {
               </>
             )}
 
-            {/* 가격: min/max 입력 */}
             {activeGroup === "price" && (
               <div className={styles.labelRow}>
                 <span className={styles.label}>가격 범위 <span className={styles.required}>*</span></span>
@@ -993,10 +974,9 @@ setTimeout(() => {
             )}
           </section>
 
-          {/* 4) 상세 후기 + 상세 이미지(아카이브 구조) */}
           <section className={styles.section}>
-            <div className={styles.Row}>
-              <span className={styles.label}>자세한 후기 입력 <span className={styles.required}>*</span></span>
+            <div className={styles.detailTitleRow}>
+              <span className={styles.fieldTitle}>자세한 후기 입력<span className={styles.required}>*</span></span>
             </div>
 
             <textarea
@@ -1006,7 +986,6 @@ setTimeout(() => {
               onChange={(e) => setDetailReview(e.target.value)}
             />
 
-            {/* 기존 상세 이미지들: 아카이브 느낌 유지(작은 프리뷰 박스들) */}
             {(detailExisting.length > 0 || detailImagePreviews.length > 0) && (
               <div
                 style={{
@@ -1075,9 +1054,7 @@ setTimeout(() => {
               </div>
             )}
 
-            {/* 아카이브 detailPhotoRow + 버튼 형태 그대로 */}
             <div className={styles.detailPhotoRow}>
-  {/* 버튼 */}
   <button
     type="button"
     className={styles.detailPhotoButton}
@@ -1087,7 +1064,6 @@ setTimeout(() => {
     <span className={styles.plus}>+</span>
   </button>
 
-  {/* 실제 파일 input */}
   <input
     ref={fileInputDetailRef}
     type="file"

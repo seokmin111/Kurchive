@@ -44,7 +44,7 @@
 }
 
 .section {
-  margin-top: 12px;
+  margin: 0 0 20px;
 }
 
 .guideText {
@@ -58,12 +58,28 @@
 }
 
 .nameInput {
-  width: 70%;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid #e0d6c8;
-  font-size: 16px;
-  margin:0px 0px 12px;
+  font-size: 13px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.nameFieldRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.nameFieldSpacer {
+  flex-shrink: 0;
+  width: 112px;
 }
 
 .row {
@@ -111,13 +127,14 @@
 .labelRow {
   display: flex;
   align-items: center;
-  margin-top: 12px;
   gap: 6px;
+  margin: 12px 0 8px;
 }
 
 .label {
   font-size: 13px;
-  color: #4a3b30;
+  font-weight: 700;
+  color: #8a0d2a;
   white-space: nowrap;
 }
 /* 지도 */
@@ -128,7 +145,7 @@
   width: 100%;
   min-width: 0;
   padding: 8px 10px;
-  margin-top: 4px;
+  margin-top: 0;
   border-radius: 10px;
   font-size: 13px;
   box-sizing: border-box;
@@ -153,17 +170,21 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  margin-top: 4px;
+  margin: 0;
 }
 
-.addressFetchRow {
+.mapLinkRow {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 20px;
 }
 
 .fetchAddressButton {
-  height: 35px;
+  flex-shrink: 0;
+  min-width: 112px;
+  height: 36px;
   padding: 0 14px;
   border-radius: 10px;
   border: 1px solid #e0d6c8;
@@ -198,7 +219,7 @@
 }
 
 .addressMessage {
-  margin-top: 6px;
+  margin: 6px 0 0;
   font-size: 12px;
   color: #777;
   line-height: 1.4;
@@ -269,13 +290,15 @@
 .divider {
   border: none;
   border-top: 1px solid #e5ded5;
-  margin: 20px 0 10px;
+  margin: 20px 0;
 }
 
 .centerTitle {
   text-align: center;
-  font-size: 14px;
-  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #8a0d2a;
+  margin: 0 0 4px;
 }
 
 .smallText {
@@ -312,7 +335,7 @@ display:flex;
 align-items:center;
 justify-content:center;
 gap:6px;
-margin:16px 0;
+margin:4px 0 12px;
 }
 
 .ratingScore{
@@ -326,7 +349,7 @@ margin-left:8px;
 display:flex;
 align-items:center;
 gap:6px;
-margin:16px 0;
+margin:4px 0 12px;
 justify-content:center;
 }
 
@@ -503,7 +526,8 @@ color:#ddd3c6;
   padding: 10px 12px;
   font-size: 13px;
   resize: none;
-  margin-top: 4px;
+  margin-top: 0;
+  box-sizing: border-box;
 }
 
 .detailPhotoRow {

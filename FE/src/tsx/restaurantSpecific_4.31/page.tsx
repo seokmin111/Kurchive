@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import client from "../../api/client";
@@ -76,11 +76,13 @@ function Stars({ value }: { value: number }) {
 export default function RestaurantSpecific() {
   const nav = useNavigate();
   const { restaurantId } = useParams();
+  const titleRef = useRef<HTMLDivElement>(null);
 
   const [restaurant, setRestaurant] = useState<RestaurantDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [titleFontSize, setTitleFontSize] = useState(20);
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -96,6 +98,30 @@ export default function RestaurantSpecific() {
       .then((res) => setCurrentUser(res.data.data || res.data))
       .catch(() => {});
   }, []);
+
+  useLayoutEffect(() => {
+    const title = titleRef.current;
+    if (!title || !restaurant?.name) return;
+
+    const fitTitle = () => {
+      let nextSize = 20;
+      title.style.fontSize = `${nextSize}px`;
+
+      while (nextSize > 15 && title.scrollWidth > title.clientWidth) {
+        nextSize -= 1;
+        title.style.fontSize = `${nextSize}px`;
+      }
+
+      setTitleFontSize(nextSize);
+    };
+
+    fitTitle();
+
+    const observer = new ResizeObserver(fitTitle);
+    observer.observe(title);
+
+    return () => observer.disconnect();
+  }, [restaurant?.name]);
 
   // 식당 상세 및 찜하기 상태 로드
   useEffect(() => {
@@ -199,7 +225,13 @@ export default function RestaurantSpecific() {
           />
         </div>
         
-        <div className={style.nav_title}>{restaurant.name}</div>
+        <div
+          ref={titleRef}
+          className={style.nav_title}
+          style={{ fontSize: titleFontSize }}
+        >
+          {restaurant.name}
+        </div>
 
         <div className={style.rightActions}>
           {canEdit && (
@@ -242,17 +274,29 @@ export default function RestaurantSpecific() {
         </div>
 
         <div className={style.rightBox}>
-          <div className={style.infoGrid}>
-            <div style={{ color: "#8B0029", fontWeight: 800 }}>한줄평</div>
-            <div>{restaurant.summary}</div>
+        <div className={style.infoGrid}>
+          <div className={style.infoGridSection}>
+            <div className={style.infoGridLabel}>한줄평</div>
+            <div className={style.infoGridValue}>{restaurant.summary}</div>
+          </div>
 
-            <div style={{ color: "#8B0029", fontWeight: 800 }}>주소</div>
-            <div style={{ fontSize: "12px" }}>{restaurant.address ?? "주소 정보 없음"}</div>
+          <div className={style.infoGridSection}>
+            <div className={style.infoGridLabel}>주소</div>
+            <div className={style.infoGridValue}>
+              {restaurant.address ?? "주소 정보 없음"}
+            </div>
+          </div>
 
-            <div style={{ color: "#8B0029", fontWeight: 800 }}>가격대</div>
-            <div style={{ fontSize: "12px" }}>{formatPrice(restaurant.price_min, restaurant.price_max)}</div>
+          <div className={style.infoGridSection}>
+            <div className={style.infoGridLabel}>가격대</div>
+            <div className={style.infoGridValue}>
+              {formatPrice(restaurant.price_min, restaurant.price_max)}
+            </div>
           </div>
         </div>
+      </div>
+
+
       </div>
 
       {/* 별점 */}
