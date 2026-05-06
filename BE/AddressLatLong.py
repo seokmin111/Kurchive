@@ -86,10 +86,21 @@ def safe_float(x) -> Optional[float]:
     except:
         return None
 
+
+def validate_address_string(address: str) -> Optional[Dict[str, Any]]:
+    """주소 문자열이 유효한지 검증하고, 가능한 경우 정규화된 주소와 좌표를 반환합니다."""
+    if not address or not address.strip():
+        return None
+    return kakao_keyword_search(address.strip())
+
+
+def is_valid_address(address: str) -> bool:
+    return validate_address_string(address) is not None
+
 # =================================================
 # 카카오 
 # =================================================
-def kakao_keyword_search(query: str) -> Optional[Dict[str, Any]]:
+def kakao_keyword_search(query: str, lat: Optional[float] = None, lng: Optional[float] = None, radius: int = 1000) -> Optional[Dict[str, Any]]:
     """카카오 로컬 API 키워드 검색"""
     if not KAKAO_REST_API_KEY: return None
     url = "https://dapi.kakao.com/v2/local/search/keyword.json"
@@ -97,6 +108,10 @@ def kakao_keyword_search(query: str) -> Optional[Dict[str, Any]]:
     clean_query = re.sub(r'\(.*?\)', '', query).strip()
     
     params = {"query": clean_query, "size": 1}
+    if lat is not None and lng is not None:
+        params["x"] = lng  # Kakao uses x for longitude
+        params["y"] = lat  # y for latitude
+        params["radius"] = radius
     try:
         r = requests.get(url, headers=KAKAO_HEADERS, params=params, timeout=5)
         
@@ -174,9 +189,10 @@ def extract_kakao_info(url: str) -> Optional[Dict[str, Any]]:
 # 네이버 
 # =================================================
 def extract_naver_info(url: str,  redirect_meta: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-    if redirect_meta and redirect_meta.get("lat") is not None and redirect_meta.get("lng") is not None:
-        return redirect_meta
-    # Place ID 추출
+    if redirect_meta and redirect_meta.get("lat") is not None and redirect_meta.get("lng") is not None and redirect_meta.get("name"):
+        # Use Kakao search with lat, lng, and name for accurate restaurant search
+        return kakao_keyword_search(redirect_meta["name"], lat=redirect_meta["lat"], lng=redirect_meta["lng"])
+    # Place ID 추출 (fallback)
     patterns = [
         r'/place/(\d+)',
         r'/restaurant/(\d+)',
@@ -211,6 +227,7 @@ def extract_naver_info(url: str,  redirect_meta: Optional[Dict[str, Any]] = None
         soup = BeautifulSoup(res.text, "html.parser")
         #print(f"html_log: {soup}") # logs
         place_name = ""
+        #print(place_name)
         
         # 1순위: JSON LD (가장 정확)
         script = soup.find("script", {"type": "application/ld+json"})

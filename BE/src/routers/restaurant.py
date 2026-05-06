@@ -107,6 +107,9 @@ router = APIRouter()
 class RestaurantCreate(BaseModel):
     name: str
     location_link: str
+    address: Optional[str] = None  # 프론트에서 /locations/extract로 추출한 주소
+    latitude: Optional[float] = None  # 프론트에서 /locations/extract로 추출한 위도
+    longitude: Optional[float] = None  # 프론트에서 /locations/extract로 추출한 경도
     location_tag_id: int
     rating: Optional[confloat(ge=0, le=5)] = 0.0
     summary: constr(strip_whitespace=True, min_length=1, max_length=100)
@@ -210,6 +213,9 @@ class FavoriteToggleResponse(BaseModel):
 class RestaurantUpdate(BaseModel):
     name: Optional[str] = None
     location_link: Optional[str] = None
+    address: Optional[str] = None  # 프론트에서 /locations/extract|geocode로 추출한 주소
+    latitude: Optional[float] = None  # 프론트에서 /locations/extract|geocode로 추출한 위도
+    longitude: Optional[float] = None  # 프론트에서 /locations/extract|geocode로 추출한 경도
     location_tag_id: Optional[int] = None
     rating: Optional[confloat(ge=0, le=5)] = None
     summary: Optional[constr(strip_whitespace=True, min_length=1, max_length=100)] = None
@@ -325,20 +331,12 @@ async def create_restaurant(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    address, lat, lon = None, None, None
-    print(f"[API] 주소 추출 시도: {payload.location_link}") # 디버깅 로그
-
-    try:
-
-        loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
-        if loc:
-            address = loc.get("road_address") or loc.get("address")
-            lat, lon = loc.get("lat"), loc.get("lng")
-            print(f" 주소 추출 성공: {address} ({lat}, {lon})")
-        else:
-            print("⚠️ 주소 추출 실패 (결과 없음)")
-    except Exception as e:
-        print(f"❌ 주소 추출 중 에러 발생: {e}")
+    # 프론트에서 /locations/extract로 이미 추출한 주소, 위도, 경도를 사용
+    address = payload.address
+    lat = payload.latitude
+    lon = payload.longitude
+    
+    print(f"[API] 식당 생성: {payload.name} / 주소: {address} / 좌표: ({lat}, {lon})")
 
     try:
         restaurant = Restaurant(
@@ -727,10 +725,10 @@ async def update_restaurant(
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
-    user = await db.get(User, restaurant.uploaded_by)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
+    user = await db.get(User, restaurant.uploaded_by)
     await assert_can_edit_restaurant(restaurant, current_user)
 
     update_data = payload.dict(exclude_unset=True)
@@ -740,20 +738,11 @@ async def update_restaurant(
         return await get_restaurant(restaurant_id, db)
 
     # -------------------------
-    # 주소 재추출 필요한 경우
+    # 주소, 위도, 경도는 프론트에서 이미 추출한 값 사용
     # -------------------------
-    if "location_link" in update_data:
-        try:
-            loc = await anyio.to_thread.run_sync(
-                extract_location_from_link,
-                str(update_data["location_link"])
-            )
-            if loc:
-                restaurant.address = loc.get("road_address") or loc.get("address")
-                restaurant.latitude = loc.get("lat")
-                restaurant.longitude = loc.get("lng")
-        except Exception as e:
-            print(f"(Update) 주소 추출 에러: {e}")
+    for field in ["address", "latitude", "longitude"]:
+        if field in update_data:
+            setattr(restaurant, field, update_data[field])
 
     # -------------------------
     # 일반 필드 반영

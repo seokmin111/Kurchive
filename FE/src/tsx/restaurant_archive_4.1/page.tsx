@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import styles from "./page.module.css";
-import client from "../../api/client"; 
+import client from "../../api/client";
+import { extractLocationFromLink, geocodeAddress } from "../../api/location"; 
+
+// 여기서는 extlocfromlink 사용
 
 type TagGroup = "region" | "food" | "price";
 
@@ -35,6 +38,8 @@ export default function RestaurantFormPage() {
   const [shortReview, setShortReview] = useState("");
   const [mapLink, setMapLink] = useState("");
   const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [isAddressLocked, setIsAddressLocked] = useState(true);
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
   const [addressSource, setAddressSource] = useState<"auto" | "manual" | null>(null);
@@ -254,27 +259,29 @@ export default function RestaurantFormPage() {
       setIsFetchingAddress(true);
       setAddressMessage("주소를 불러오는 중입니다...");
 
-      const res = await client.post("/address/resolve", {
-        location_link: mapLink.trim(),
-      });
+      const res = await extractLocationFromLink(mapLink.trim());
 
-      const resolvedAddress = res.data?.address;
-
-      if (!resolvedAddress) {
+      if (!res.ok || !res.address || res.lat === undefined || res.lng === undefined) {
         setAddress("");
+        setLatitude(null);
+        setLongitude(null);
         setIsAddressLocked(false);
         setAddressSource(null);
         setAddressMessage("주소를 자동으로 불러오지 못했습니다. 직접 입력해주세요.");
         return;
       }
 
-      setAddress(resolvedAddress);
+      setAddress(res.address);
+      setLatitude(res.lat);
+      setLongitude(res.lng);
       setIsAddressLocked(true);
       setAddressSource("auto");
       setAddressMessage("지도 링크를 기반으로 주소를 불러왔습니다.");
     } catch (e) {
       console.error(e);
       setAddress("");
+      setLatitude(null);
+      setLongitude(null);
       setIsAddressLocked(false);
       setAddressMessage("주소를 불러오는 중 오류가 발생했습니다.");
     } finally {
@@ -287,15 +294,35 @@ export default function RestaurantFormPage() {
     setAddressMessage("주소를 수정한 뒤 적용 버튼을 눌러주세요.");
   };
 
-  const handleApplyAddress = () => {
+  const handleApplyAddress = async () => {
     if (!address.trim()) {
       setAddressMessage("주소를 입력해주세요.");
       return;
     }
 
-    setIsAddressLocked(true);
-    setAddressSource("manual");
-    setAddressMessage("수정한 주소가 반영되었습니다.");
+    try {
+      setIsFetchingAddress(true);
+      setAddressMessage("주소를 검증하는 중입니다..."); //originally placeholder
+      
+      // 주소를 입력한 경우, /locations/geocode로 위도/경도 검증
+      const res = await geocodeAddress(address.trim()); //awaiting so we actually check res is filled
+      
+      if (!res.ok) {
+        setAddressMessage("주소 검증에 실패했습니다. 정확한 주소를 입력해주세요.");
+        return;
+      }
+
+      setLatitude(res.lat ?? null);
+      setLongitude(res.lng ?? null);
+      setIsAddressLocked(true);
+      setAddressSource("manual");
+      setAddressMessage("수정한 주소가 반영되었습니다.");
+    } catch (e) {
+      console.error(e);
+      setAddressMessage("주소 검증 중 오류가 발생했습니다.");
+    } finally {
+      setIsFetchingAddress(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -324,6 +351,8 @@ export default function RestaurantFormPage() {
         name: name.trim(),
         location_link: mapLink.trim(),
         address: address.trim(),
+        latitude: latitude,
+        longitude: longitude,
         location_tag_id: selectedLv2,
         rating: rating,
         summary: (shortReview ?? "").trim() || " ",
@@ -457,6 +486,8 @@ export default function RestaurantFormPage() {
             placeholder="카카오맵 / 네이버맵 / 구글맵 링크 입력"
             value={mapLink}
             onChange={(e) => {
+              setLatitude(null);
+              setLongitude(null);
               setMapLink(e.target.value);
               setAddress("");
               setIsAddressLocked(true);
