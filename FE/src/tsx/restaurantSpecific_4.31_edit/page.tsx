@@ -629,7 +629,15 @@ setTimeout(() => {
   nav(`/restaurant/${id}`, { replace: true });
 }, 800);
     } catch (e: any) {
-      console.error(e);
+      // UI가 없어서 DevTools로 확인 가능하게 에러를 최대한 자세히 출력
+      console.error("[RestaurantEdit] request failed", {
+        message: e?.message,
+        status: e?.response?.status,
+        statusText: e?.response?.statusText,
+        url: e?.config?.url,
+        method: e?.config?.method,
+        response: e?.response?.data,
+      });
       const msg =
         e?.response?.data?.message ||
         e?.response?.data?.detail ||

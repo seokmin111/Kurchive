@@ -102,6 +102,64 @@ def ok(data: Any = None, message: str = "OK", meta: Optional[Dict[str, Any]] = N
 router = APIRouter()
 
 # ---------------------------
+# 중복 판별 (링크/주소/근접)
+# ---------------------------
+def _normalize_link(v: Optional[str]) -> Optional[str]:
+    if v is None:
+        return None
+    v = str(v).strip()
+    if not v:
+        return None
+    # 흔한 입력 편차만 정리 (리다이렉트/쿼리 정규화는 하지 않음)
+    return v[:-1] if v.endswith("/") else v
+
+def _normalize_address(v: Optional[str]) -> Optional[str]:
+    if v is None:
+        return None
+    v = str(v).strip()
+    if not v:
+        return None
+    return v
+
+async def _find_exact_duplicates(
+    db: AsyncSession,
+    *,
+    location_link: Optional[str],
+    address: Optional[str],
+    exclude_restaurant_id: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    """
+    링크/주소 완전 일치 중복 탐색.
+    - exclude_restaurant_id: 수정 시 자기 자신 제외
+    """
+    link = _normalize_link(location_link)
+    addr = _normalize_address(address)
+
+    clauses = []
+    if link:
+        clauses.append(Restaurant.location_link == link)
+    if addr:
+        clauses.append(Restaurant.address == addr)
+
+    if not clauses:
+        return []
+
+    stmt = select(Restaurant).where(or_(*clauses))
+    if exclude_restaurant_id is not None:
+        stmt = stmt.where(Restaurant.id != exclude_restaurant_id)
+
+    rows = (await db.execute(stmt)).scalars().all()
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "address": r.address,
+            "location_link": r.location_link,
+        }
+        for r in rows
+    ]
+
+# ---------------------------
 # 요청/응답 모델
 # ---------------------------
 class RestaurantCreate(BaseModel):
@@ -338,11 +396,52 @@ async def create_restaurant(
     
     print(f"[API] 식당 생성: {payload.name} / 주소: {address} / 좌표: ({lat}, {lon})")
 
+    # -------------------------
+    # 중복 검사 (1) 링크/주소 완전 일치
+    # -------------------------
+    exact_dups = await _find_exact_duplicates(
+        db,
+        location_link=payload.location_link,
+        address=address,
+        exclude_restaurant_id=None,
+    )
+    if exact_dups:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "ok": False,
+                "message": "이미 등록된 식당입니다. (링크 또는 주소가 동일)",
+                "data": {"exact_matches": exact_dups},
+            },
+        )
+
+    # -------------------------
+    # 중복 검사 (2) 근접 + 이름 유사 (좌표 있을 때만)
+    # -------------------------
+    if lat is not None and lon is not None and str(payload.name).strip():
+        try:
+            is_dup, candidates = await find_duplicate_candidates(
+                db, payload.name, float(lat), float(lon)
+            )
+            if is_dup:
+                return JSONResponse(
+                    status_code=409,
+                    content={
+                        "ok": False,
+                        "message": "이미 근처에 유사한 이름의 식당이 존재합니다. (중복 후보)",
+                        "data": {"nearby_candidates": candidates},
+                    },
+                )
+        except Exception as e:
+            # 중복 모듈 실패가 등록 자체를 막으면 UX가 나빠서,
+            # 실패 로그만 남기고 등록은 계속 진행
+            print(f"[duplicate_det 실패] {e}")
+
     try:
         restaurant = Restaurant(
             name=payload.name,
             address=address,
-            location_link=str(payload.location_link),
+            location_link=_normalize_link(str(payload.location_link)) or str(payload.location_link),
             latitude=lat,
             longitude=lon,
             location_tag_id=payload.location_tag_id,
@@ -738,6 +837,50 @@ async def update_restaurant(
         return await get_restaurant(restaurant_id, db)
 
     # -------------------------
+    # 중복 검사 (링크/주소/근접)
+    # - 수정 시 자기 자신은 제외
+    # -------------------------
+    next_link = update_data.get("location_link", restaurant.location_link)
+    next_address = update_data.get("address", restaurant.address)
+    exact_dups = await _find_exact_duplicates(
+        db,
+        location_link=next_link,
+        address=next_address,
+        exclude_restaurant_id=restaurant.id,
+    )
+    if exact_dups:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "ok": False,
+                "message": "이미 등록된 식당입니다. (링크 또는 주소가 동일)",
+                "data": {"exact_matches": exact_dups},
+            },
+        )
+
+    next_lat = update_data.get("latitude", restaurant.latitude)
+    next_lon = update_data.get("longitude", restaurant.longitude)
+    next_name = update_data.get("name", restaurant.name)
+    if next_lat is not None and next_lon is not None and str(next_name).strip():
+        try:
+            is_dup, candidates = await find_duplicate_candidates(
+                db, str(next_name), float(next_lat), float(next_lon)
+            )
+            # 수정 화면에서 현재 식당이 후보에 잡히는 건 제외
+            filtered = [c for c in candidates if c.get("id") != restaurant.id]
+            if is_dup and filtered:
+                return JSONResponse(
+                    status_code=409,
+                    content={
+                        "ok": False,
+                        "message": "이미 근처에 유사한 이름의 식당이 존재합니다. (중복 후보)",
+                        "data": {"nearby_candidates": filtered},
+                    },
+                )
+        except Exception as e:
+            print(f"[duplicate_det 실패] {e}")
+
+    # -------------------------
     # 주소, 위도, 경도는 프론트에서 이미 추출한 값 사용
     # -------------------------
     for field in ["address", "latitude", "longitude"]:
@@ -759,7 +902,14 @@ async def update_restaurant(
         "recommended_menus"
     ]:
         if field in update_data:
-            setattr(restaurant, field, update_data[field])
+            if field == "location_link":
+                setattr(
+                    restaurant,
+                    field,
+                    _normalize_link(update_data[field]) or update_data[field],
+                )
+            else:
+                setattr(restaurant, field, update_data[field])
 
     # -------------------------
     # 태그 갱신 (있을 때만)
