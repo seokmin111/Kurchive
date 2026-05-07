@@ -1,10 +1,11 @@
 export type SelectedItem = {
-  type: "region" | "tag" | "price";
+  type: "region" | "tag" | "price" | "rating";
   id: number | null;
   name: string;
   parentId?: number;
   priceMin?: number;
   priceMax?: number;
+  ratingMin?: number;
 };
 
 export type RegionItem = {

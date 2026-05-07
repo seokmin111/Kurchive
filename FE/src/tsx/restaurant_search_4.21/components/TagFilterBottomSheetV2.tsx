@@ -8,6 +8,7 @@ import { SelectedItem } from "./types";
 import RegionSelector from "./RegionSelector";
 import FoodTagSelector from "./FoodTagSelector";
 import PriceRangeSelectorV3 from "./PriceRangeSelectorV3";
+import RatingSelector from "./RatingSelector";
 import AtmosphereSelector from "./AtmosphereSelector";
 
 type Props = {
@@ -15,13 +16,14 @@ type Props = {
   onClose: () => void;
 };
 
-const TAGS = ["지역", "음식 종류", "가격", "분위기"] as const;
+const TAGS = ["지역", "음식 종류", "가격", "별점", "분위기"] as const;
 
 export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
   const navigate = useNavigate();
   const regionRef = useRef<HTMLDivElement>(null);
   const foodRef = useRef<HTMLDivElement>(null);
   const priceRef = useRef<HTMLDivElement>(null);
+  const ratingRef = useRef<HTMLDivElement>(null);
   const atmoRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -36,6 +38,7 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
     if (activeTag === "지역") target = regionRef.current;
     if (activeTag === "음식 종류") target = foodRef.current;
     if (activeTag === "가격") target = priceRef.current;
+    if (activeTag === "별점") target = ratingRef.current;
     if (activeTag === "분위기") target = atmoRef.current;
 
     if (!target) return;
@@ -50,9 +53,9 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
   }, [activeTag]);
 
   const addItem = (item: SelectedItem) => {
-    if (item.type === "price") {
+    if (item.type === "price" || item.type === "rating") {
       setSelectedTags((prev) => [
-        ...prev.filter((selected) => selected.type !== "price"),
+        ...prev.filter((selected) => selected.type !== item.type),
         item,
       ]);
       return;
@@ -104,6 +107,7 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
     let regionId: number | null = null;
     let priceMin: number | undefined;
     let priceMax: number | undefined;
+    let ratingMin: number | undefined;
 
     for (const item of selectedTags) {
       if (item.type === "region") regionId = item.id;
@@ -112,12 +116,14 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
         priceMin = item.priceMin;
         priceMax = item.priceMax;
       }
+      if (item.type === "rating") ratingMin = item.ratingMin;
     }
 
     if (regionId) params.set("region_id", String(regionId));
     if (tagIds.length) params.set("tag_ids", tagIds.join(","));
     if (priceMin != null) params.set("price_min", String(priceMin));
     if (priceMax != null) params.set("price_max", String(priceMax));
+    if (ratingMin != null) params.set("min_rating", String(ratingMin));
 
     navigate(`/restaurant/search/results?${params.toString()}`);
   };
@@ -154,6 +160,10 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
 
           <div ref={priceRef}>
             <PriceRangeSelectorV3 onAddItem={addItem} />
+          </div>
+
+          <div ref={ratingRef}>
+            <RatingSelector onAddItem={addItem} />
           </div>
 
           <div ref={atmoRef}>

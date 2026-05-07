@@ -506,6 +506,7 @@ async def list_restaurants(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    min_rating: Optional[float] = None,
     db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Restaurant).distinct()
@@ -527,6 +528,8 @@ async def list_restaurants(
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
+    if min_rating is not None:
+        stmt = stmt.where(Restaurant.rating >= min_rating)
 
     category_count = 0
 
