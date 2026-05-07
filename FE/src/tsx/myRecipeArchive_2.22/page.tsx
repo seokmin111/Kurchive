@@ -1,98 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./page.module.css";
-import client from "../../api/client"; 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import ArchiveHeader from "../../components/common/ArchiveHeader";
+import ArchiveSearchBar from "../../components/common/ArchiveSearchBar";
+import ArchiveStatusMessage from "../../components/common/ArchiveStatusMessage";
+import client from "../../api/client";
 import { getMyPage, MyPageUser } from "../../api/mypage";
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
-
-// 백엔드 반환 DTO 형태에 맞춘 FavoriteRecipe 인터페이스
-interface FavoriteRecipe {
-  id: number;
-  title: string;
-  base_serving: number;
-  thumbnail_url?: string;
-  created_at?: string;
-}
-
-// 레시피 카드 컴포넌트
-const RecipeCard = ({ recipe, onDelete }: { recipe: FavoriteRecipe; onDelete: (id: number) => void }) => {
-  const navigate = useNavigate();
-
-  return (
-    <div 
-      className={styles.restaurantCard} 
-      onClick={() => navigate(`/recipe/${recipe.id}`)}
-    >
-      <div className={styles.cardContent}>
-        {/* CSS 클래스명은 기존 구조(restaurantName)를 유지하며 데이터만 레시피 정보로 바인딩합니다 */}
-        <h3 className={styles.restaurantName}>{recipe.title}</h3>
-        <p className={styles.restaurantLocation}>
-          기본 {recipe.base_serving}인분
-        </p>
-        
-        <div className={styles.uploader}>
-          <div className={styles.redcircle}></div>
-          <div>
-            <div className={styles.uploader_name}>저장한 레시피</div>
-            <div className={styles.uploader_date}>
-              {recipe.created_at ? new Date(recipe.created_at).toLocaleDateString() : ""}
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div
-        className={`${styles.cardImage} ${recipe.thumbnail_url ? styles.cardImageWithPhoto : ""}`}
-        style={recipe.thumbnail_url ? { backgroundImage: `url(${recipe.thumbnail_url})` } : {}}
-      >
-        <button 
-          className={styles.deleteButton}
-          onClick={(e) => {
-            e.stopPropagation(); // 카드 전체 클릭(상세 이동) 방지
-            onDelete(recipe.id);
-          }}
-        >
-          ✕
-        </button>
-        
-        {!recipe.thumbnail_url && (
-          <div className={styles.imagePlaceholder}>
-            <span className={styles.imageIcon}>🖼</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+import RecipeFavoriteCard, { FavoriteRecipeItem } from "./components/RecipeFavoriteCard";
+import styles from "./page.module.css";
 
 export default function RecipeArchivePage() {
   const navigate = useNavigate();
-  
+
   const [user, setUser] = useState<MyPageUser | null>(null);
-  const [recipes, setRecipes] = useState<FavoriteRecipe[]>([]);
+  const [recipes, setRecipes] = useState<FavoriteRecipeItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // 데이터 로드
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // 내 정보와 찜한 레시피 목록 동시 호출
+
         const [userData, recipesRes] = await Promise.all([
           getMyPage(),
-          client.get<FavoriteRecipe[]>('/mypage/logs/favorite-recipes')
+          client.get<FavoriteRecipeItem[]>("/mypage/logs/favorite-recipes"),
         ]);
-        
+
         setUser(userData);
-        // 백엔드에서 최신순 정렬해서 넘겨주므로 그대로 사용
         setRecipes(recipesRes.data);
       } catch (error) {
-        console.error("데이터 로딩 실패:", error);
+        console.error("Failed to load favorite recipes:", error);
       } finally {
         setLoading(false);
       }
@@ -101,88 +42,63 @@ export default function RecipeArchivePage() {
     fetchData();
   }, []);
 
-  // 검색 기능 (레시피 제목 기준)
-  const filteredRecipes = recipes.filter((r) => 
-    r.title.includes(searchQuery)
+  const filteredRecipes = useMemo(
+    () =>
+      recipes.filter((r) =>
+        r.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      ),
+    [recipes, searchQuery]
   );
 
-  // 삭제(찜 해제) 핸들러
   const handleDeleteItem = async (id: number) => {
-    if(!window.confirm("아카이브에서 삭제하시겠습니까?")) return;
-    
+    if (!window.confirm("아카이브에서 삭제하시겠습니까?")) return;
+
     try {
-      // 레시피 즐겨찾기 토글(해제) API 호출
       await client.post(`/recipe/${id}/favorite`);
-      
-      // 상태 즉시 반영
-      setRecipes(prev => prev.filter(item => item.id !== id));
+      setRecipes((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
-      console.error("즐겨찾기 삭제 실패:", error);
+      console.error("Failed to remove favorite recipe:", error);
       alert("레시피를 아카이브에서 삭제하는 데 실패했습니다.");
     }
   };
 
+  const emptyMessage = searchQuery
+    ? "검색 결과가 없습니다."
+    : "아직 저장한 레시피가 없습니다.";
+
   return (
-        <div className={styles.container}>
-          {/* --- 기존 마크업과 동일 --- */}
-          <header className={styles.header}>
-  <div className={styles.headerLeft}>
-    <img
-      src="/backstep_white_background.png"
-      alt="뒤로가기"
-      className={styles.backButton}
-      onClick={() => navigate(-1)}
-    />
+    <div className={styles.container}>
+      <ArchiveHeader
+        classNames={styles}
+        onBack={() => navigate(-1)}
+        onMyPage={() => navigate("/mypage")}
+      />
 
-    <div className={styles.logoSection}>
-      <span className={styles.logoSubtitle}>우리만의 미식 지도</span>
-      <span className={styles.logo}>커카이브</span>
-    </div>
-  </div>
-
-  <button
-    className={styles.myPageButton}
-    onClick={() => navigate("/mypage")}
-  >
-    마이페이지
-  </button>
-</header>
-
-      {/* 페이지 제목 */}
       <div className={styles.pageTitle}>
-              <span className={styles.username}>{user?.nickname || "사용자"}</span> 님 찜한 레시피
-       </div>
-
-      {/* 검색바 */}
-      <div className={styles.searchSection}>
-        <div className={styles.searchBar}>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="즐겨찾기 내 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />
-        </div>
+        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님 찜한 레시피
       </div>
 
-      {/* 레시피 리스트 */}
+      <ArchiveSearchBar
+        classNames={styles}
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="즐겨찾기 내 검색"
+        icon={<FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />}
+      />
+
       <div className={styles.restaurantList}>
         {loading ? (
-          <div style={{textAlign: 'center', padding: '20px', color: '#888'}}>로딩 중...</div>
+          <ArchiveStatusMessage variant="loading">로딩 중...</ArchiveStatusMessage>
         ) : filteredRecipes.length > 0 ? (
           filteredRecipes.map((recipe) => (
-            <RecipeCard 
-              key={recipe.id} 
-              recipe={recipe} 
-              onDelete={handleDeleteItem} 
+            <RecipeFavoriteCard
+              key={recipe.id}
+              recipe={recipe}
+              onDelete={handleDeleteItem}
             />
           ))
         ) : (
-          <div style={{textAlign: 'center', padding: '40px', color: '#999'}}>
-            {searchQuery ? "검색 결과가 없습니다." : "아직 저장한 레시피가 없습니다."}
-          </div>
+          <ArchiveStatusMessage variant="empty">{emptyMessage}</ArchiveStatusMessage>
         )}
       </div>
     </div>
