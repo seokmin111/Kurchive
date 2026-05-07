@@ -3,8 +3,26 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import client from "../../api/client";
+import StarRating from "../../components/StarRating";
 
-import { MapPin, Utensils, Tag, FileText, Pencil, Heart } from "lucide-react";
+import {
+  getRestaurantReviews,
+  createRestaurantReview,
+  updateReview,
+  deleteReview,
+  type Review,
+} from "../../api/rest_review";
+
+import {
+  MapPin,
+  Utensils,
+  Tag,
+  FileText,
+  Pencil,
+  Heart,
+  MessageSquare,
+  Trash2,
+} from "lucide-react";
 
 type Tag = {
   id: number;
@@ -33,6 +51,21 @@ type RestaurantDetail = {
 
   recommended_menus?: string[];
 };
+// 리뷰
+type RestaurantReview = {
+  id: number;
+  restaurant_id: number;
+  user_id: number | string;
+  rating: number;
+  content: string;
+  created_at?: string;
+  user_nickname?: string;
+  nickname?: string;
+  writer_name?: string;
+  menus: string[];
+};
+
+
 
 function formatPrice(min?: number, max?: number) {
   const a = min ?? 0;
@@ -73,6 +106,7 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+
 export default function RestaurantSpecific() {
   const nav = useNavigate();
   const { restaurantId } = useParams();
@@ -86,7 +120,24 @@ export default function RestaurantSpecific() {
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // ✅ 찜하기 상태
+  //리뷰 관련 상태
+
+  const [reviews, setReviews] = useState<RestaurantReview[]>([]);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewMenus, setReviewMenus] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+ // 리뷰 수정 관련 상태
+  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+  const [editReviewContent, setEditReviewContent] = useState("");
+  const [editReviewRating, setEditReviewRating] = useState(5);
+  const [editReviewMenus, setEditReviewMenus] = useState("");
+
+  
+
+
+  // 찜하기 상태
   const [isZzim, setIsZzim] = useState(false);
 
   // 내 정보 로드
@@ -166,7 +217,164 @@ export default function RestaurantSpecific() {
       alert("즐겨찾기 상태를 변경할 수 없습니다.");
     }
   };
-  // 삭제
+
+useEffect(() => {
+  fetchReviews();
+}, [restaurantId]);
+
+
+
+// -----------------------------
+// 리뷰 조회
+// -----------------------------
+const fetchReviews = async () => {
+  if (!restaurantId) return;
+
+  try {
+    const data = await getRestaurantReviews(Number(restaurantId));
+    setReviews(data);
+  } catch (err) {
+    console.error("리뷰 조회 실패:", err);
+  }
+};
+
+// -----------------------------
+// 리뷰 작성
+// -----------------------------
+const createReview = async () => {
+  if (!restaurantId) return;
+
+  if (!reviewContent.trim()) {
+    alert("후기를 입력해주세요.");
+    return;
+  }
+
+  try {
+    setReviewSubmitting(true);
+
+    await createRestaurantReview(Number(restaurantId), {
+      content: reviewContent.trim(),
+      rating: reviewRating,
+      menus: reviewMenus
+        .split(",")
+        .map((menu) => menu.trim())
+        .filter(Boolean),
+    });
+
+    setReviewContent("");
+    setReviewRating(5);
+    setReviewMenus("");
+    setReviewOpen(false);
+
+    await fetchReviews();
+  } catch (err: any) {
+    console.error("리뷰 작성 실패: 로그인이 필요합니다.", err);
+    alert(err.response?.data?.detail ?? "리뷰 작성 실패");
+  } finally {
+    setReviewSubmitting(false);
+  }
+};
+
+// -----------------------------
+// 리뷰 수정
+// -----------------------------
+
+
+// -----------------------------
+// 리뷰 삭제
+// -----------------------------
+const removeReview = async (reviewId: number) => {
+  if (!confirm("리뷰를 삭제할까요?")) return;
+
+  try {
+    await deleteReview(reviewId);
+    await fetchReviews();
+  } catch (err: any) {
+    console.error("리뷰 삭제 실패:", err);
+    alert(err.response?.data?.detail ?? "리뷰 삭제 실패");
+  }
+};
+
+// -----------------------------
+// 리뷰 수정 시작
+// -----------------------------
+const startEditReview = (review: RestaurantReview) => {
+  setEditingReviewId(review.id);
+  setEditReviewContent(review.content ?? "");
+  setEditReviewRating(review.rating ?? 5);
+  setEditReviewMenus((review.menus ?? []).join(", "));
+};
+
+// -----------------------------
+// 리뷰 수정 취소
+// -----------------------------
+const cancelEditReview = () => {
+  setEditingReviewId(null);
+  setEditReviewContent("");
+  setEditReviewRating(5);
+  setEditReviewMenus("");
+};
+
+// -----------------------------
+// 리뷰 수정 저장
+// -----------------------------
+const submitEditReview = async (reviewId: number) => {
+  if (!editReviewContent.trim()) {
+    alert("후기를 입력해주세요.");
+    return;
+  }
+
+  try {
+    setReviewSubmitting(true);
+
+    await updateReview(reviewId, {
+      content: editReviewContent.trim(),
+      rating: editReviewRating,
+      menus: editReviewMenus
+        .split(",")
+        .map((menu) => menu.trim())
+        .filter(Boolean),
+    });
+
+    cancelEditReview();
+    await fetchReviews();
+  } catch (err: any) {
+    console.error("리뷰 수정 실패:", err);
+    alert(err.response?.data?.detail ?? "리뷰 수정 실패");
+  } finally {
+    setReviewSubmitting(false);
+  }
+};
+
+// -----------------------------
+// 리뷰 작성자 표시
+// -----------------------------
+const getReviewWriter = (review: RestaurantReview) => {
+  if (!review.user_id) return "탈퇴한 사용자";
+  return `${review.nickname}`;
+};
+
+// -----------------------------
+// 리뷰 수정/삭제 권한 확인
+// -----------------------------
+const canManageReview = (review: RestaurantReview) => {
+  if (!currentUser) return false;
+
+  const myId = currentUser.id ?? currentUser.user_id;
+
+  const isMine =
+    myId !== undefined &&
+    review.user_id !== undefined &&
+    String(myId) === String(review.user_id);
+
+  const isAdmin =
+    currentUser.is_admin === 1 ||
+    currentUser.is_admin === true ||
+    currentUser.role === "admin";
+
+  return isMine || isAdmin;
+};
+  // 식당 삭제
   const deleteRestaurant = async () => {
   if (!restaurant) return;
 
@@ -186,7 +394,7 @@ export default function RestaurantSpecific() {
     }
   }
 };
-  // 수정 권한 체크
+  // 식당 정보 수정 권한 체크
   const canEdit = useMemo(() => {
     if (!currentUser || !restaurant) return false;
 
@@ -368,65 +576,228 @@ export default function RestaurantSpecific() {
 
       <div className={style.line}></div>
 
-      {/* 상세 후기 */}
-     <div className={style.section}>
-     <div className={style.sectionTitle}>
-  <FileText size={18} /> 상세 후기
-</div>
-
-  <div className={style.lower_box}>
-    {restaurant.description}
+     {/* 상세 후기 */}
+<div className={style.section}>
+  <div className={style.sectionTitle}>
+    <FileText size={18} /> 상세 후기
   </div>
-</div>
 
-      {/* 본문 이미지 갤러리 */}
-      {restaurant.images && restaurant.images.length > 0 && (
-        <div
-          style={{
-            marginTop: 20,
-            display: "flex",
-            gap: 12,
-            overflowX: "auto",
-            paddingBottom: 8,
-            width: "100%"
-          }}
-        >
-          {restaurant.images?.length > 0 && (
-  <div className={style.imageGallery}>
-    {restaurant.images
-      .filter((img) => {
-        if (!restaurant.thumbnail_url) return true;
-        return img.image_url !== restaurant.thumbnail_url;
-      })
-      .map((img) => (
-        <img
-          key={img.id}
-          src={img.image_url}
-          alt="restaurant"
-          className={style.galleryImage}
-          onClick={() => setSelectedImage(img.image_url)}
-        />
-      ))}
-  </div>
-)}
-          {/* 이미지 확대 모달 */}
-          {selectedImage && (
-            <div className={style.imageModal}>
-              <button
-                className={style.closeButton}
-                onClick={() => setSelectedImage(null)}
-              >
-                ✕
-              </button>
+  <div className={style.reviewDetailCard}>
+    <div className={style.reviewDetailText}>
+      {restaurant.description}
+    </div>
+
+    {restaurant.images &&
+      restaurant.images.filter((img) => img.image_url !== restaurant.thumbnail_url).length > 0 && (
+        <div className={style.reviewImageGallery}>
+          {restaurant.images
+            .filter((img) => img.image_url !== restaurant.thumbnail_url)
+            .map((img) => (
               <img
-                src={selectedImage}
-                alt="확대 이미지"
-                className={style.modalImage}
+                key={img.id}
+                src={img.image_url}
+                alt="restaurant"
+                className={style.reviewGalleryImage}
+                onClick={() => setSelectedImage(img.image_url)}
               />
-            </div>
-          )}
+            ))}
         </div>
       )}
+  </div>
+</div>
+
+{/* 이미지 확대 모달 */}
+{selectedImage && (
+  <div className={style.imageModal}>
+    <button
+      className={style.closeButton}
+      onClick={() => setSelectedImage(null)}
+    >
+      ✕
+    </button>
+    <img
+      src={selectedImage}
+      alt="확대 이미지"
+      className={style.modalImage}
+    />
+  </div>
+)}
+
+{/* 리뷰 작성 버튼 */}
+<div className={style.writeReviewBox}>
+  <button
+    className={style.writeReviewButton}
+    onClick={() => setReviewOpen((prev) => !prev)}
+  >
+    <Pencil size={18} />
+    리뷰 작성하기
+  </button>
+</div>
+
+{/* 리뷰 작성 폼 */}
+{reviewOpen && (
+  <div className={style.reviewFormCard}>
+    <div className={style.reviewFormTitle}>이 식당은 어땠나요?</div>
+
+    <div className={style.reviewRatingSelect}>
+  <StarRating value={reviewRating} onChange={setReviewRating} />
+  <span className={style.reviewRatingText}>
+    {reviewRating.toFixed(1)}
+  </span>
+</div>
+    <input
+  className={style.reviewInput}
+  value={reviewMenus}
+  onChange={(e) => setReviewMenus(e.target.value)}
+  placeholder="추천 메뉴를 쉼표로 구분해서 입력"
+/>
+
+    <textarea
+      className={style.reviewTextarea}
+      value={reviewContent}
+      onChange={(e) => setReviewContent(e.target.value)}
+      placeholder="이 식당에 대한 리뷰를 남겨주세요. 500자내로 남겨주세요."
+      maxLength={500}
+    />
+
+    <div className={style.reviewFormBottom}>
+      <span className={style.reviewLength}>
+        {reviewContent.length}/500
+      </span>
+
+      <button
+        className={style.reviewSubmitButton}
+        onClick={createReview}
+        disabled={reviewSubmitting}
+      >
+        {reviewSubmitting ? "등록 중..." : "등록하기"}
+      </button>
+    </div>
+  </div>
+)}
+
+{/* 리뷰 리스트 */}
+<div className={style.reviewSection}>
+  <div className={style.reviewHeader}>
+    <div className={style.reviewTitle}>
+      <MessageSquare size={18} />
+      리뷰 {reviews.length}개
+    </div>
+  </div>
+
+  {reviews.length === 0 ? (
+    <div className={style.emptyReviewBox}>
+      아직 등록된 리뷰가 없습니다.
+      <br />
+      첫 리뷰를 남겨보세요!
+    </div>
+  ) : (
+    <div className={style.reviewList}>
+      {reviews.map((review) => (
+        <div key={review.id} className={style.reviewCard}>
+          <div className={style.reviewCardTop}>
+            <div className={style.reviewWriterArea}>
+              <div className={style.reviewAvatar}>
+                {getReviewWriter(review).slice(0, 1)}
+              </div>
+
+              <div>
+                <div className={style.reviewWriter}>
+                  {getReviewWriter(review)}
+                </div>
+                <div className={style.reviewDate}>
+                  {review.created_at
+                    ? new Date(review.created_at).toLocaleDateString("ko-KR")
+                    : ""}
+                </div>
+              </div>
+            </div>
+
+            <div className={style.reviewScore}>
+              <Stars value={review.rating} />
+              <strong>{review.rating.toFixed(1)}</strong>
+            </div>
+          </div>
+
+          {editingReviewId === review.id ? (
+  <div className={style.reviewEditBox}>
+    <textarea
+      className={style.reviewTextarea}
+      value={editReviewContent}
+      onChange={(e) => setEditReviewContent(e.target.value)}
+      placeholder="리뷰 내용을 입력하세요"
+    />
+
+    <input
+      className={style.reviewInput}
+      value={editReviewMenus}
+      onChange={(e) => setEditReviewMenus(e.target.value)}
+      placeholder="추천 메뉴를 쉼표로 구분해서 입력"
+    />
+
+    <div className={style.reviewActions}>
+      <button
+        type="button"
+        className={style.reviewSubmitButton}
+        onClick={() => submitEditReview(review.id)}
+        disabled={reviewSubmitting}
+      >
+        저장
+      </button>
+
+      <button
+        type="button"
+        className={style.reviewEditButton}
+        onClick={cancelEditReview}
+        disabled={reviewSubmitting}
+      >
+        취소
+      </button>
+    </div>
+  </div>
+) : (
+  <>
+    <div className={style.reviewContent}>
+      {review.content}
+    </div>
+
+    {review.menus && review.menus.length > 0 && (
+      <div className={style.reviewMenuLine}>
+        <span className={style.reviewMenuLabel}>추천 메뉴</span>
+        {review.menus.map((menu, idx) => (
+          <span key={idx} className={style.reviewMenuChip}>
+            {menu}
+          </span>
+        ))}
+      </div>
+    )}
+
+    {canManageReview(review) && (
+      <div className={style.reviewActions}>
+        <button
+          type="button"
+          className={style.reviewEditButton}
+          onClick={() => startEditReview(review)}
+        >
+          수정
+        </button>
+
+        <button
+          type="button"
+          className={style.reviewDeleteButton}
+          onClick={() => removeReview(review.id)}
+        >
+          삭제
+        </button>
+      </div>
+    )}
+  </>
+)}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
       {canEdit && (
   <div
     style={{
