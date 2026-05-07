@@ -6,6 +6,7 @@ export type SelectedItem = {
   priceMin?: number;
   priceMax?: number;
   ratingMin?: number;
+  ratingMax?: number;
 };
 
 export type RegionItem = {

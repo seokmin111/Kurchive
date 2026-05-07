@@ -50,6 +50,12 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
       top: content.scrollTop + (targetTop - contentTop),
       behavior: "smooth",
     });
+
+    const resetActiveTag = window.setTimeout(() => {
+      setActiveTag("");
+    }, 400);
+
+    return () => window.clearTimeout(resetActiveTag);
   }, [activeTag]);
 
   const addItem = (item: SelectedItem) => {
@@ -108,6 +114,7 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
     let priceMin: number | undefined;
     let priceMax: number | undefined;
     let ratingMin: number | undefined;
+    let ratingMax: number | undefined;
 
     for (const item of selectedTags) {
       if (item.type === "region") regionId = item.id;
@@ -116,7 +123,10 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
         priceMin = item.priceMin;
         priceMax = item.priceMax;
       }
-      if (item.type === "rating") ratingMin = item.ratingMin;
+      if (item.type === "rating") {
+        ratingMin = item.ratingMin;
+        ratingMax = item.ratingMax;
+      }
     }
 
     if (regionId) params.set("region_id", String(regionId));
@@ -124,6 +134,7 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
     if (priceMin != null) params.set("price_min", String(priceMin));
     if (priceMax != null) params.set("price_max", String(priceMax));
     if (ratingMin != null) params.set("min_rating", String(ratingMin));
+    if (ratingMax != null) params.set("max_rating", String(ratingMax));
 
     navigate(`/restaurant/search/results?${params.toString()}`);
   };
@@ -180,6 +191,9 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
             <div className={styles.tagSearch__iconAndTags}>
               {selectedTags.map((item, idx) => (
                 <div key={`${item.type}-${item.id}-${idx}`} className={styles.tagSearch__selectedTag}>
+                  {item.type === "rating" && (
+                    <span className={styles.tagSearch__selectedTagStar}>★</span>
+                  )}
                   <span className={styles.tagSearch__selectedTagText}>{item.name}</span>
                   <span className={styles.tagSearch__tagDel} onClick={() => removeItem(item)}>
                     <FontAwesomeIcon icon={faXmark} />

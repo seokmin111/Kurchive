@@ -533,23 +533,23 @@ const handleValidateAddress = async () => {
 
   try {
     setIsValidatingAddress(true);
-    setAddressMessage("주소 검증 중...");
+    setAddressMessage("주소 적용 중...");
     
     const res = await geocodeAddress(address.trim());
     
     if (!res.ok) {
       setIsAddressValid(false);
-      setAddressMessage("주소 검증에 실패했습니다. 정확한 주소를 입력해주세요.");
+      setAddressMessage("주소 적용에 실패했습니다. 정확한 주소를 입력해주세요.");
       return;
     }
 
     setLatitude(res.lat ?? null);
     setLongitude(res.lng ?? null);
     setIsAddressValid(true);
-    setAddressMessage("주소 검증 완료!");
+    setAddressMessage("주소 적용 완료!");
   } catch (e) {
     setIsAddressValid(false);
-    setAddressMessage("주소 검증 중 오류가 발생했습니다.");
+    setAddressMessage("주소 적용 중 오류가 발생했습니다.");
   } finally {
     setIsValidatingAddress(false);
   }
@@ -564,7 +564,7 @@ const handleValidateAddress = async () => {
     if (!mapLink.trim().startsWith("http")) return alert("맵 링크는 http/https로 시작해야 합니다."); 
     if (!isValidMapLink(mapLink.trim())) {return alert("지원되는 지도 링크가 아닙니다.");}
     if (!address.trim()) return alert("주소를 입력해주세요.");
-    if (isAddressValid !== true) return alert("주소 검증을 완료해주세요.");
+    if (isAddressValid !== true) return alert("주소 적용을 완료해주세요.");
     if (!selectedLv2) return alert("소지역(구/시/군)을 선택해주세요.");
     if (priceMin === "" || priceMax === "") return alert("가격 범위(최소/최대)를 입력해주세요.");
     if (Number.isNaN(priceMin) || Number.isNaN(priceMax)) return alert("가격은 숫자만 입력해주세요.");
@@ -770,7 +770,7 @@ setTimeout(() => {
                   onClick={handleValidateAddress}
                   disabled={isValidatingAddress}
                 >
-                  {isValidatingAddress ? "검증 중..." : "검증"}
+                  {isValidatingAddress ? "적용 중..." : "적용"}
                 </button>
               </div>
             </div>

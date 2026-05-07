@@ -47,6 +47,7 @@ export const listRestaurants = (params?: {
   price_min?: number;
   price_max?: number;
   min_rating?: number;
+  max_rating?: number;
 }) =>
   client.get("/api/restaurants", {
     params: {

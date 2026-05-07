@@ -641,6 +641,7 @@
   margin-top: 0.1em;
   margin-bottom: 10px;
   color: #9d9d9d;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -649,9 +650,22 @@
   width: 100%;
   height: 30px;
   padding: 2px 10px;
-  border: none;
+  border: 2px solid #d3d9de;
   border-radius: 20px;
-  background-color: #f0f0f0;
+  background-color: #fff;
+  color: #111;
+  font-family: var(--font-pretendard), sans-serif;
+  font-size: clamp(11px, 2.7vw, 13px); 
+  line-height: 1.2;
+}
+
+.Price__separator,
+.Rating__separator {
+  justify-self: center;
+  color: #9d9d9d;
+  font-size: clamp(11px, 2.7vw, 13px);
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .Price__submit {
@@ -669,34 +683,59 @@
 /* Rating */
 .Rating__contents {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(0.65em, 3.5%, 1.25em);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(4.8em, 0.7fr);
+  align-items: center;
+  gap: 0.6em;
 }
 
-.Rating__option {
-  display: flex;
+.Rating__field {
+  display: grid;
+  grid-template-columns: auto minmax(5.8em, 8.5em) auto;
   align-items: center;
   justify-content: center;
-  gap: 0.32em;
+  gap: 0.5em;
   box-sizing: border-box;
-  width: 100%;
-  min-height: 40px;
-  padding: 0 10px;
-  border: 2px solid #d3d9de;
-  border-radius: 18px;
-  background-color: #fff;
+  min-width: 0;
+  min-height: 30px;
   color: #2a2a2a;
   font-family: var(--font-pretendard), sans-serif;
-  font-size: clamp(11px, 2.7vw, 14px);
+  font-size: clamp(11px, 2.7vw, 13px);
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.Rating__select {
+  width: 100%;
+  height: 30px;
+  padding: 0 0.75em;
+  border: 1px solid #d3d9de;
+  border-radius: 20px;
+  outline: none;
+  background-color: #fff;
+  color: #8b0029;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
 }
 
 .Rating__star {
   color: #8b0029;
   font-size: 0.95em;
   line-height: 1;
+}
+
+.Rating__submit {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 5px 20px;
+  border: 2px solid #9d9d9d;
+  border-radius: 20px;
+  background-color: #fff;
+  color: #9d9d9d;
+  font-family: var(--font-pretendard), sans-serif;
+  font-weight: 400;
 }
 
 /* Atmosphere */
@@ -790,6 +829,13 @@
   white-space: nowrap;
 }
 
+.tagSearch__selectedTagStar {
+  flex-shrink: 0;
+  margin-right: 0.35em;
+  line-height: 1;
+  transform: translateY(-0.03em);
+}
+
 .tagSearch__selectedTagText {
   min-width: 0;
   overflow: hidden;
@@ -833,6 +879,12 @@
   background-color: #f2ece5;
 }
 
+.Price__submit:active,
+.Rating__submit:active {
+  border-color: #8b0029;
+  color: #8b0029;
+}
+
 /* State */
 @media (hover: hover) and (pointer: fine) {
   .tagSearch__title:hover {
@@ -861,7 +913,6 @@
   }
 
   .Food__tag:hover,
-  .Rating__option:hover,
   .atmo__item:hover {
     border: 2px solid #8b0029;
   }
@@ -871,8 +922,10 @@
     color: aliceblue;
   }
 
-  .Price__submit:hover {
-    border: 2px solid #8b0029;
+  .Rating__select:hover,
+  .Price__submit:hover,
+  .Rating__submit:hover {
+    border-color: #8b0029;
     color: #8b0029;
   }
 }
@@ -915,7 +968,13 @@
   }
 
   .Rating__contents {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .Rating__submit {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 34%;
   }
 
   .Price__contents > div:last-child {
