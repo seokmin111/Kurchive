@@ -176,6 +176,7 @@ class RestaurantCreate(BaseModel):
     price_max: int
     tag_ids: List[int]
     recommended_menus: Optional[List[str]] = []
+    force: Optional[bool] = False # 중복 의심이어도 등록할건지 말건지
 
     @validator("location_link")
     def validate_location_link(cls, v: str):
@@ -389,6 +390,7 @@ async def create_restaurant(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
+<<<<<<< HEAD
     # 프론트에서 /locations/extract로 이미 추출한 주소, 위도, 경도를 사용
     address = payload.address
     lat = payload.latitude
@@ -436,7 +438,44 @@ async def create_restaurant(
             # 중복 모듈 실패가 등록 자체를 막으면 UX가 나빠서,
             # 실패 로그만 남기고 등록은 계속 진행
             print(f"[duplicate_det 실패] {e}")
+=======
+    address, lat, lon = None, None, None
 
+    try:
+        loc = await anyio.to_thread.run_sync(
+            extract_location_from_link,
+            str(payload.location_link)
+        )
+        if loc:
+            address = loc.get("road_address") or loc.get("address")
+            lat, lon = loc.get("lat"), loc.get("lng")
+    except Exception as e:
+        print(f"주소 추출 에러: {e}")
+>>>>>>> main
+
+    # -------------------------
+    # 중복 체크
+    # -------------------------
+    candidates = []
+    if lat is not None and lon is not None:
+        candidates = await find_duplicate_candidates(
+            db=db,
+            name=payload.name,
+            lat=lat,
+            lon=lon
+        )
+
+        # force 없으면 막기
+        if candidates and not getattr(payload, "force", False):
+            return {
+                "ok": False,
+                "message": "중복 식당 후보 존재",
+                "candidates": candidates
+            }
+
+    # -------------------------
+    # DB insert
+    # -------------------------
     try:
         restaurant = Restaurant(
             name=payload.name,
@@ -459,16 +498,31 @@ async def create_restaurant(
         await db.refresh(restaurant)
     except Exception as e:
         await db.rollback()
-        return JSONResponse(status_code=400, content={"ok": False, "message": f"DB insert error: {e}"})
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "message": f"DB insert error: {e}"}
+        )
 
+    # -------------------------
+    # 태그 insert
+    # -------------------------
     try:
         for tag_id in payload.tag_ids:
-            db.add(RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id))
+            db.add(RestaurantTag(
+                restaurant_id=restaurant.id,
+                tag_id=tag_id
+            ))
         await db.commit()
     except Exception as e:
         await db.rollback()
-        return JSONResponse(status_code=400, content={"ok": False, "message": f"Tag insert error: {e}"})
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "message": f"Tag insert error: {e}"}
+        )
 
+    # -------------------------
+    # 성공 응답
+    # -------------------------
     return {
         "ok": True,
         "message": "식당 등록 완료",
@@ -484,7 +538,6 @@ async def create_restaurant(
             "created_at": datetime.utcnow().isoformat()
         }
     }
-    
 # 식당 이름 검색
 @router.get("/restaurants/search")
 async def search_restaurants_by_name(

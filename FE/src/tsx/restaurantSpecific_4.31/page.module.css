@@ -382,3 +382,370 @@
     font-size: 10px;
   }
 }
+
+/* font size */
+.infoLabel {
+  font-size: 14px;
+}
+
+.infoValue {
+  font-size: 14px;
+}
+
+/* 상세 설명 */
+.lower_box {
+  width: 90%;
+  height: 300px;
+  border: 1px dotted black;
+  border-radius: 20px;
+
+  padding: 16px;
+  white-space: pre-wrap;
+  overflow-y: auto;
+
+  text-align: left;
+}
+
+.reviewDetailCard {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 20px 18px;
+  border: 1px solid #eee;
+  border-radius: 22px;
+
+  background: #fffafa;
+  box-shadow: 0 6px 18px rgba(139, 0, 41, 0.06);
+
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.reviewDetailText {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #222;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.reviewImageGallery {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.reviewImageGallery::-webkit-scrollbar {
+  height: 4px;
+}
+
+.reviewImageGallery::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 999px;
+}
+
+.reviewGalleryImage {
+  width: 31%;
+  min-width: 96px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.writeReviewBox {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.writeReviewButton {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 18px;
+  background: #fff1f5;
+  color: #8B0029;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.reviewFormCard {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fffafa;
+  border: 1px solid #f0d8df;
+}
+
+.reviewFormTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 12px;
+}
+
+.reviewRatingSelect {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.reviewStarActive,
+.reviewStarInactive {
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.reviewStarActive {
+  color: #8B0029;
+}
+
+.reviewStarInactive {
+  color: #e6c6d0;
+}
+
+.reviewRatingText {
+  margin-left: 8px;
+  color: #8B0029;
+  font-weight: 800;
+}
+
+.reviewTextarea {
+  width: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  border: 1px solid #ead7dd;
+  border-radius: 14px;
+  padding: 12px;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.reviewTextarea:focus {
+  border-color: #8B0029;
+}
+
+.reviewFormBottom {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reviewLength {
+  font-size: 12px;
+  color: #999;
+}
+
+.reviewSubmitButton {
+  border: none;
+  border-radius: 12px;
+  background: #8B0029;
+  color: white;
+  padding: 9px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.reviewSubmitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reviewSection {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.reviewTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.emptyReviewBox {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 28px 16px;
+  border-radius: 18px;
+  background: #fafafa;
+  color: #777;
+  text-align: center;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reviewCard {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+.reviewCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reviewWriterArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reviewAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f2ece5;
+  color: #8B0029;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.reviewWriter {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.reviewDate {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #999;
+}
+
+.reviewScore {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #111;
+  font-size: 14px;
+}
+
+.reviewContent {
+  margin-top: 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #222;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.reviewActions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reviewDeleteButton {
+  border: 1px solid #ead7dd;
+  background: white;
+  color: #8B0029;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease; /* 🔥 추가 */
+}
+.reviewMenuLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.reviewMenuLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: #222;
+  margin-right: 2px;
+}
+
+.reviewMenuChip {
+  background: #f3f3f3;
+  color: #8B0029;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reviewDeleteButton:hover {
+  background: #8B0029;   /* 색 반전 */
+  color: white;
+  border-color: #8B0029;
+  transform: scale(0.96); /* 눌리는 느낌 */
+}
+.reviewDeleteButton:active {
+  background: #8B0029;   /* 색 반전 */
+  color: white;
+  border-color: #8B0029;
+  transform: scale(0.96); /* 눌리는 느낌 */
+}
+
+.reviewEditButton {
+  border: 1px solid #ead7dd;
+  background: white;
+  color: #444; /* 삭제보다 덜 강하게 */
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.reviewEditButton:hover {
+  background: #444;
+  color: white;
+  border-color: #444;
+  transform: scale(0.96);
+}

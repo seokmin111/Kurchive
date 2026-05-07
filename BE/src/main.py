@@ -22,7 +22,11 @@ import BE.src.models
 
 from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
+<<<<<<< HEAD
 from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, location
+=======
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, restaurant_review
+>>>>>>> main
 from BE.src.errors import register_exception_handlers
 
 
@@ -74,3 +78,4 @@ app.include_router(location.router, tags=["Location"])
 app.include_router(comment.router)
 app.include_router(ingredient.router)
 app.include_router(admin.router)
+app.include_router(restaurant_review.router, prefix = "/api", tags=["Reviews"])
