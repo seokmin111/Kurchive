@@ -796,6 +796,7 @@ setTimeout(() => {
           <hr className={styles.divider} />
 
           <section className={styles.section}>
+            <div className={styles.menuSectionTitle}>별점 <span className={styles.required}>*</span></div>
             <div className={styles.ratingBox}>
               <RatingInput
                 value={rating}

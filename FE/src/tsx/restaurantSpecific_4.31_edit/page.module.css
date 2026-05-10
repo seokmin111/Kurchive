@@ -31,8 +31,11 @@
 
 /* Common form*/
 .requiredGuide {
-  font-size: 18px;
-  line-height: 1.35;
+  margin: 0 0 18px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .required {
