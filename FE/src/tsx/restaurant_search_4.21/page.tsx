@@ -191,7 +191,7 @@ const atmoRef = useRef<HTMLDivElement>(null);
   };
 
   //상위 태그 누르면 해당 위치로 이동하는 함수
-  const handleScroll = () => {
+const handleScroll = () => {
   const content = scrollRef.current;
   if (!content) return;
 
@@ -203,10 +203,13 @@ const atmoRef = useRef<HTMLDivElement>(null);
   if (activeTag === "분위기") target = atmoRef.current;
 
   if (target) {
+    const contentTop = content.getBoundingClientRect().top;
+    const targetTop = target.getBoundingClientRect().top;
+
     content.scrollTo({
-  top: target.offsetTop - content.offsetTop,
-  behavior: "smooth",
-});
+      top: content.scrollTop + (targetTop - contentTop),
+      behavior: "smooth",
+    });
   }
 };
 

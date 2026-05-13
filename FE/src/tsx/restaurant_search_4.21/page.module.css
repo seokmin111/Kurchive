@@ -240,7 +240,7 @@
     justify-content: center;
     align-items: center;
     width: 80vw;
-    height: 230px;
+    height: auto;
     padding: 10px;
     border: 2px solid rgb(177, 177, 177);
     border-radius: 30px;
@@ -292,6 +292,17 @@
     border: 2px solid rgb(97, 97, 97);
     flex-shrink: 0;
     padding: 4px;
+}
+.tagSearch__trashcan {
+    display: flex;              /* 🔥 핵심 */
+    align-items: center;        /* 세로 중앙 */
+    justify-content: center;    /* 가로 중앙 */
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+    border: 2px solid rgb(97, 97, 97);
 }
 
 .tagSearch__selectedTag{
@@ -367,7 +378,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     position: relative;
     height: 60vh;
 }
@@ -405,7 +416,7 @@
 }
 
 .Food__foodTags{
-    margin-top: 15px;
+    margin-top: 55px;
     padding: 20px;
     display: flex;
     flex-wrap: wrap;
@@ -798,10 +809,12 @@
 .section_title {
   position: absolute;
   right: 15px;      /* 오른쪽 끝에서 15px 띄움 */
-  top: 10px;           /* 가장 상단 */
+  top: 5px;           /* 가장 상단 */
   font-weight: 600;
+  align-self: flex-end;
   color: #9D9D9D;
   font-size: 14px;
+   margin-bottom: 10px; /* 간격 조절 */
   z-index: 1;       /* 다른 요소보다 위에 보이게 함 */
 }
 
@@ -815,8 +828,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 700px; /* 모든 섹션 높이 통일 */
-    padding-top: 40px; /* 타이틀과 겹치지 않게 상단 여백 추가 */
+    padding-top: 20px; /* 타이틀과 겹치지 않게 상단 여백 추가 */
+    height: auto;
+    min-width: unset;
+    margin-bottom: 20;
 }
 
 /* 기존 중복되거나 다른 이름의 타이틀 스타일은 제거하거나 위 클래스로 통합하세요 */
@@ -824,7 +839,7 @@
   display: none; /* 아래 JSX 수정에서 section_title로 교체할 것이므로 숨김 */
 }
 
-/* ====== 모바일 꽉참/잘림 방지 오버라이드 (파일 맨 아래에 붙이기) ====== */
+/* ====== 모바일 꽉참/잘림 방지 오버라이드 ====== */
 .tagSearch__body, 
 .Food__container, 
 .Price__container, 
@@ -834,8 +849,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 400px;      /* ✅ 예전 큰 간격 유지 */
-    padding-top: 40px;  /* 기존 값 유지 */
+    min-height: 400px; 
 }
 .section_title {
   top: 0;

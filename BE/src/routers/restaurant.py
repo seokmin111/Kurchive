@@ -34,7 +34,7 @@ import anyio
 
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, or_, exists
 from sqlalchemy.orm import aliased
 
 from BE.src.dependencies import get_async_db, get_current_user_from_token
@@ -50,6 +50,7 @@ from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
 from BE.src.utils.image_upload import ALLOWED_MIME
 from BE.src.utils.user_serializer import build_uploader
+from BE.src.utils.tags import expand_tag_ids
 
 # 유틸 함수
 from BE.src.utils.duplicate_det import find_duplicate_candidates
@@ -454,6 +455,9 @@ async def search_restaurants_by_name(
     return out
 
 # 식당 상세 조회
+'''같은 카테고리 내에 여러 태그가 들어옴 -> OR
+다른 카테고리 -> AND
+음식 태그에서 상위 태그만 선택시 -> 하위 태그를 포함하는 결과들도 전부 출력'''
 @router.get("/restaurants/{restaurant_id}")
 async def get_restaurant(
     restaurant_id: int,
@@ -532,25 +536,6 @@ async def get_restaurant(
         "images": image_list
     }
 
-# 헬퍼 함수: 요청된 태그 ID들을 각각 [본인 + 자식들]의 집합(Set) 리스트로 변환
-async def _build_tag_requirements(db: AsyncSession, tag_ids_str: str) -> List[set]:
-    try:
-        req_ids = list(map(int, tag_ids_str.split(",")))
-    except ValueError:
-        return []
-
-    requirements = []
-    for rid in req_ids:
-        # 해당 태그의 자식 태그들 조회
-        stmt = select(Tag.id).where(Tag.parent_id == rid)
-        result = await db.execute(stmt)
-        child_ids = result.scalars().all()
-        
-        # {본인 ID, 자식 ID 1, 자식 ID 2 ...} 집합 생성
-        expanded_set = {rid} | set(child_ids)
-        requirements.append(expanded_set)
-    
-    return requirements
 
 # 식당 목록 조회
 @router.get("/restaurants")
@@ -600,39 +585,18 @@ async def list_restaurants(
     # 태그 필터 (핵심)
     # -----------------------
     if tag_ids:
-        req_ids = list(map(int, tag_ids.split(",")))
+        req_ids = [int(x) for x in tag_ids.split(",") if x]
+        category_groups = await expand_tag_ids(db, req_ids)
 
-        # tag + category 조회
-        tag_rows = await db.execute(
-            select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
-        )
-        tag_info = tag_rows.all()
-
-        category_groups = {}
-        for tid, cid in tag_info:
-            category_groups.setdefault(cid, []).append(tid)
-
-        category_count = len(category_groups)
-
-        stmt = (
-            stmt.join(RestaurantTag, Restaurant.id == RestaurantTag.restaurant_id)
-            .join(Tag, Tag.id == RestaurantTag.tag_id)
-        )
-
-        or_conditions = []
-
-        for cid, tids in category_groups.items():
-            or_conditions.append(
-                and_(
-                    Tag.category_id == cid,
-                    Tag.id.in_(tids)
+        for tids in category_groups.values():
+            stmt = stmt.where(
+                exists().where(
+                    and_(
+                        RestaurantTag.restaurant_id == Restaurant.id,
+                        RestaurantTag.tag_id.in_(tids)
+                    )
                 )
             )
-
-        stmt = stmt.where(or_(*or_conditions))
-        stmt = stmt.group_by(Restaurant.id)
-        stmt = stmt.having(func.count(func.distinct(Tag.category_id)) == category_count)
-
     result = await db.execute(stmt)
     restaurants = result.scalars().all()
 
@@ -692,27 +656,17 @@ async def list_restaurants_nearby(
     # ---- 태그 필터 동일 로직 ----
     if tag_ids:
         req_ids = list(map(int, tag_ids.split(",")))
-        tag_rows = await db.execute(
-            select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
-        )
-        tag_info = tag_rows.all()
+        category_groups = await expand_tag_ids(db, req_ids)
 
-        category_groups = {}
-        for tid, cid in tag_info:
-            category_groups.setdefault(cid, []).append(tid)
-
-        category_count = len(category_groups)
-
-        stmt = (
-            stmt.join(RestaurantTag)
-            .join(Tag)
-            .where(or_(*[
-                and_(Tag.category_id == cid, Tag.id.in_(tids))
-                for cid, tids in category_groups.items()
-            ]))
-            .group_by(Restaurant.id)
-            .having(func.count(func.distinct(Tag.category_id)) == category_count)
-        )
+        for tids in category_groups.values():
+            stmt = stmt.where(
+                exists().where(
+                    and_(
+                        RestaurantTag.restaurant_id == Restaurant.id,
+                        RestaurantTag.tag_id.in_(tids)
+                    )
+                ).correlate(Restaurant)
+            )
 
     result = await db.execute(stmt)
     candidates = result.scalars().all()
@@ -777,41 +731,21 @@ async def list_restaurants_in_viewport(
     if rating_max is not None:
         stmt = stmt.where(Restaurant.rating <= rating_max)
 
-    candidates = (await db.execute(stmt.limit(5000))).scalars().all()
-
-    # ---------------------------
-    # 태그 조건 준비
-    # ---------------------------
-    category_expanded_sets = []
-
     if tag_ids:
-        try:
-            req_ids = list(map(int, tag_ids.split(",")))
-        except ValueError:
-            req_ids = []
+        req_ids = list(map(int, tag_ids.split(",")))
+        category_groups = await expand_tag_ids(db, req_ids)
 
-        if req_ids:
-            tag_rows = await db.execute(
-                select(Tag.id, Tag.category_id).where(Tag.id.in_(req_ids))
+        for tids in category_groups.values():
+            stmt = stmt.where(
+                exists().where(
+                    and_(
+                        RestaurantTag.restaurant_id == Restaurant.id,
+                        RestaurantTag.tag_id.in_(tids)
+                    )
+                ).correlate(Restaurant)
             )
-            tag_info = tag_rows.all()
 
-            category_groups = {}
-            for tid, cid in tag_info:
-                category_groups.setdefault(cid, []).append(tid)
-
-            for cid, tids in category_groups.items():
-                expanded_set = set()
-
-                for rid in tids:
-                    child_stmt = select(Tag.id).where(Tag.parent_id == rid)
-                    child_rows = await db.execute(child_stmt)
-                    child_ids = child_rows.scalars().all()
-
-                    expanded_set.update([rid] + child_ids)
-
-                category_expanded_sets.append(expanded_set)
-
+    candidates = (await db.execute(stmt.limit(5000))).scalars().all()
     # ---------------------------
     # 필터링
     # ---------------------------
@@ -824,16 +758,6 @@ async def list_restaurants_in_viewport(
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-        current_tag_ids = {t["id"] for t in tag_list}
-
-        if category_expanded_sets:
-            is_match = True
-            for expanded_set in category_expanded_sets:
-                if current_tag_ids.isdisjoint(expanded_set):
-                    is_match = False
-                    break
-            if not is_match:
-                continue
 
         results.append({
             "id": r.id,
