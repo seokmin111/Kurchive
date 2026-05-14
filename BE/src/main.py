@@ -22,11 +22,7 @@ import BE.src.models
 
 from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
-<<<<<<< HEAD
-from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, location
-=======
-from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, restaurant_review
->>>>>>> main
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, location, restaurant_review
 from BE.src.errors import register_exception_handlers
 
 

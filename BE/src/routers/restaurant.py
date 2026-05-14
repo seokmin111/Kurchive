@@ -390,7 +390,6 @@ async def create_restaurant(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-<<<<<<< HEAD
     # 프론트에서 /locations/extract로 이미 추출한 주소, 위도, 경도를 사용
     address = payload.address
     lat = payload.latitude
@@ -438,20 +437,6 @@ async def create_restaurant(
             # 중복 모듈 실패가 등록 자체를 막으면 UX가 나빠서,
             # 실패 로그만 남기고 등록은 계속 진행
             print(f"[duplicate_det 실패] {e}")
-=======
-    address, lat, lon = None, None, None
-
-    try:
-        loc = await anyio.to_thread.run_sync(
-            extract_location_from_link,
-            str(payload.location_link)
-        )
-        if loc:
-            address = loc.get("road_address") or loc.get("address")
-            lat, lon = loc.get("lat"), loc.get("lng")
-    except Exception as e:
-        print(f"주소 추출 에러: {e}")
->>>>>>> main
 
     # -------------------------
     # 중복 체크
