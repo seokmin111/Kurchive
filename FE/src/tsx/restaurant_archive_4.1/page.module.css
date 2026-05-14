@@ -330,46 +330,38 @@
 .starButtonInactive {
   color: #ddd3c6;
 }
-.ratingBox{
-display:flex;
-align-items:center;
-justify-content:center;
-gap:6px;
-margin:4px 0 12px;
+.ratingBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 12px;
 }
 
-.ratingScore{
-font-size:17px;
-font-weight:500;
-color: #8a0d2a;
-margin-left:8px;
+.ratingScore {
+  margin-left: 8px;
+  color: #8a0d2a;
+  font-size: 17px;
+  font-weight: 500;
 }
 
-.ratingBox{
-display:flex;
-align-items:center;
-gap:6px;
-margin:4px 0 12px;
-justify-content:center;
+.star {
+  cursor: pointer;
+  font-size: 28px;
 }
 
-.star{
-cursor:pointer;
-font-size:28px;
+.starActive {
+  color: #e0a700;
 }
 
-.starActive{
-color:#e0a700;
+.starHalf {
+  background: linear-gradient(90deg, #e0a700 50%, #ddd3c6 50%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.starHalf{
-background:linear-gradient(90deg,#e0a700 50%,#ddd3c6 50%);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-}
-
-.starInactive{
-color:#ddd3c6;
+.starInactive {
+  color: #ddd3c6;
 }
 
 /* 추천 메뉴 */

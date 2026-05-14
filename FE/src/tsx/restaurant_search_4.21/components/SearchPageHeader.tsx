@@ -9,7 +9,6 @@ export default function SearchPageHeader() {
           &lt;
         </button>
       </Link>
-      <br />
       <h1 className={styles.title} style={{ display: "inline" }}>
         커카이브
       </h1>

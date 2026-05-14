@@ -92,51 +92,53 @@ export default function RecipeMainPage() {
 
       {/* 하단 패널 (카드) */}
       <div className={styles.recipe_container}>
-        {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
-        {!loading && errMsg && <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>}
-        {!loading && !errMsg && recipes.length === 0 && (
-          <div style={{ gridColumn: "1 / -1" }}>등록된 레시피가 없습니다</div>
-        )}
+        <div className={styles.scroll_area}>
+          {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
+          {!loading && errMsg && <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>}
+          {!loading && !errMsg && recipes.length === 0 && (
+            <div style={{ gridColumn: "1 / -1" }}>등록된 레시피가 없습니다</div>
+          )}
 
-        {!loading &&
-          !errMsg &&
-          recipes.map((r) => (
-            <div
-              key={r.id}
-              className={styles.recipe_item}
-              onClick={() => navigate(`/recipe/${r.id}`)}
-              style={{ cursor: "pointer" }}
-              title="클릭해서 레시피 상세로 이동"
-            >
-              <div className={styles.recipe_contentCarrier}>
-                <h4 className={styles.recipe_title}>{r.title}</h4>
+          {!loading &&
+            !errMsg &&
+            recipes.map((r) => (
+              <div
+                key={r.id}
+                className={styles.recipe_item}
+                onClick={() => navigate(`/recipe/${r.id}`)}
+                style={{ cursor: "pointer" }}
+                title="클릭해서 레시피 상세로 이동"
+              >
+                <div className={styles.recipe_contentCarrier}>
+                  <h4 className={styles.recipe_title}>{r.title}</h4>
 
-                <div className={styles.recipe_text}>
-                  기준 인분: {r.base_serving}
-                </div>
-
-                <div className={styles.recipe_descriptionContainer}>
-                  <div className={styles.recipe_underContainer}>
-                    <div className={styles.recipe_uploader}>
-                      업로더: {r.uploader?.nickname ?? `user_${r.uploader_id}`}
-                    </div>
-
-                    <div className={styles.recipe_date}>
-                      {formatDate(r.created_at)}
-                    </div>
+                  <div className={styles.recipe_text}>
+                    기준 인분: {r.base_serving}
                   </div>
 
-                  {r.thumbnail_url && (
-                    <img
-                      src={r.thumbnail_url}
-                      alt="thumbnail"
-                      className={styles.recipe_thumbnail}
-                    />
-                  )}
+                  <div className={styles.recipe_descriptionContainer}>
+                    <div className={styles.recipe_underContainer}>
+                      <div className={styles.recipe_uploader}>
+                        업로더: {r.uploader?.nickname ?? `user_${r.uploader_id}`}
+                      </div>
+
+                      <div className={styles.recipe_date}>
+                        {formatDate(r.created_at)}
+                      </div>
+                    </div>
+
+                    {r.thumbnail_url && (
+                      <img
+                        src={r.thumbnail_url}
+                        alt="thumbnail"
+                        className={styles.recipe_thumbnail}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+        </div>
       </div>
 
       <div className={styles.footer}></div>

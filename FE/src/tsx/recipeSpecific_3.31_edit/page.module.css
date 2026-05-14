@@ -1,4 +1,4 @@
-/* ===== Page frame ===== */
+/* Page */
 .page {
   min-height: 100vh;
   display: flex;
@@ -14,15 +14,15 @@
   background: #ffffff;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR",
-    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
+/* Header */
 .banner {
   width: 100%;
-  height: 15%;
+  height: 150px;
   padding: 18px 16px;
   display: flex;
   align-items: flex-start;
@@ -38,9 +38,10 @@
   cursor: pointer;
 }
 
+/* Layout */
 .main {
   width: 100%;
-  padding: 8px 16px 24px;
+  padding: 18px 16px 28px;
   box-sizing: border-box;
 }
 
@@ -52,7 +53,7 @@
   align-items: center;
 }
 
-/* ===== Shared form controls ===== */
+/* Form */
 input,
 select,
 textarea,
@@ -85,10 +86,20 @@ select {
   padding-right: 28px;
 }
 
+/* Message */
+.errorText {
+  width: 90%;
+  margin: 0 auto 18px;
+  color: #8b0028;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Section titles */
 .infoTitle,
 .ingredientTitle,
 .recipeTitle {
-  margin: 10px auto 20px;
+  margin: 6px auto 18px;
   color: #8b0028;
   font-size: 16px;
   font-weight: 700;
@@ -102,90 +113,177 @@ select {
   background-color: rgba(0, 0, 0, 0.55);
 }
 
-/* ===== Food info ===== */
+/* Food info */
 .foodTitle {
   width: 90%;
   margin: 0 auto 10px;
-  display: flex;
-  justify-content: center;
 }
 
 .foodTitle input,
 .section > textarea {
-  width: 90%;
+  width: 100%;
   font-size: 13px;
 }
 
 .foodTitle input {
-  width: 100%;
+  height: 40px;
 }
 
+.section > textarea {
+  width: 90%;
+  min-height: 70px;
+  margin: 0 auto 14px;
+  resize: vertical;
+}
+
+.thumbnailRow + textarea {
+  display: none;
+}
+
+/* Thumbnail */
+.thumbnailRow {
+  width: 90%;
+  margin: 0 auto 14px;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+}
+
+.thumbnailLabel {
+  width: 100%;
+  justify-self: start;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.thumbnailControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.thumbnailPreview,
+.thumbnailEmpty {
+  width: 100%;
+  max-width: 100%;
+  height: 92px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.thumbnailEmpty {
+  display: grid;
+  place-items: center;
+  border: 1px dashed #cfcfcf;
+  font-size: 13px;
+}
+
+.fileName {
+  width: 100%;
+  color: #666666;
+  font-size: 12px;
+  text-align: center;
+}
+
+.smallTextButton {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d6d6d6;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+/* Portion */
 .portionBody {
   width: 90%;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   font-size: 13px;
 }
 
-/* ===== Buttons ===== */
-.addRowBtn,
-.actionBtn {
-  width: 90%;
-  border-radius: 14px;
-  color: #8b0028;
-  font-size: 13px;
+.baseServingGroup,
+.servingChangeGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.baseServingGroup {
+  flex: 0 0 auto;
+}
+
+.servingChangeGroup {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.portionBody input,
+.portionBody button {
+  height: 40px;
+  flex: 0 0 auto;
+}
+
+.portionBody input {
+  width: 64px;
+}
+
+.portionBody button {
+  width: 88px;
+  border: 1px solid #e7d8cf;
+  border-radius: 12px;
+  background: #f2ece5;
   font-weight: 700;
   cursor: pointer;
 }
 
-.addRowBtn {
-  margin: 0 auto 2px;
-  padding: 14px;
-  border: 1px solid rgba(139, 0, 40, 0.45);
-  background: #ffffff;
+/* Ingredients */
+.ingredientSection {
+  margin-top: 30px;
+}
+
+.ingredientHeader {
+  width: 90%;
+  margin: 0 auto 14px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
 }
 
-.addRowBtn:hover {
-  background: rgba(139, 0, 40, 0.06);
+.ingredientTitle {
+  margin: 0;
+  text-align: left;
 }
 
-.addRowPlus {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
+.applyUnitBtn {
+  min-width: 92px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(139, 0, 40, 0.35);
+  border-radius: 12px;
+  background: #ffffff;
+  color: rgba(139, 0, 40, 0.45);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.applyUnitBtn:not(:disabled):hover {
   background: #8b0028;
   color: #ffffff;
-  font-weight: 900;
-  line-height: 1;
 }
 
-.actionBtn {
-  padding: 10px 14px;
-  border: 1px solid #e7d8cf;
-  background: #f2ece5;
-}
-
-.actionBtn:hover {
-  filter: brightness(0.98);
-}
-
-.actionBtn:disabled {
-  opacity: 0.5;
+.applyUnitBtn:disabled {
   cursor: not-allowed;
-}
-
-/* ===== Ingredient table ===== */
-.ingredientSection {
-  width: 100%;
 }
 
 .tableScroll {
@@ -197,7 +295,7 @@ select {
 .table {
   width: 100%;
   min-width: 0;
-  margin: 14px auto 10px;
+  margin: 14px auto 18px;
   border: 1px solid #e7e7e7;
   border-collapse: separate;
   border-spacing: 0;
@@ -312,15 +410,6 @@ select {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
-.ingDropdown::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ingDropdown::-webkit-scrollbar-thumb {
-  background: #dddddd;
-  border-radius: 6px;
-}
-
 .ingDropdownItem,
 .ingDropdownLoading {
   padding: 12px 14px;
@@ -329,18 +418,46 @@ select {
 
 .ingDropdownItem {
   cursor: pointer;
-  transition: background 0.15s ease;
 }
 
 .ingDropdownItem:hover {
   background: rgba(139, 0, 40, 0.06);
 }
 
-.ingDropdownLoading {
-  color: #666666;
+.addRowBtn {
+  width: 90%;
+  margin: 0 auto 2px;
+  padding: 14px;
+  border: 1px solid rgba(139, 0, 40, 0.45);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #8b0028;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
 }
 
-/* ===== Recipe steps ===== */
+.addRowBtn:hover {
+  background: rgba(139, 0, 40, 0.06);
+}
+
+.addRowPlus {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #8b0028;
+  color: #ffffff;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Recipe steps */
 .recipeBody {
   width: 90%;
   display: flex;
@@ -350,22 +467,15 @@ select {
 
 .recipeBody > .addRowBtn,
 .recipeBody > .actionWrap {
-  width: 100% !important;
-}
-
-.recipeBody .actionBtn {
-  width: 100% !important;
-}
-
-.actionWrap {
   width: 100%;
-  margin: 30px auto 60px;
 }
 
 .recipeItem {
   display: flex;
   align-items: flex-start;
   gap: 16px;
+  flex-direction: row;
+  width: 100%;
 }
 
 .photoBox {
@@ -394,6 +504,11 @@ select {
   font-weight: 900;
 }
 
+.stepTextArea {
+  flex: 1;
+  min-width: 0;
+}
+
 .textBox {
   width: 100%;
   height: 120px;
@@ -408,6 +523,10 @@ select {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.stepFileInput {
+  display: none;
 }
 
 .stepImageBtn {
@@ -436,14 +555,9 @@ select {
   line-height: 1;
 }
 
-.stepAddText,
-.stepImageReplaceBtn,
-.stepDeleteBtn {
-  font-size: 13px;
-}
-
 .stepAddText {
   color: #8a0023;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: -0.2px;
 }
@@ -498,6 +612,7 @@ select {
   border: 1px solid #cfcfcf;
   border-radius: 10px;
   background: #ffffff;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
@@ -509,6 +624,61 @@ select {
   color: #8b0028;
 }
 
-.stepDeleteBtn:hover {
-  background: rgba(139, 0, 40, 0.14);
+/* Actions */
+.actionBar {
+  width: 90%;
+  margin: 26px auto 10px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.actionBtn {
+  min-width: 72px;
+  padding: 10px 14px;
+  border: 1px solid #e7d8cf;
+  border-radius: 12px;
+  background: #f2ece5;
+  color: #8b0028;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actionBtn:hover {
+  filter: brightness(0.98);
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mobile */
+@media (max-width: 420px) {
+  .portionBody {
+  gap: 10px;
+  }
+
+  .baseServingGroup,
+  .servingChangeGroup {
+  gap: 8px;
+  }
+
+  .portionBody input {
+  width: 54px;
+  }
+
+  .portionBody button {
+  width: 78px;
+  }
+
+  .recipeItem {
+  gap: 12px;
+  }
+
+  .photoBox {
+  width: 112px;
+  min-width: 112px;
+  }
 }

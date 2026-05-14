@@ -13,20 +13,21 @@ import RestaurantPage from "./tsx/restaurant_4.0/page";
 import RestaurantArchivePage from "./tsx/restaurant_archive_4.1/page";
 import SearchPage from "./tsx/restaurant_search_4.21/page";
 import RestaurantSearchResultsPage from "./tsx/restaurant_search_result_4.3/page";
-import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page"; 
+import RestaurantDetailPage from "./tsx/restaurantSpecific_4.31/page";
 import RestaurantEditPage from "./tsx/restaurantSpecific_4.31_edit/page";
-import MapPage from "./tsx/restaurantmap_4.32/page"; 
+import MapPage from "./tsx/restaurantmap_4.32/page";
 
-import RecipeMainPage from "./tsx/recipe_3.0/page"; 
+import RecipeMainPage from "./tsx/recipe_3.0/page";
 import RecipeSearchPage from "./tsx/recipeSearch_3.2/page";
 import RecipeArchivePage from "./tsx/recipe_archiving_3.1/page";
 import RecipeSpecific from "./tsx/recipeSpecific_3.31/page"
+import RecipeSpecificEdit from "./tsx/recipeSpecific_3.31_edit/page";
 import RecipeSearchResultsPage from "./tsx/recipesearchcomplete_3.3/page";
 
 import MyPage from "./tsx/mypage_2.0/page";
 import MyFavoritePage from "./tsx/myactivity_2.2/page";
-import MyRestaurantFavoritePage from "./tsx/myRestaurantArchive_2.21/page"; 
-import MyRecipeFavoritePage from "./tsx/myRecipeArchive_2.22/page"; 
+import MyRestaurantFavoritePage from "./tsx/myRestaurantArchive_2.21/page";
+import MyRecipeFavoritePage from "./tsx/myRecipeArchive_2.22/page";
 import MyActivityRestaurant from "./tsx/myActivityRestaurant_2.31/page";
 import MyActivityRecipe from "./tsx/myActivityRecipe_2.32/page";
 
@@ -42,8 +43,8 @@ import AdminEntrustCompletePage from './tsx/10.34/page'
 
 export default function App() {
   return (
-    <>
-    <Routes>
+  <>
+  <Routes>
 
       {/* 공개 페이지 */}
       <Route path="/" element={<MainPage />} />
@@ -66,171 +67,171 @@ export default function App() {
       {/* 🔐 보호 페이지 */}
 
       <Route
-        path="/restaurant/archive"
-        element={
+    path="/restaurant/archive"
+    element={
           <ProtectedRoute>
-            <RestaurantArchivePage />
+      <RestaurantArchivePage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/restaurant/:restaurantId/edit"
-        element={
+    path="/restaurant/:restaurantId/edit"
+    element={
           <ProtectedRoute>
-            <RestaurantEditPage />
+      <RestaurantEditPage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/recipe/archive"
-        element={
+    path="/recipe/archive"
+    element={
           <ProtectedRoute>
-            <RecipeArchivePage />
+      <RecipeArchivePage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/recipe/:recipeId/edit"
-        element={
+    path="/recipe/:recipeId/edit"
+    element={
           <ProtectedRoute>
-            <RecipeSpecific mode="edit" />
+      <RecipeSpecificEdit />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/mypage"
-        element={
+    path="/mypage"
+    element={
           <ProtectedRoute>
-            <MyPage />
+      <MyPage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/myfavorites"
-        element={
+    path="/myfavorites"
+    element={
           <ProtectedRoute>
-            <MyFavoritePage />
+      <MyFavoritePage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/my-restaurant-favorite"
-        element={
+    path="/my-restaurant-favorite"
+    element={
           <ProtectedRoute>
-            <MyRestaurantFavoritePage />
+      <MyRestaurantFavoritePage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/my-recipe-favorite"
-        element={
+    path="/my-recipe-favorite"
+    element={
           <ProtectedRoute>
-            <MyRecipeFavoritePage />
+      <MyRecipeFavoritePage />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/my-restaurant-activity"
-        element={
+    path="/my-restaurant-activity"
+    element={
           <ProtectedRoute>
-            <MyActivityRestaurant />
+      <MyActivityRestaurant />
           </ProtectedRoute>
-        }
+    }
       />
-    <Route
-        path="/my-recipe-activity"
-        element={
+  <Route
+    path="/my-recipe-activity"
+    element={
           <ProtectedRoute>
-            <MyActivityRecipe />
+      <MyActivityRecipe />
           </ProtectedRoute>
-        }
+    }
       />
       <Route
-        path="/infoedit"
-        element={
+    path="/infoedit"
+    element={
           <ProtectedRoute>
-            <MyInfoEdit />
+      <MyInfoEdit />
           </ProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/quitpage"
-        element={
+    path="/quitpage"
+    element={
           <ProtectedRoute>
-            <QuitPage />
+      <QuitPage />
           </ProtectedRoute>
-        }
+    }
       />
 
       {/* 관리자 */}
 
       <Route
-        path="/admin"
-        element={
-            <AdminFirstPage />
-    
-        }
+    path="/admin"
+    element={
+      <AdminFirstPage />
+
+    }
       />
 
       <Route
-        path="/admin/main"
-        element={
+    path="/admin/main"
+    element={
           <AdminProtectedRoute>
-            <AdminMainPage />
+      <AdminMainPage />
           </AdminProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/admin/member"
-        element={
+    path="/admin/member"
+    element={
           <AdminProtectedRoute>
-            <MemberSearchPage />
+      <MemberSearchPage />
           </AdminProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/admin/member/result"
-        element={
+    path="/admin/member/result"
+    element={
           <AdminProtectedRoute>
-            <MemberSearchResultPage />
+      <MemberSearchResultPage />
           </AdminProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/admin/entrust/result"
-        element={
+    path="/admin/entrust/result"
+    element={
           <AdminProtectedRoute>
-            <AdminEntrustPage />
+      <AdminEntrustPage />
           </AdminProtectedRoute>
-        }
+    }
       />
 
       <Route
-        path="/admin/entrust/complete"
-        element={
+    path="/admin/entrust/complete"
+    element={
           <AdminProtectedRoute>
-            <AdminEntrustCompletePage />
+      <AdminEntrustCompletePage />
           </AdminProtectedRoute>
-        }
+    }
       />
 
       {/* 404 */}
       <Route path="*" element={<div style={{ fontSize: 50, color: "red" }}>경로 없음 (404)</div>} />
 
-    </Routes>
-    <ToastContainer position="top-center" autoClose={2000} />
-    </>
+  </Routes>
+  <ToastContainer position="top-center" autoClose={2000} />
+  </>
   );
 }

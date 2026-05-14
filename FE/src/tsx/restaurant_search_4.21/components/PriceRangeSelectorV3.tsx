@@ -120,7 +120,7 @@ export default function PriceRangeSelectorV3({ onAddItem }: Props) {
         <div>
           <div className={styles.Price__selfInput}>직접 입력</div>
           <input type="text" value={fmt(minVal)} className={styles.Price__input} readOnly />
-          <span> ~ </span>
+          <span className={styles.Price__separator}>~</span>
           <input type="text" value={fmt(maxVal)} className={styles.Price__input} readOnly />
           <button
             className={styles.Price__submit}

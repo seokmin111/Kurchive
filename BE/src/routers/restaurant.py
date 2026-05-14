@@ -396,6 +396,7 @@ async def create_restaurant(
     lon = payload.longitude
     
     print(f"[API] 식당 생성: {payload.name} / 주소: {address} / 좌표: ({lat}, {lon})")
+<<<<<<< HEAD
 
     # -------------------------
     # 중복 검사 (1) 링크/주소 완전 일치
@@ -437,6 +438,20 @@ async def create_restaurant(
             # 중복 모듈 실패가 등록 자체를 막으면 UX가 나빠서,
             # 실패 로그만 남기고 등록은 계속 진행
             print(f"[duplicate_det 실패] {e}")
+=======
+    # address, lat, lon = None, None, None
+
+    try:
+        loc = await anyio.to_thread.run_sync(
+            extract_location_from_link,
+            str(payload.location_link)
+        )
+        if loc:
+            address = loc.get("road_address") or loc.get("address")
+            lat, lon = loc.get("lat"), loc.get("lng")
+    except Exception as e:
+        print(f"주소 추출 에러: {e}")
+>>>>>>> seokmin/feature/map-improvement
 
     # -------------------------
     # 중복 체크
@@ -643,6 +658,8 @@ async def list_restaurants(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    min_rating: Optional[float] = None,
+    max_rating: Optional[float] = None,
     db: AsyncSession = Depends(get_async_db)
 ):
     stmt = select(Restaurant).distinct()
@@ -664,6 +681,10 @@ async def list_restaurants(
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
+    if min_rating is not None:
+        stmt = stmt.where(Restaurant.rating >= min_rating)
+    if max_rating is not None:
+        stmt = stmt.where(Restaurant.rating <= max_rating)
 
     category_count = 0
 
