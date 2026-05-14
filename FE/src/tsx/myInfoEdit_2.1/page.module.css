@@ -1,225 +1,288 @@
+/* Fonts */
 @font-face {
-    font-family: 'SlowGothic';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
-    font-weight: normal;
-    font-display: swap;
+  font-family: 'SlowGothic';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2') format('woff2');
+  font-weight: normal;
+  font-display: swap;
 }
 
 @font-face {
-    font-family: 'Pretendard';
-    src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2') format('woff2');
-    font-weight: 400;
-    font-display: swap;
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
 }
 
+/* Layout */
 .nomrg {
-    overflow: hidden;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
-.header{
-    display: flex;
-    align-items:flex-end;
-    margin-left: 10px;
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 30px;
 }
 
-.chevronLeft{
-    color: #8B0029;
-    font-size: 30px;
-    font-weight: 100;
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.header_title{
-    display: flex;
-    flex-direction: column;
-    margin-left: 30px;
-    margin-right: 280px;
+.chevronLeft {
+  color: #8B0029;
+  font-size: 30px;
+  font-weight: 100;
+  cursor: pointer;
+}
+
+.header_title {
+  display: flex;
+  flex-direction: column;
 }
 
 .title {
-    font-family: 'SlowGothic', sans-serif;
-    color: #8B0029;
-    box-sizing: content-box;
-    font-size: 30px !important;
-    font-weight: 500 !important;
-    margin: 0px 3px 0px 0px;
+  font-family: 'SlowGothic', sans-serif;
+  color: #8B0029;
+  font-size: 28px !important;
+  font-weight: 500 !important;
+  margin: 0;
+  line-height: 1;
 }
 
 .sub_title {
-    font-family: 'Pretendard', sans-serif;
-    color: #8B0029;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    margin-bottom: -0.1px;
+  font-family: 'Pretendard', sans-serif;
+  color: #8B0029;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  margin-bottom: 2px;
 }
 
 .mypage{
-    font-family: var(--font-geist-mono);
-    font-weight: 700;
-    position: absolute;
-    right: 25px;
-    color: #8B0029;
-    border: 1px solid #8B0029;
-    padding: 15px;
-    border-radius: 50%;
+  font-family: var(--font-geist-mono);
+  font-weight: 700;
+  flex: 0 0 auto;
+  color: #8B0029;
+  border: 1.5px solid #8B0029;
+  padding: 12px;
+  border-radius: 50%;
+  font-size: 13px;
+  white-space: nowrap;
+  text-align: center;
 }
 
+/* Nickname */
 .nicknameChange{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 .nicknameChange__title{
-    font-size: 20px;
-    margin-bottom: 10px;
-    font: var(--font-geist-mono);
-    font-weight: 700;
-    color: #8B0029;
+  font-size: 20px;
+  margin-bottom: 10px;
+  font: var(--font-geist-mono);
+  font-weight: 700;
+  color: #8B0029;
 }
 
 .nicknameChange__bar{
-    height: 1px;
-    width: 80vw;
-    background-color: #535353;
+  height: 1px;
+  width: min(100%, 380px);
+  background-color: #535353;
 }
 
 .nicknameChange__main{
-    margin-top: 30px;
-    width: 60vw;
-    display: flex;
-    justify-content: space-between;
-    align-items:flex-start;
+  margin-top: 30px;
+  width: min(80vw, 380px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
 }
 
 .present__nickname{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 132px 1px minmax(0, 1fr);
+  column-gap: 18px;
+  align-items: center;
+}
+
+.present__nickname::after{
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  width: 1px;
+  height: 28px;
+  background-color: #d6d6d6;
 }
 
 .present__nickname__title{
-    font-family: var(--font-geist-mono);
-    font-size: 15px;
-    color: #8B0029;
-    margin-bottom: 15px;
+  font-family: var(--font-geist-mono);
+  font-size: 15px;
+  color: #8B0029;
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.present__nickname__data{
+  grid-column: 3;
+  grid-row: 1;
+  min-width: 0;
+  font-size: clamp(11px, 3.2vw, 15px);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .divider{
-    margin-top: -10px;
-    opacity: 20%;
-    height: 70px;
-    width: 1px;
-    background-color: #535353;
+  display: none;
+}
+
+.new__nickname{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .new__nickname__title{
-    font-family: var(--font-geist-mono);
-    font-size: 15px;
-    color: #8B0029;
-    margin-bottom: 10px;
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  color: #8B0029;
+  margin: 0 0 5px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .new__nickname__input{
-    height: 30px;
-    width: 180px;
-    border: 1px solid rgb(216, 216, 216);
-    border-radius: 5px;
+  box-sizing: border-box;
+  height: 50px;
+  width: 100%;
+  border: 1px solid rgb(216, 216, 216);
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 15px;
 }
 
 .nicknameChange__save{
-    font-family: var(--font-geist-mono);
-    font-size: 12px;
-    font-weight: 400;
-    text-align: center;
-    background-color: #8B0029;
-    color: white;
-    width: 60vw;
-    padding: 20px;
-    border-radius: 30px;
-    margin-top: 30px;
-    margin-bottom: 10px;
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: center;
+  background-color: #8B0029;
+  color: white;
+  box-sizing: border-box;
+  width: min(80vw, 380px);
+  padding: 20px;
+  border-radius: 30px;
+  margin-top: 30px;
+  margin-bottom: 10px;
 }
 
+/* Password */
 .passwordChange{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .passwordChange__title{
-    font-size: 20px;
-    margin-bottom: 10px;
-    font: var(--font-geist-mono);
-    font-weight: 700;
-    color: #8B0029;
+  font-size: 20px;
+  margin-bottom: 10px;
+  font: var(--font-geist-mono);
+  font-weight: 700;
+  color: #8B0029;
 }
 
 .passwordChange__input{
-    margin: 20px 0px;
-} 
+  width: min(80vw, 380px);
+  margin: 20px 0px;
+}
 
 .passwordChange__input div{
-    color: #8B0029;
-    font-size: 12px;
-    margin-bottom: 5px;
+  color: #8B0029;
+  font-size: 12px;
+  margin-bottom: 5px;
 }
 
 .passwordChange__input input{
-    width: 80vw;
-    height: 50px;
-    border: 1px solid rgb(216, 216, 216);
-    border-radius: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 50px;
+  border: 1px solid rgb(216, 216, 216);
+  border-radius: 10px;
+  padding: 0 10px;
 }
 
 .passwordChange__submit__carrier{
-    position: relative;
+  position: relative;
+  width: min(80vw, 380px);
 }
 
 .passwordChange__submit{
-    z-index: 1;
-    font-family: var(--font-geist-mono);
-    font-size: 12px;
-    font-weight: 400;
-    text-align: center;
-    background-color: white;
-    border: 1px solid #8B0029;
-    color: rgb(0, 0, 0);
-    width: 60vw;
-    padding: 20px;
-    border-radius: 30px;
-    margin-top: 30px;
-    margin-bottom: 10px;
+  z-index: 1;
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  font-weight: 400;
+  text-align: center;
+  background-color: white;
+  border: 1px solid #8B0029;
+  color: rgb(0, 0, 0);
+  box-sizing: border-box;
+  width: 100%;
+  padding: 20px;
+  border-radius: 30px;
+  margin-top: 30px;
+  margin-bottom: 10px;
 }
 
 .passwordChange__submit__background{
-    position: absolute;
-    z-index: -1;
-    top: 5px;
-    left: 0;
-    background-color:#8B0029;
-    width: 60vw;
-    padding: 20px;
-    height: 20px;
-    border-radius: 30px;
-    margin-top: 30px;
-    margin-bottom: 10px;
+  position: absolute;
+  z-index: -1;
+  top: 5px;
+  left: 0;
+  background-color: #8B0029;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 20px;
+  height: 20px;
+  border-radius: 30px;
+  margin-top: 30px;
+  margin-bottom: 10px;
 }
 
+/* Decoration */
 .designCircle{
-    position: absolute;
-    bottom: -420px;
-    z-index: -1;
-    width: 150vw;
-    height: 100vw;
-    border: 1px solid #8B0029;
-    border-radius: 90%;
+  position: absolute;
+  bottom: -420px;
+  z-index: -1;
+  width: 150vw;
+  height: 100vw;
+  border: 1px solid #8B0029;
+  border-radius: 90%;
 }
 
 /* cursor */
