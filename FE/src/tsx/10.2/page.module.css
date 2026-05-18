@@ -7,11 +7,13 @@
 
 .container{
   position: relative;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   width: 100%;
+  padding: 0 24px 48px;
   background-color: #ffffff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   margin: 0 auto; /* 중앙 정렬 */
@@ -20,9 +22,8 @@
 .pageTitle{
   display: flex;
   align-items:flex-end;
-  position: absolute;
-  left: 10px;
-  top: 10px;
+  width: min(100%, 960px);
+  margin-top: 24px;
 }
 
 .kurchive{
@@ -40,7 +41,7 @@
 }
 
 .memberSearch{
-  margin-top: 120px;
+  margin-top: 110px;
   color:#4B0017;
   font-size: 25px;
   font-weight: 700;
@@ -50,23 +51,30 @@
 .memberList{
   background-color: black;
   color: white;
-  width: 70px;
-  padding: 10px 20px;
+  min-width: 86px;
+  padding: 12px 18px;
   border-radius: 30px;
   position: absolute;
-  left: 10px;
-  top: -19px;
+  left: 24px;
+  top: -28px;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .memberSearchBody{
-  width: 85%;
-  margin-right: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: min(85%, 900px);
   margin-bottom: 50px;
 }
 
 .memberSearchInput{
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   height: 40px;
+  box-sizing: border-box;
   border-radius: 30px;
   border: none;
   background-color: #F2F2F2;
@@ -74,9 +82,10 @@
 }
 
 .tableBody{
-  width: 80%;
+  width: min(90%, 960px);
+  box-sizing: border-box;
   border: 1px dotted #333;
-  padding: 10px;
+  padding: 44px 24px 20px;
   border-radius: 10px;
   position: relative;
 }
@@ -91,6 +100,7 @@
 .userTable {
   margin-top: 15px;
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse; /* 테두리 겹침 방지 */
 }
 
@@ -135,11 +145,43 @@
 
 /* 수정하기 버튼 공통 */
 .editBtnLight, .editBtnDark {
+  min-width: 92px;
   padding: 8px 16px;
   border-radius: 20px;
   border: none;
   font-size: 14px;
   cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .container {
+    padding: 0 16px 40px;
+  }
+
+  .pageTitle {
+    margin-top: 20px;
+  }
+
+  .kurchive {
+    font-size: 30px;
+  }
+
+  .adminPage {
+    font-size: 16px;
+  }
+
+  .memberSearchBody,
+  .tableBody {
+    width: 100%;
+  }
+
+  .tableBody {
+    padding: 42px 16px 18px;
+  }
+
+  .memberList {
+    left: 16px;
+  }
 }
 
 .editBtnLight:hover{
@@ -159,3 +201,156 @@
   color: #ffffff;
 }
 
+/* Restaurant-search aligned admin header/search */
+.container {
+  padding: 0 0 48px;
+}
+
+.pageTitle {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 20px 0;
+}
+
+.backBtn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  border: none;
+  background: transparent;
+  color: #4B0017;
+  font-size: 42px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.kurchive {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 500;
+}
+
+.adminPage {
+  margin: 0 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.memberSearch {
+  margin-top: clamp(70px, 8vh, 115px);
+  margin-bottom: clamp(18px, 3vh, 28px);
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.memberSearchBody {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: clamp(300px, 60%, 900px);
+  max-width: calc(100% - 48px);
+  height: clamp(50px, 6vw, 66px);
+  margin: 0 auto clamp(54px, 8vh, 90px);
+  border-radius: 999px;
+  background-color: #F2F2F2;
+}
+
+.memberSearchInput {
+  flex: 1;
+  width: auto;
+  height: 100%;
+  padding: 0 64px 0 28px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #4B0017;
+  font-size: clamp(16px, 2vw, 22px);
+}
+
+.memberSearchInput::placeholder {
+  color: #4B0017;
+  opacity: 0.55;
+}
+
+.searchButton {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #4B0017;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.userTable th:nth-child(1),
+.userTable td:nth-child(1) {
+  width: 42%;
+}
+
+.userTable th:nth-child(2),
+.userTable td:nth-child(2) {
+  width: 32%;
+}
+
+.userTable th:nth-child(3),
+.userTable td:nth-child(3) {
+  width: 26%;
+}
+
+.userTable td {
+  word-break: keep-all;
+}
+
+.editBtnLight,
+.editBtnDark {
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.userTable select {
+  width: min(100%, 130px);
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d6d6d6;
+  border-radius: 12px;
+  box-sizing: border-box;
+  background-color: #fff;
+  font: inherit;
+  color: #111;
+}
+
+@media (max-width: 520px) {
+  .userTable thead th {
+    padding: 10px 4px;
+    font-size: 15px;
+  }
+
+  .userTable td {
+    padding: 14px 4px;
+  }
+
+  .editBtnLight,
+  .editBtnDark {
+    min-width: 72px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .userTable select {
+    width: min(100%, 96px);
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}

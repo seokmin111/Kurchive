@@ -14,9 +14,9 @@ export type IngredientSearchItem = {
   unit_type: string;
 };
 
-export async function searchIngredients(q: string) {
+export async function searchIngredients(q: string, limit?: number) {
   const res = await client.get<IngredientSearchItem[]>("/ingredient/search", {
-    params: { q },
+    params: { q, ...(limit ? { limit } : {}) },
   });
   return res.data;
 }

@@ -4,8 +4,9 @@
   min-height: 100vh;
   font-family: Pretendard, sans-serif;
   width: 100%;
-  max-width: 480px;      /* 모바일 앱 표준 최대 너비 */
+  max-width: 480px;
   margin: 0 auto;
+  box-sizing: border-box;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 }
 
@@ -38,17 +39,18 @@
 
 .card {
   width: 100%;
-  min-height: 118px;
-  display: flex;
+  min-height: clamp(118px, 30vw, 150px);
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(104px, 1fr);
   border-radius: 22px;
   overflow: hidden;
   background: #ffffff;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  min-width: 0;
 }
 
 .cardLeft {
-  flex: 1;
-  padding: 18px 20px;
+  padding: clamp(14px, 4.4vw, 22px) clamp(14px, 4.8vw, 24px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -58,50 +60,62 @@
 }
 
 .name {
-  font-size: 22px;
+  font-size: clamp(19px, 5.6vw, 24px);
   font-weight: 800;
   color: #8b0029;
   line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .sub {
   margin-top: 6px;
-  font-size: 14px;
+  font-size: clamp(13px, 3.7vw, 15px);
   color: #898989;
   line-height: 1.4; /* 줄 간격을 조금 넓히면 가독성이 좋아집니다 */
   text-align: left;
 
   /* ⬇️ 말줄임표 처리를 위한 설정 ⬇️ */
   display: -webkit-box;
-  -webkit-line-clamp: 3;    /* 보여주고 싶은 줄 수 (예: 3줄) */
+  -webkit-line-clamp: 2;    /* 보여주고 싶은 줄 수 (예: 2줄) */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;  /* 자동으로 ...을 붙여줍니다 */
-  word-break: break-all;    /* 영어 단어 등이 길 때 잘리도록 설정 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .ratingRow {
   margin-top: auto;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  font-size: 18px;
+  font-size: clamp(16px, 4.6vw, 15px);
   color: #8b0029;
   padding-top: 10px;
+  max-width: 100%;
+  line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
 }
 
 .cardRight {
-  width: 160px;
   background: #8b0029;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
 }
 
 .cardRightText {
   color: #ffffff;
-  font-size: 16px;
+  font-size: clamp(14px, 4vw, 17px);
   font-weight: 700;
+  text-align: center;
+  word-break: keep-all;
 }
 
 .empty {
@@ -114,4 +128,14 @@
 :global(body) {
   overflow: visible !important; /* 또는 auto */
   height: auto !important; /* 100%로 고정된 높이를 풀어줍니다 */
+}
+
+@media (max-width: 380px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .card {
+    grid-template-columns: minmax(0, 2fr) minmax(96px, 1fr);
+  }
 }
