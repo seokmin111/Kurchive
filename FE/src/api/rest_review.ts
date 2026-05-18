@@ -14,6 +14,7 @@ export type Review = {
   user_id: number | null;
   nickname?: string;
   menus: string[];
+  images: string[];
   created_at: string;
   like_count?: number;
   dislike_count?: number;
@@ -23,7 +24,12 @@ export async function getRestaurantReviews(
   restaurantId: number
 ): Promise<Review[]> {
   const res = await client.get(`/restaurants/${restaurantId}/reviews`);
-  return res.data;
+
+  return res.data.map((review: Review) => ({
+    ...review,
+    images: review.images ?? [],
+    menus: review.menus ?? [],
+  }));
 }
 
 export async function createRestaurantReview(

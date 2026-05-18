@@ -120,7 +120,6 @@ class RestaurantCreate(BaseModel):
     price_min: int
     price_max: int
     tag_ids: List[int]
-    recommended_menus: Optional[List[str]] = []
     force: Optional[bool] = False # 중복 의심이어도 등록할건지 말건지
 
     @validator("location_link")
@@ -539,10 +538,13 @@ async def list_restaurants(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
-    min_rating: Optional[float] = None,
-    max_rating: Optional[float] = None,
+    rating_min: Optional[float] = Query(None, ge=0, le=5),
+    rating_max: Optional[float] = Query(None, ge=0, le=5),
     db: AsyncSession = Depends(get_async_db)
 ):
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(status_code=422, detail="rating_min must be <= rating_max")
+
     stmt = select(Restaurant).distinct()
 
     # -----------------------
@@ -562,10 +564,14 @@ async def list_restaurants(
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
-    if min_rating is not None:
-        stmt = stmt.where(Restaurant.rating >= min_rating)
-    if max_rating is not None:
-        stmt = stmt.where(Restaurant.rating <= max_rating)
+
+    # -----------------------
+    # 별점 필터
+    # -----------------------
+    if rating_min is not None:
+        stmt = stmt.where(Restaurant.rating >= rating_min)
+    if rating_max is not None:
+        stmt = stmt.where(Restaurant.rating <= rating_max)
 
     category_count = 0
 
@@ -619,8 +625,13 @@ async def list_restaurants_nearby(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    rating_min: Optional[float] = Query(None, ge=0, le=5),
+    rating_max: Optional[float] = Query(None, ge=0, le=5),
     db: AsyncSession = Depends(get_async_db)
 ):
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(status_code=422, detail="rating_min must be <= rating_max")
+
     stmt = select(Restaurant).where(
         Restaurant.latitude.is_not(None),
         Restaurant.longitude.is_not(None),
@@ -630,6 +641,11 @@ async def list_restaurants_nearby(
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
+
+    if rating_min is not None:
+        stmt = stmt.where(Restaurant.rating >= rating_min)
+    if rating_max is not None:
+        stmt = stmt.where(Restaurant.rating <= rating_max)
 
     # ---- 태그 필터 동일 로직 ----
     if tag_ids:
@@ -658,6 +674,7 @@ async def list_restaurants_nearby(
                 "id": r.id,
                 "name": r.name,
                 "distance_km": round(d, 3),
+                "rating": r.rating,
                 "latitude": r.latitude,
                 "longitude": r.longitude,
             })
@@ -676,9 +693,14 @@ async def list_restaurants_in_viewport(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    rating_min: Optional[float] = Query(None, ge=0, le=5),
+    rating_max: Optional[float] = Query(None, ge=0, le=5),
     limit: int = 200,
     db: AsyncSession = Depends(get_async_db)
 ):
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(status_code=422, detail="rating_min must be <= rating_max")
+
     if min_lat > max_lat:
         min_lat, max_lat = max_lat, min_lat
     if min_lon > max_lon:
@@ -698,10 +720,10 @@ async def list_restaurants_in_viewport(
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
 
-    # ---------------------------
-    # 태그 조건 준비
-    # ---------------------------
-    category_expanded_sets = []
+    if rating_min is not None:
+        stmt = stmt.where(Restaurant.rating >= rating_min)
+    if rating_max is not None:
+        stmt = stmt.where(Restaurant.rating <= rating_max)
 
     if tag_ids:
         req_ids = list(map(int, tag_ids.split(",")))
@@ -716,6 +738,8 @@ async def list_restaurants_in_viewport(
                     )
                 ).correlate(Restaurant)
             )
+
+    candidates = (await db.execute(stmt.limit(5000))).scalars().all()
     # ---------------------------
     # 필터링
     # ---------------------------
@@ -728,16 +752,6 @@ async def list_restaurants_in_viewport(
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-        current_tag_ids = {t["id"] for t in tag_list}
-
-        if category_expanded_sets:
-            is_match = True
-            for expanded_set in category_expanded_sets:
-                if current_tag_ids.isdisjoint(expanded_set):
-                    is_match = False
-                    break
-            if not is_match:
-                continue
 
         results.append({
             "id": r.id,

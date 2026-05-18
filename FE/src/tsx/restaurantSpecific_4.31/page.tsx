@@ -63,6 +63,7 @@ type RestaurantReview = {
   nickname?: string;
   writer_name?: string;
   menus: string[];
+  images: string[];
 };
 
 
@@ -133,6 +134,9 @@ export default function RestaurantSpecific() {
   const [editReviewContent, setEditReviewContent] = useState("");
   const [editReviewRating, setEditReviewRating] = useState(5);
   const [editReviewMenus, setEditReviewMenus] = useState("");
+
+  // 리뷰 이미지 관련 상태
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
 
   
 
@@ -232,7 +236,17 @@ const fetchReviews = async () => {
 
   try {
     const data = await getRestaurantReviews(Number(restaurantId));
-    setReviews(data);
+
+    console.log("리뷰 API 응답:", data);
+
+    setReviews(
+      data.map((review: any) => ({
+        ...review,
+        images: review.images ?? [],
+        menus: review.menus ?? [],
+      }))
+    );
+    
   } catch (err) {
     console.error("리뷰 조회 실패:", err);
   }
@@ -242,43 +256,57 @@ const fetchReviews = async () => {
 // 리뷰 작성
 // -----------------------------
 const createReview = async () => {
-  if (!restaurantId) return;
-
   if (!reviewContent.trim()) {
-    alert("후기를 입력해주세요.");
+    alert("리뷰 내용을 입력하세요.");
     return;
   }
 
   try {
-    setReviewSubmitting(true);
+    const formData = new FormData();
 
-    await createRestaurantReview(Number(restaurantId), {
-      content: reviewContent.trim(),
-      rating: reviewRating,
-      menus: reviewMenus
-        .split(",")
-        .map((menu) => menu.trim())
-        .filter(Boolean),
+    formData.append("content", reviewContent.trim());
+    formData.append("rating", String(reviewRating));
+    formData.append("menus", reviewMenus); // "마라탕,꿔바로우"
+
+    reviewImages.forEach((image) => {
+      formData.append("files", image); // ⚠️ files로 보내야 함
     });
 
+    await client.post(
+      `/restaurants/${restaurantId}/reviews`,
+      formData
+    );
+
+    // 성공 후 초기화
     setReviewContent("");
     setReviewRating(5);
     setReviewMenus("");
-    setReviewOpen(false);
+    setReviewImages([]);
 
-    await fetchReviews();
-  } catch (err: any) {
-    console.error("리뷰 작성 실패: 로그인이 필요합니다.", err);
-    alert(err.response?.data?.detail ?? "리뷰 작성 실패");
-  } finally {
-    setReviewSubmitting(false);
+    fetchReviews();
+
+  } catch (err) {
+    console.error(err);
+    alert("리뷰 등록 실패");
   }
 };
 
 // -----------------------------
-// 리뷰 수정
+// 리뷰 이미지
 // -----------------------------
+const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files ?? []);
 
+  const imageFiles = files.filter((file) =>
+    file.type.startsWith("image/")
+  );
+
+  setReviewImages((prev) => [...prev, ...imageFiles].slice(0, 5));
+};
+
+const removeReviewImage = (index: number) => {
+  setReviewImages((prev) => prev.filter((_, i) => i !== index));
+};
 
 // -----------------------------
 // 리뷰 삭제
@@ -659,7 +687,41 @@ const canManageReview = (review: RestaurantReview) => {
       placeholder="이 식당에 대한 리뷰를 남겨주세요. 500자내로 남겨주세요."
       maxLength={500}
     />
+  {/* 이미지 UI */}
+  <div className={style.reviewImageUploadBox}>
+  <label className={style.reviewImageUploadButton}>
+    이미지 추가
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      hidden
+      onChange={handleReviewImageChange}
+    />
+  </label>
 
+  {reviewImages.length > 0 && (
+    <div className={style.reviewImagePreviewList}>
+      {reviewImages.map((file, index) => (
+        <div key={index} className={style.reviewImagePreviewItem}>
+          <img
+            src={URL.createObjectURL(file)}
+            alt="리뷰 이미지 미리보기"
+            className={style.reviewImagePreview}
+          />
+
+          <button
+            type="button"
+            className={style.reviewImageRemoveButton}
+            onClick={() => removeReviewImage(index)}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
     <div className={style.reviewFormBottom}>
       <span className={style.reviewLength}>
         {reviewContent.length}/500
@@ -694,6 +756,7 @@ const canManageReview = (review: RestaurantReview) => {
   ) : (
     <div className={style.reviewList}>
       {reviews.map((review) => (
+        
         <div key={review.id} className={style.reviewCard}>
           <div className={style.reviewCardTop}>
             <div className={style.reviewWriterArea}>
@@ -757,9 +820,34 @@ const canManageReview = (review: RestaurantReview) => {
   </div>
 ) : (
   <>
+  {/* 리뷰 내용 */}
+  
     <div className={style.reviewContent}>
       {review.content}
     </div>
+
+    {review.images && review.images.length > 0 && (
+  <div className={style.reviewImageGallery}>
+    {review.images?.map((imageUrl, idx) => {
+  console.log("렌더링 이미지 URL:", imageUrl);
+
+  return (
+   <img
+  key={idx}
+  src={String(imageUrl)}
+  alt="리뷰 이미지"
+  className={style.reviewGalleryImage}
+  onError={(e) => {
+    console.log("이미지 로드 실패 src:", e.currentTarget.src);
+  }}
+  onLoad={() => {
+    console.log("이미지 로드 성공:", imageUrl);
+  }}
+/>
+  );
+})}
+  </div>
+)}
 
     {review.menus && review.menus.length > 0 && (
       <div className={style.reviewMenuLine}>
