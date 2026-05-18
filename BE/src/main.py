@@ -43,6 +43,9 @@ origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
     "http://146.56.117.219:8000",
+    
+    "https://kurchive.com",
+    "https://www.kurchive.com"
 ]
 
 app.add_middleware(
