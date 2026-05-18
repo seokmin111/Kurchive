@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 load_dotenv(".dev.env") # 개발용
 import os
 import logging
-
+import logging
+logging.warning(f"DATABASE_URL = {os.getenv('DATABASE_URL')}")
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
