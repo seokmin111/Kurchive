@@ -21,7 +21,7 @@ export default function EntrustCompletePage() {
         password,
       });
 
-      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("admin_token", data.access_token);
 
       alert("관리자 로그인 성공");
       navigate("/admin/main");

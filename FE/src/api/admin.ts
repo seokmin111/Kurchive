@@ -56,3 +56,14 @@ export const delegateAdminRole = (userid: string) =>
   client
     .put<MemberInfo>(`/admin/delegate/${encodeURIComponent(userid)}`)
     .then((r) => r.data);
+
+
+/** -------------- 회원 이름으로 검색 --------------*/
+
+export const searchMembers = (name: string) =>
+  client.get<MemberInfo[]>("/admin/members/search", { params: { name } }).then((r) => r.data);
+
+
+/** -------------- 회원 강제 탈퇴 -------------- */
+export const forceWithdrawMember = (userid: string) =>
+  client.delete<void>(`/admin/members/${encodeURIComponent(userid)}`).then((r) => r.data);
