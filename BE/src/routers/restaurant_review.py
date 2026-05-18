@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
@@ -8,80 +8,123 @@ from datetime import datetime
 from BE.src.dependencies import get_async_db, get_current_user_from_token
 from BE.src.models.users import User
 from BE.src.models.restaurants import Restaurant
-from BE.src.models.restaurant_reviews import Review, ReviewMenu
+from BE.src.models.restaurant_reviews import Review, ReviewMenu, ReviewImage
+
+from BE.src.utils.image_upload import save_image
+from BE.src.utils.image_upload import delete_image_oci
+import logging
+
+logger = logging.getLogger("image_cleanup")
+
 
 router = APIRouter()
-
+'''프론트 흐름
+1. 리뷰 작성 폼에서 이미지 선택
+2. POST /restaurants/{restaurant_id}/reviews 로 multipart/form-data 전송
+3. content, rating, menus, files를 한 번에 저장
+'''
 
 # ---------------------------
 # DTO
 # ---------------------------
+# 리뷰 생성
 class ReviewCreate(BaseModel):
     content: str = Field(max_length=300)
     rating: float
-    menus: List[str] = []
+    menus: List[str] = [] # 추천 메뉴
+    images: List[str] = [] # 이미지
+    
+# 리뷰 수정
+class ReviewUpdate(BaseModel):
+    content: Optional[str] = Field(default=None, max_length=300)
+    rating: Optional[float] = None
+    menus: Optional[List[str]] = None
+    images: Optional[List[str]] = None
 
-
+# 조회 응답
 class ReviewOut(BaseModel):
     id: int
     content: str
     rating: float
     user_id: Optional[int]
-    nickname: Optional[str]  
-    menus: List[str]
+    nickname: Optional[str]
+    menus: List[str] # 추천 메뉴
+    images: List[str] # 이미지
     created_at: datetime
 
 
+# 이미지 삭제
+
+async def cleanup_review_images(images):
+    for img in images:
+        try:
+            delete_image_oci(img.image_url)
+        except Exception as e:
+            logger.warning(f"[리뷰 이미지 삭제 실패] {e}")
+            
+            
 # ---------------------------
 # 리뷰 생성
 # ---------------------------
 @router.post("/restaurants/{restaurant_id}/reviews")
 async def create_review(
     restaurant_id: int,
-    payload: ReviewCreate,
+    content: str = Form(...),
+    rating: float = Form(...),
+    menus: str = Form("[]"),
+    files: List[UploadFile] = File(default=[]),
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token),
 ):
-    # 1. 식당 존재 확인
     restaurant = await db.get(Restaurant, restaurant_id)
     if not restaurant:
         raise HTTPException(404, "식당 없음")
 
-    '''# 2. 중복 리뷰 체크
-    result = await db.execute(
-        select(Review).where(
-            Review.restaurant_id == restaurant_id,
-            Review.user_id == current_user.id
-        )
-    )
-    if result.scalar_one_or_none():
-        raise HTTPException(400, "이미 리뷰 작성함")
-    '''
+    menu_list = [m.strip() for m in menus.split(",") if m.strip()]
 
-    # 3. 리뷰 생성
     review = Review(
         restaurant_id=restaurant_id,
         user_id=current_user.id,
-        content=payload.content,
-        rating=payload.rating,
+        content=content,
+        rating=rating,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
 
     db.add(review)
-    await db.flush()  # review.id 확보
-    
-    review_id = review.id  # 추가
+    await db.flush()
 
-    # 4. 메뉴 저장
-    for m in payload.menus:
+    for m in menu_list:
         db.add(ReviewMenu(review_id=review.id, name=m))
 
-    await db.commit()
+    uploaded_images = []
 
-    return {"ok": True, "review_id": review.id}
+    try:
+        for i, file in enumerate(files):
+            _, url = await save_image(file, f"reviews/{review.id}")
 
+            uploaded_images.append(url)
 
+            db.add(ReviewImage(
+                review_id=review.id,
+                image_url=url,
+                sort_order=i
+            ))
+
+        await db.commit()
+
+    except Exception as e:
+        for url in uploaded_images:
+            delete_image_oci(url)
+        logger.error(f"[리뷰 이미지 업로드 실패] {e}")
+
+        await db.rollback()
+        raise e
+
+    return {
+        "ok": True,
+        "review_id": review.id
+    }
 # ---------------------------
 # 리뷰 조회 (식당별)
 # ---------------------------
@@ -100,19 +143,27 @@ async def get_reviews(
 
     out = []
 
-    for r, nickname in rows:  # 리뷰, 닉네임 분리
+    for r, nickname in rows:
         menu_rows = await db.execute(
             select(ReviewMenu.name).where(ReviewMenu.review_id == r.id)
         )
         menus = menu_rows.scalars().all()
+
+        image_rows = await db.execute(
+            select(ReviewImage.image_url)
+            .where(ReviewImage.review_id == r.id)
+            .order_by(ReviewImage.sort_order)
+        )
+        images = image_rows.scalars().all()
 
         out.append({
             "id": r.id,
             "content": r.content,
             "rating": r.rating,
             "user_id": r.user_id,
-            "nickname": nickname,  
+            "nickname": nickname,
             "menus": menus,
+            "images": images,
             "created_at": r.created_at,
             "like_count": r.like_count,
             "dislike_count": r.dislike_count
@@ -126,10 +177,11 @@ async def get_reviews(
 # ---------------------------
 # 리뷰 수정
 # ---------------------------
+# 필드를 보내면 수정, 안 보내면 유지
 @router.patch("/reviews/{review_id}")
 async def update_review(
     review_id: int,
-    payload: ReviewCreate,
+    payload: ReviewUpdate,
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token),
 ):
@@ -141,19 +193,43 @@ async def update_review(
     if review.user_id != current_user.id:
         raise HTTPException(403, "권한 없음")
 
-    # 업데이트
-    review.content = payload.content
-    review.rating = payload.rating
+    if payload.content is not None:
+        review.content = payload.content
+
+    if payload.rating is not None:
+        review.rating = payload.rating
+
+    if payload.menus is not None:
+        if not isinstance(payload.menus, list):
+            raise HTTPException(400, "menus는 배열이어야 함")
+
+        await db.execute(
+            ReviewMenu.__table__.delete().where(ReviewMenu.review_id == review_id)
+        )
+
+        for m in payload.menus:
+            db.add(ReviewMenu(review_id=review.id, name=m))
+
+    if payload.images is not None:
+        image_result = await db.execute(
+            select(ReviewImage).where(ReviewImage.review_id == review_id)
+        )
+        old_images = image_result.scalars().all()
+
+        await cleanup_review_images(old_images)
+
+        await db.execute(
+            ReviewImage.__table__.delete().where(ReviewImage.review_id == review_id)
+        )
+
+        for i, image_url in enumerate(payload.images):
+            db.add(ReviewImage(
+                review_id=review.id,
+                image_url=image_url,
+                sort_order=i
+            ))
+
     review.updated_at = datetime.utcnow()
-
-    # 기존 메뉴 삭제
-    await db.execute(
-        ReviewMenu.__table__.delete().where(ReviewMenu.review_id == review_id)
-    )
-
-    # 새 메뉴 추가
-    for m in payload.menus:
-        db.add(ReviewMenu(review_id=review.id, name=m))
 
     await db.commit()
 
@@ -176,6 +252,13 @@ async def delete_review(
 
     if review.user_id != current_user.id:
         raise HTTPException(403, "권한 없음")
+
+    image_result = await db.execute(
+    select(ReviewImage).where(ReviewImage.review_id == review_id)
+    )
+    images = image_result.scalars().all()
+
+    await cleanup_review_images(images)
 
     await db.delete(review)
     await db.commit()
