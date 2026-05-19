@@ -5,29 +5,63 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
-import { getAllMembers, MemberInfo, updateMembersStatus } from "../../api/admin";
+import {
+  getAllMembers,
+  MemberInfo,
+  updateMembersStatus,
+  searchMembers,
+  forceWithdrawMember,
+} from "../../api/admin";
 
 export default function MemberSearchPage() {
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredMembers, setFilteredMembers] = useState<MemberInfo[]>([]);
   const [isSearched, setIsSearched] = useState(false);
+
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingRole, setEditingRole] = useState<"staff" | "member">("member");
   const navigate = useNavigate();
 
-  const handleSearch = () => {
-    const keyword = searchKeyword.trim();
-    if (!keyword) {
-      setFilteredMembers([]);
-      setIsSearched(false);
-      return;
+  const handleSearch = async () => {
+    if (!searchKeyword.trim()) return;
+    try {
+      const result = await searchMembers(searchKeyword);
+      setFilteredMembers(result);
+      setIsSearched(true);
+    } catch (err) {
+      console.error(err);
+      alert("검색 중 오류가 발생했습니다.");
     }
+  };
 
-    setFilteredMembers(members.filter((member) => member.userid.includes(keyword)));
-    setIsSearched(true);
+  const handleForceWithdraw = async (member: MemberInfo) => {
+    if (!confirm(`${member.nickname} 회원을 강제 탈퇴시키겠습니까?`)) return;
+    try {
+      await forceWithdrawMember(member.userid);
+      alert("강제 탈퇴 완료");
+      const data = await getAllMembers();
+      setMembers(data);
+      if (isSearched) {
+        const refreshed = await searchMembers(searchKeyword);
+        setFilteredMembers(refreshed);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("강제 탈퇴 실패");
+    }
+  };
+
+  const handleEditClick = (member: MemberInfo) => {
+    if (editingUserId === member.userid) {
+      handleSave(member);
+    } else {
+      setEditingUserId(member.userid);
+      setEditingRole(member.role);
+    }
   };
 
   const handleSave = async (member: MemberInfo) => {
@@ -36,47 +70,19 @@ export default function MemberSearchPage() {
         setEditingUserId(null);
         return;
       }
-
       await updateMembersStatus({
         members: [{ userid: member.userid, role: editingRole }],
       });
-
       alert("변경 완료");
       setEditingUserId(null);
-      setMembers(await getAllMembers());
+      const data = await getAllMembers();
+      setMembers(data);
     } catch (err) {
       console.error(err);
       alert("변경 실패");
     }
   };
 
-  const handleEditClick = (member: MemberInfo) => {
-    if (editingUserId === member.userid) {
-      handleSave(member);
-      return;
-    }
-
-    setEditingUserId(member.userid);
-    setEditingRole(member.role);
-  };
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setIsLoading(true);
-        setMembers(await getAllMembers());
-      } catch (err: any) {
-        console.error("데이터 로딩 실패:", err);
-        if (err.response?.status !== 401 && err.response?.status !== 403) {
-          setError("데이터를 불러오는 중 오류가 발생했습니다.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMembers();
-  }, []);
 
   const displayMembers = isSearched ? filteredMembers : members;
 
@@ -111,7 +117,6 @@ export default function MemberSearchPage() {
 
       <div className={style.tableBody}>
         <div className={style.memberList}>회원 목록</div>
-
         {isLoading ? (
           <div className={style.loadingStatus}>데이터를 불러오는 중...</div>
         ) : error ? (
@@ -123,6 +128,7 @@ export default function MemberSearchPage() {
                 <th>이름</th>
                 <th>권한</th>
                 <th>수정</th>
+                <th>탈퇴</th>
               </tr>
             </thead>
             <tbody>
@@ -133,8 +139,8 @@ export default function MemberSearchPage() {
                     {editingUserId === member.userid ? (
                       <select
                         value={editingRole}
-                        onChange={(event) =>
-                          setEditingRole(event.target.value as "staff" | "member")
+                        onChange={(e) =>
+                          setEditingRole(e.target.value as "staff" | "member")
                         }
                       >
                         <option value="member">일반 회원</option>
@@ -168,6 +174,15 @@ export default function MemberSearchPage() {
                       disabled={member.is_admin}
                     >
                       {editingUserId === member.userid ? "저장" : "권한 수정"}
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      className={style.withdrawBtn}
+                      onClick={() => handleForceWithdraw(member)}
+                      disabled={member.is_admin}
+                    >
+                      강제 탈퇴
                     </button>
                   </td>
                 </tr>
