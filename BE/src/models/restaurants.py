@@ -28,6 +28,7 @@ class Restaurant(Base):
     favorites = relationship("Favorite", back_populates="restaurant")
     images = relationship("RestaurantImage", back_populates="restaurant", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="restaurant", cascade="all, delete")
+    reviews = relationship("Review", back_populates="restaurant", cascade="all, delete-orphan")
 
 # 식당별 태그
 class RestaurantTag(Base):

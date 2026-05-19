@@ -26,6 +26,7 @@ client.interceptors.response.use(
 
     if ((status === 401 || status === 403) && token) {
       localStorage.removeItem("access_token");
+      localStorage.removeItem("admin_token");
     }
 
     return Promise.reject(err);

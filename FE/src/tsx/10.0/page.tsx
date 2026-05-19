@@ -20,7 +20,7 @@ export default function EntrustCompletePage() {
         userid,
         password,
       });
-
+      localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("admin_token", data.access_token);
 
       alert("관리자 로그인 성공");
