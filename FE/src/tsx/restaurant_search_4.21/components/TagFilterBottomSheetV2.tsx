@@ -133,8 +133,8 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
     if (tagIds.length) params.set("tag_ids", tagIds.join(","));
     if (priceMin != null) params.set("price_min", String(priceMin));
     if (priceMax != null) params.set("price_max", String(priceMax));
-    if (ratingMin != null) params.set("min_rating", String(ratingMin));
-    if (ratingMax != null) params.set("max_rating", String(ratingMax));
+    if (ratingMin != null) params.set("rating_min", String(ratingMin));
+    if (ratingMax != null) params.set("rating_max", String(ratingMax));
 
     navigate(`/restaurant/search/results?${params.toString()}`);
   };

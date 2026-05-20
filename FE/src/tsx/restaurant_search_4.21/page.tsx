@@ -22,11 +22,13 @@ type SuggestionItem = {
 };
 
 type SelectedItem = {
-  type: "region" | "tag" | "price";
+  type: "region" | "tag" | "price" | "rating";
   id: number | null;
   name: string;
   priceMin?: number;
   priceMax?: number;
+  ratingMin?: number;
+  ratingMax?: number;
 };
 
 export default function SearchPage() {
@@ -36,34 +38,47 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
 
-  const initialSelectedTags = useMemo<SelectedItem[]>(() => {
-    const params = new URLSearchParams(location.search);
+const initialSelectedTags = useMemo<SelectedItem[]>(() => {
+  const params = new URLSearchParams(location.search);
 
-    const initialTagId = params.get("tag_id");
-    const initialTagName = params.get("tag_name");
-    const initialRegionId = params.get("region_id");
-    const initialRegionName = params.get("region_name");
+  const initialTagId = params.get("tag_id");
+  const initialTagName = params.get("tag_name");
+  const initialRegionId = params.get("region_id");
+  const initialRegionName = params.get("region_name");
 
-    const items: SelectedItem[] = [];
+  const ratingMin = params.get("rating_min");
+  const ratingMax = params.get("rating_max");
 
-    if (initialTagId && initialTagName) {
-      items.push({
-        type: "tag",
-        id: Number(initialTagId),
-        name: initialTagName,
-      });
-    }
+  const items: SelectedItem[] = [];
 
-    if (initialRegionId && initialRegionName) {
-      items.push({
-        type: "region",
-        id: Number(initialRegionId),
-        name: initialRegionName,
-      });
-    }
+  if (initialTagId && initialTagName) {
+    items.push({
+      type: "tag",
+      id: Number(initialTagId),
+      name: initialTagName,
+    });
+  }
 
-    return items;
-  }, [location.search]);
+  if (initialRegionId && initialRegionName) {
+    items.push({
+      type: "region",
+      id: Number(initialRegionId),
+      name: initialRegionName,
+    });
+  }
+
+  if (ratingMin || ratingMax) {
+    items.push({
+      type: "rating",
+      id: null,
+      name: ratingMin ? `${ratingMin}점 이상` : `${ratingMax}점 이하`,
+      ratingMin: ratingMin ? Number(ratingMin) : undefined,
+      ratingMax: ratingMax ? Number(ratingMax) : undefined,
+    });
+  }
+
+  return items;
+}, [location.search]);
 
   const [isTagSearchOpen, setIsTagSearchOpen] = useState(
     initialSelectedTags.length > 0
