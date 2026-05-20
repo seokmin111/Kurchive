@@ -45,7 +45,7 @@ from BE.src.models.regions import Region
 from BE.src.models.favorites import Favorite
 
 # 주소 추출 모듈 임포트
-from BE.src.AddressLatLong import extract_location_from_link
+from BE.AddressLatLong import extract_location_from_link
 from BE.src.utils.image_cleanup import cleanup_restaurant_images
 from BE.src.utils.image_upload import save_image, delete_image_oci
 from BE.src.utils.image_upload import ALLOWED_MIME
