@@ -8,7 +8,7 @@ const client = axios.create({
 
 // 요청 인터셉터: 토큰 자동 첨부
 client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("admin_token");
+  const token = localStorage.getItem("access_token");
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
