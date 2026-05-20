@@ -222,3 +222,83 @@ async def delegate_admin_role(
 
     return user_to_promote
 
+# --------------------
+# 회원 검색 (이름 기반)
+# --------------------
+
+@router.get(
+    "/members/search",
+    response_model=List[MemberInfoResponse],
+    summary="회원 이름(name)으로 검색",
+)
+
+async def search_members_by_name(
+    name: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_admin: User = Depends(get_current_admin_user)
+):
+
+    """
+    관리자가 회원의 실명(name)을 입력하여 검색합니다.
+    부분 일치 검색을 지원합니다.
+    """
+
+    # SQL: SELECT * FROM users WHERE name LIKE '%name%' ORDER BY name
+
+    query = (
+        select(User)
+        .where(User.name.contains(name)) 
+        .order_by(User.name)
+    )
+    
+    result = await db.execute(query)
+    members = result.scalars().all()
+
+    if not name or not name.strip():
+        raise HTTPException(status_code=400, detail="검색어를 입력해주세요.")
+
+    return members
+
+
+# --------------------
+# 회원 강제 탈퇴
+# --------------------
+
+@router.delete(
+    "/members/{userid}",
+    summary="회원 강제 탈퇴",
+)
+
+async def force_withdraw_member(
+    userid: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_admin: User = Depends(get_current_admin_user)
+):
+    # 1. 유저 조회
+
+    result = await db.execute(
+        select(User).where(User.userid == userid)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="존재하지 않는 회원입니다."
+        )
+
+    # 2. 관리자 보호 (관리자는 강제탈퇴 불가)
+
+    if user.is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="관리자 계정은 강제탈퇴할 수 없습니다."
+        )
+
+    # 3. 삭제
+    await db.delete(user)
+    await db.commit()
+
+    return {
+        "message": f"{userid} 회원이 강제탈퇴 처리되었습니다."
+    }
