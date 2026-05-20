@@ -68,7 +68,7 @@ def _ensure_client():
         return _object_storage
 
     try:
-        _config = oci.config.from_file(r"~\.oci\config") # 로컬 백엔드면 바꿔야 함.
+        _config = oci.config.from_file("/root/.oci/config")# 로컬 백엔드면 바꿔야 함.
         # 홍지우 로컬 : C:\Users\82105\.oci\config
         # 
         _object_storage = oci.object_storage.ObjectStorageClient(_config)
