@@ -4,6 +4,7 @@ import client from "./client";
 
 // 레시피 생성 시 재료 타입 (이름 등록)
 export type IngredientCreateInput = {
+  ingredient_id?: number;
   name: string;
   quantity: number;
   unit_name: string;
@@ -31,6 +32,7 @@ export type RecipeStepInput = {
 // 레시피 생성 요청
 export type CreateRecipeBody = {
   title: string;
+  description?: string;
   base_serving: number;
   ingredients: IngredientCreateInput[];
   steps: RecipeStepInput[];
@@ -97,11 +99,12 @@ export const convertRecipeUnits = (
 
 // 2. 생성 / 수정 / 삭제
 
-export async function getOrCreateIngredient(name: string) {
+export async function getOrCreateIngredient(name: string, unit_type?: string) {
   const res = await client.post("/recipe/ingredients/get-or-create", {
     name,
+    ...(unit_type ? { unit_type } : {}),
   });
-  return res.data; 
+  return res.data;
   // 기대: { id: number, unit_type: string }
 }
 

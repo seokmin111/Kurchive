@@ -5,9 +5,12 @@ import { useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
 import client from "../../api/client"; 
 import { getMyPage, MyPageUser } from "../../api/mypage";
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import ArchiveHeader from "../../components/common/ArchiveHeader";
+import ArchiveItemCard from "../../components/common/ArchiveItemCard";
+import ArchiveSearchBar from "../../components/common/ArchiveSearchBar";
+import ArchiveStatusMessage from "../../components/common/ArchiveStatusMessage";
 
 interface MyRestaurant {
   id: number;
@@ -18,70 +21,19 @@ interface MyRestaurant {
   created_at?: string;
 }
 
-const StarRating = ({ rating }: { rating: number }) => {
-  const score = rating || 0;
-
-  return (
-    <div className={styles.ratingContainer}>
-      {[1,2,3,4,5].map((star) => (
-        <span
-          key={star}
-          className={star <= score ? styles.star : styles.starEmpty}
-        >
-          ★
-        </span>
-      ))}
-    </div>
-  );
-};
-
 const RestaurantCard = ({ restaurant }: { restaurant: MyRestaurant }) => {
   const navigate = useNavigate();
 
   return (
-    <div
-      className={styles.restaurantCard}
+    <ArchiveItemCard
+      title={restaurant.name}
+      description={restaurant.address || "주소 정보 없음"}
+      metaLabel="내가 아카이빙"
+      rating={restaurant.rating ?? 0}
+      imageLabel="사진 없음"
+      thumbnailUrl={restaurant.thumbnail_url}
       onClick={() => navigate(`/restaurant/${restaurant.id}`)}
-    >
-      <div className={styles.cardContent}>
-        <h3 className={styles.restaurantName}>{restaurant.name}</h3>
-
-        <p className={styles.restaurantLocation}>
-          {restaurant.address || "주소 정보 없음"}
-        </p>
-
-        <div className={styles.userInfo}>
-          <span className={styles.userCircle}></span>
-          <span className={styles.metaText}>
-            내가 아카이빙
-          </span>
-        </div>
-
-        <div className={styles.bottomRow}>
-          <StarRating rating={restaurant.rating || 0} />
-          <span className={styles.scoreText}>
-            {restaurant.rating?.toFixed(1) || "0.0"}
-          </span>
-        </div>
-      </div>
-
-      <div
-        className={`${styles.cardImage} ${
-          restaurant.thumbnail_url ? styles.cardImageWithPhoto : ""
-        }`}
-        style={
-          restaurant.thumbnail_url
-            ? { backgroundImage: `url(${restaurant.thumbnail_url})` }
-            : {}
-        }
-      >
-        {!restaurant.thumbnail_url && (
-          <div className={styles.noImageText}>
-            <div>사진 없음</div>
-          </div>
-        )}
-      </div>
-    </div>
+    />
   );
 };
 
@@ -130,33 +82,11 @@ export default function RestaurantArchivePage() {
 
   return (
     <div className={styles.container}>
-
-      <header className={styles.header}>
-
-        <div className={styles.headerLeft}>
-
-          <img
-            src="/backstep_white_background.png"
-            alt="뒤로가기"
-            className={styles.backButton}
-            onClick={() => navigate(-1)}
-          />
-
-          <div className={styles.logoSection}>
-            <span className={styles.logoSubtitle}>우리만의 미식 지도</span>
-            <span className={styles.logo}>커카이브</span>
-          </div>
-
-        </div>
-
-        <button
-          className={styles.myPageButton}
-          onClick={() => navigate("/mypage")}
-        >
-          마이페이지
-        </button>
-
-      </header>
+      <ArchiveHeader
+        classNames={styles}
+        onBack={() => navigate(-1)}
+        onMyPage={() => navigate("/mypage")}
+      />
 
       <div className={styles.pageTitle}>
         <span className={styles.username}>
@@ -165,30 +95,18 @@ export default function RestaurantArchivePage() {
         님의 식당 아카이브
       </div>
 
-      <div className={styles.searchSection}>
-
-        <div className={styles.searchBar}>
-
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="내 아카이브 검색"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />
-
-        </div>
-
-      </div>
+      <ArchiveSearchBar
+        classNames={styles}
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="내 아카이브 검색"
+        icon={<FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />}
+      />
 
       <div className={styles.restaurantList}>
 
         {loading ? (
-          <div style={{textAlign:"center",padding:"20px",color:"#888"}}>
-            로딩 중...
-          </div>
+          <ArchiveStatusMessage variant="loading">로딩 중...</ArchiveStatusMessage>
 
         ) : filteredRestaurants.length > 0 ? (
 
@@ -201,11 +119,11 @@ export default function RestaurantArchivePage() {
 
         ) : (
 
-          <div style={{textAlign:"center",padding:"40px",color:"#999"}}>
+          <ArchiveStatusMessage variant="empty">
             {searchQuery
               ? "검색 결과가 없습니다."
               : "아직 아카이빙한 식당이 없습니다."}
-          </div>
+          </ArchiveStatusMessage>
 
         )}
 

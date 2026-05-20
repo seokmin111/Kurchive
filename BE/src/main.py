@@ -22,7 +22,7 @@ import BE.src.models
 
 from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
-from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, restaurant_review
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, location, restaurant_review
 from BE.src.errors import register_exception_handlers
 
 
@@ -43,6 +43,9 @@ origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
     "http://146.56.117.219:8000",
+    
+    "https://kurchive.com",
+    "https://www.kurchive.com"
 ]
 
 app.add_middleware(
@@ -72,6 +75,7 @@ app.include_router(map.router, prefix="/api", tags=["Map"])
 app.include_router(recipe.router)
 app.include_router(mypage.router)
 app.include_router(restaurant.router, prefix = "/api", tags=["Restaurants"])
+app.include_router(location.router, tags=["Location"])
 app.include_router(comment.router)
 app.include_router(ingredient.router)
 app.include_router(admin.router)
