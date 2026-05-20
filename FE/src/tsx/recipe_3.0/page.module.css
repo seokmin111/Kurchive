@@ -32,6 +32,10 @@
   font-display: swap;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 /* =========================
     Base
 ========================= */
@@ -163,31 +167,33 @@
     Recipe Grid Container (4.0 스타일로 통일)
 ========================= */
 .recipe_container {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: 120px;
-
-  column-gap: 25px;
-  row-gap: 30px; /*줄간 간격 너무 긴 문제 해결용*/
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  z-index: 10;
 
   width: 100%;
   height: 40vh;
-  padding: 20px;
-  box-sizing: border-box;
-
-  background-color: #ffffff;
-  border-top-left-radius: 30px;
-  border-top-right-radius: 30px;
-
-  position: fixed;
-  bottom: 0;
-  z-index: 10;
-
-  overflow-y: auto;
-
-  left: 50%;
-  transform: translateX(-50%);
   max-width: 1200px;
+
+  overflow: hidden;
+  border-radius: 30px 30px 0 0;
+  background: #ffffff;
+  transform: translateX(-50%);
+}
+
+.scroll_area {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 120px;
+  column-gap: 25px;
+  row-gap: 30px;
+
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* =========================
@@ -202,9 +208,9 @@
   padding: 12px 14px;
   box-sizing: border-box;
 
-  background: #ffffff;
-  border: 1.5px solid #8b0029;
+  border: 1.5px solid #8B0029;
   border-radius: 12px;
+  background: white;
 
   min-width: 0;
 }
@@ -227,11 +233,11 @@
 
 /* 제목 */
 .recipe_title {
-  font-family: "Pretendard", sans-serif;
+  font-family: var(--font-pretendard), "Pretendard", sans-serif;
   font-size: 14px;
-  font-weight: 800; /* ExtraBold 실제 폰트 로드됨 */
+  font-weight: 800;
   line-height: 1.15;
-  color: #8b0029;
+  color: #8B0029;
 
   margin: 0 0 4px 0;
 
@@ -246,11 +252,10 @@
 
 /* 보조 텍스트(= summary 자리) */
 .recipe_text {
-  font-family: "Pretendard", sans-serif;
+  font-family: var(--font-pretendard), "Pretendard", sans-serif;
   font-size: 9px;
-  font-weight: 600; /* ✅ 식당 느낌으로 조금 더 힘 줌 */
   line-height: 1.2;
-  color: #8b0029;
+  color: #8B0029;
 
   white-space: nowrap;
   overflow: hidden;
@@ -263,11 +268,10 @@
 .recipe_descriptionContainer {
   display: flex;
   align-items: center;
-  gap: 10px;
-
+  gap : 10px;
   margin-top: auto;
   min-width: 0;
-  width: 100%;
+  width : 100%;
 }
 
 .recipe_underContainer {
@@ -284,7 +288,7 @@
 
 /* 업로더 */
 .recipe_uploader {
-  font-family: "Pretendard", sans-serif;
+  font-family: var(--font-pretendard), "Pretendard", sans-serif;
   font-size: 11px;
   font-weight: 400;
   color: rgb(141, 141, 141);
@@ -298,7 +302,7 @@
 
 /* 날짜 */
 .recipe_date {
-  font-family: "Pretendard", sans-serif;
+  font-family: var(--font-pretendard), "Pretendard", sans-serif;
   font-size: 11px;
   font-weight: 400;
   color: rgb(141, 141, 141);
@@ -316,10 +320,11 @@
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background-color: #f2ece5;
+  background-color: #F2ECE5;
   flex-shrink: 0;
   margin-left: auto;
   display: block;
+  object-fit: cover;
 }
 
 /* =========================
@@ -344,6 +349,13 @@
 }
 .recipe_text {
   margin-bottom: 10px;  
+}
+
+.recipe_title,
+.recipe_text,
+.recipe_uploader,
+.recipe_date {
+  text-align: left;
 }
 /* =========================
     Mobile (Carousel: 식당 4.0과 동일)

@@ -37,7 +37,23 @@ export default function MainPage() {
         </Link>
       </div>
 
-      <div className="footer"></div>
+      <div className="footer">
+        <a
+          href="https://docs.google.com/forms/d/10IjDgTdbvtc1RTPZ_hRkvWbvE2oc8yT1tcHfCHVt3SQ/edit#responses"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="contactButton"
+          aria-label="문의하기"
+        >
+          <span className="contactIcon">📩</span>
+          <span className="contactButtonText">문의하기</span>
+        </a>
+
+        <div className="footerDivider"></div>
+
+        <p className="footerDescription">커리손연구회 커리 아카이빙 서비스</p>
+        <p className="footerCredit">Built with 💗 by Kurchive Team</p>
+      </div>
     </div>
   );
 }

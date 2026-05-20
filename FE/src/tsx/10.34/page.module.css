@@ -6,12 +6,12 @@
 }
 
 .container{
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 812px;
-  width: 375px;
-  background-color: #ffffff;
+  min-height: 100vh;
+  width: 100%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   margin: 0 auto; /* 중앙 정렬 */
   background: linear-gradient(to bottom, #6F0121 30%, #ffffff 60%);
@@ -33,19 +33,6 @@
   font-size: 40px;
   color: #ffffff; /* 흰색 글씨 */
   margin-bottom: 60px;
-}
-
-.password{
-  color: white;
-  font-weight: 200;
-}
-
-.inputBox{
-  height: 40px;
-  width: 80%;
-  border: none;
-  border-radius: 5px;
-  margin-bottom: 170px;
 }
 
 .loginBtn{

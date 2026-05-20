@@ -186,7 +186,7 @@ interface Name{
 }
 
 interface handleSellectedTagsType{
-    handleSellectedTags: (tag:string)=>{};
+    handleSellectedTags: (tag:string)=>void;
 }
 
 function Region({handleSellectedTags}:handleSellectedTagsType){

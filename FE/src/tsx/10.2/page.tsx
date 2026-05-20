@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
 import {
   getAllMembers,
@@ -21,6 +24,7 @@ export default function MemberSearchPage() {
 
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingRole, setEditingRole] = useState<"staff" | "member">("member");
+  const navigate = useNavigate();
 
   const handleSearch = async () => {
     if (!searchKeyword.trim()) return;
@@ -79,43 +83,37 @@ export default function MemberSearchPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getAllMembers();
-        setMembers(data);
-      } catch (err: any) {
-        console.error("데이터 로딩 실패:", err);
-        if (err.response?.status !== 401 && err.response?.status !== 403) {
-          setError("데이터를 불러오는 중 오류가 발생했습니다.");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMembers();
-  }, []);
 
   const displayMembers = isSearched ? filteredMembers : members;
 
   return (
     <div className={style.container}>
       <div className={style.pageTitle}>
-        <div className={style.kurchive}>커카이브</div>
-        <div className={style.adminPage}>관리자 페이지</div>
+        <button type="button" className={style.backBtn} onClick={() => navigate("/admin/main")}>
+          &lt;
+        </button>
+        <h1 className={style.kurchive}>커카이브</h1>
+        <p className={style.adminPage}>관리자 페이지</p>
       </div>
 
       <div className={style.memberSearch}>회원 조회하기</div>
-      <div className={style.memberSearchBody}>
+      <form
+        className={style.memberSearchBody}
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSearch();
+        }}
+      >
         <input
           placeholder="회원 아이디를 입력해주세요"
           className={style.memberSearchInput}
           value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
+          onChange={(event) => setSearchKeyword(event.target.value)}
         />
-        <button onClick={handleSearch}>검색</button>
-      </div>
+        <button type="submit" className={style.searchButton} aria-label="검색">
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
+        </button>
+      </form>
 
       <div className={style.tableBody}>
         <div className={style.memberList}>회원 목록</div>
@@ -154,22 +152,25 @@ export default function MemberSearchPage() {
                           member.role === "staff" && member.is_admin
                             ? style.adminRole
                             : member.role === "staff"
-                            ? style.staffRole
-                            : style.userRole
+                              ? style.staffRole
+                              : style.userRole
                         }
                       >
                         {member.role === "staff" && member.is_admin
                           ? "관리자"
                           : member.role === "staff"
-                          ? "임원진"
-                          : "일반 회원"}
+                            ? "임원진"
+                            : "일반 회원"}
                       </span>
                     )}
                   </td>
                   <td>
                     <button
                       className={style.editBtnLight}
-                      onClick={() => handleEditClick(member)}
+                      onClick={(event) => {
+                        handleEditClick(member);
+                        event.currentTarget.blur();
+                      }}
                       disabled={member.is_admin}
                     >
                       {editingUserId === member.userid ? "저장" : "권한 수정"}

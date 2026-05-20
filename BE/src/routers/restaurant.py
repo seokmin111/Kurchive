@@ -52,8 +52,11 @@ from BE.src.utils.image_upload import ALLOWED_MIME
 from BE.src.utils.user_serializer import build_uploader
 from BE.src.utils.tags import expand_tag_ids
 
-# 유틸 함수
-from BE.src.utils.duplicate_det import find_duplicate_candidates
+from BE.src.routers.utils import (
+    normalize_link,
+    check_create_restaurant_duplicates,
+    check_update_restaurant_duplicates,
+)
 
 from urllib.parse import urlparse
 
@@ -107,6 +110,9 @@ router = APIRouter()
 class RestaurantCreate(BaseModel):
     name: str
     location_link: str
+    address: Optional[str] = None  # 프론트에서 /locations/extract로 추출한 주소
+    latitude: Optional[float] = None  # 프론트에서 /locations/extract로 추출한 위도
+    longitude: Optional[float] = None  # 프론트에서 /locations/extract로 추출한 경도
     location_tag_id: int
     rating: Optional[confloat(ge=0, le=5)] = 0.0
     summary: constr(strip_whitespace=True, min_length=1, max_length=100)
@@ -114,7 +120,7 @@ class RestaurantCreate(BaseModel):
     price_min: int
     price_max: int
     tag_ids: List[int]
-    recommended_menus: Optional[List[str]] = []
+    force: Optional[bool] = False # 중복 의심이어도 등록할건지 말건지
 
     @validator("location_link")
     def validate_location_link(cls, v: str):
@@ -210,6 +216,9 @@ class FavoriteToggleResponse(BaseModel):
 class RestaurantUpdate(BaseModel):
     name: Optional[str] = None
     location_link: Optional[str] = None
+    address: Optional[str] = None  # 프론트에서 /locations/extract|geocode로 추출한 주소
+    latitude: Optional[float] = None  # 프론트에서 /locations/extract|geocode로 추출한 위도
+    longitude: Optional[float] = None  # 프론트에서 /locations/extract|geocode로 추출한 경도
     location_tag_id: Optional[int] = None
     rating: Optional[confloat(ge=0, le=5)] = None
     summary: Optional[constr(strip_whitespace=True, min_length=1, max_length=100)] = None
@@ -325,26 +334,33 @@ async def create_restaurant(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user_from_token)
 ):
-    address, lat, lon = None, None, None
-    print(f"[API] 주소 추출 시도: {payload.location_link}") # 디버깅 로그
+    # 프론트에서 /locations/extract로 이미 추출한 주소, 위도, 경도를 사용
+    address = payload.address
+    lat = payload.latitude
+    lon = payload.longitude
+    
+    print(f"[API] 식당 생성: {payload.name} / 주소: {address} / 좌표: ({lat}, {lon})")
 
-    try:
+    dup_response = await check_create_restaurant_duplicates(
+        db,
+        name=payload.name,
+        location_link=payload.location_link,
+        address=address,
+        lat=lat,
+        lon=lon,
+        force=bool(payload.force),
+    )
+    if dup_response:
+        return dup_response
 
-        loc = await anyio.to_thread.run_sync(extract_location_from_link, str(payload.location_link))
-        if loc:
-            address = loc.get("road_address") or loc.get("address")
-            lat, lon = loc.get("lat"), loc.get("lng")
-            print(f" 주소 추출 성공: {address} ({lat}, {lon})")
-        else:
-            print("⚠️ 주소 추출 실패 (결과 없음)")
-    except Exception as e:
-        print(f"❌ 주소 추출 중 에러 발생: {e}")
-
+    # -------------------------
+    # DB insert
+    # -------------------------
     try:
         restaurant = Restaurant(
             name=payload.name,
             address=address,
-            location_link=str(payload.location_link),
+            location_link=normalize_link(str(payload.location_link)) or str(payload.location_link),
             latitude=lat,
             longitude=lon,
             location_tag_id=payload.location_tag_id,
@@ -362,16 +378,31 @@ async def create_restaurant(
         await db.refresh(restaurant)
     except Exception as e:
         await db.rollback()
-        return JSONResponse(status_code=400, content={"ok": False, "message": f"DB insert error: {e}"})
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "message": f"DB insert error: {e}"}
+        )
 
+    # -------------------------
+    # 태그 insert
+    # -------------------------
     try:
         for tag_id in payload.tag_ids:
-            db.add(RestaurantTag(restaurant_id=restaurant.id, tag_id=tag_id))
+            db.add(RestaurantTag(
+                restaurant_id=restaurant.id,
+                tag_id=tag_id
+            ))
         await db.commit()
     except Exception as e:
         await db.rollback()
-        return JSONResponse(status_code=400, content={"ok": False, "message": f"Tag insert error: {e}"})
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "message": f"Tag insert error: {e}"}
+        )
 
+    # -------------------------
+    # 성공 응답
+    # -------------------------
     return {
         "ok": True,
         "message": "식당 등록 완료",
@@ -387,7 +418,6 @@ async def create_restaurant(
             "created_at": datetime.utcnow().isoformat()
         }
     }
-    
 # 식당 이름 검색
 @router.get("/restaurants/search")
 async def search_restaurants_by_name(
@@ -508,8 +538,13 @@ async def list_restaurants(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    rating_min: Optional[float] = Query(None, ge=0, le=5),
+    rating_max: Optional[float] = Query(None, ge=0, le=5),
     db: AsyncSession = Depends(get_async_db)
 ):
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(status_code=422, detail="rating_min must be <= rating_max")
+
     stmt = select(Restaurant).distinct()
 
     # -----------------------
@@ -529,6 +564,14 @@ async def list_restaurants(
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
+
+    # -----------------------
+    # 별점 필터
+    # -----------------------
+    if rating_min is not None:
+        stmt = stmt.where(Restaurant.rating >= rating_min)
+    if rating_max is not None:
+        stmt = stmt.where(Restaurant.rating <= rating_max)
 
     category_count = 0
 
@@ -582,8 +625,13 @@ async def list_restaurants_nearby(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    rating_min: Optional[float] = Query(None, ge=0, le=5),
+    rating_max: Optional[float] = Query(None, ge=0, le=5),
     db: AsyncSession = Depends(get_async_db)
 ):
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(status_code=422, detail="rating_min must be <= rating_max")
+
     stmt = select(Restaurant).where(
         Restaurant.latitude.is_not(None),
         Restaurant.longitude.is_not(None),
@@ -593,6 +641,11 @@ async def list_restaurants_nearby(
         stmt = stmt.where(Restaurant.price_min >= price_min)
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
+
+    if rating_min is not None:
+        stmt = stmt.where(Restaurant.rating >= rating_min)
+    if rating_max is not None:
+        stmt = stmt.where(Restaurant.rating <= rating_max)
 
     # ---- 태그 필터 동일 로직 ----
     if tag_ids:
@@ -621,6 +674,7 @@ async def list_restaurants_nearby(
                 "id": r.id,
                 "name": r.name,
                 "distance_km": round(d, 3),
+                "rating": r.rating,
                 "latitude": r.latitude,
                 "longitude": r.longitude,
             })
@@ -639,9 +693,14 @@ async def list_restaurants_in_viewport(
     tag_ids: Optional[str] = None,
     price_min: Optional[int] = None,
     price_max: Optional[int] = None,
+    rating_min: Optional[float] = Query(None, ge=0, le=5),
+    rating_max: Optional[float] = Query(None, ge=0, le=5),
     limit: int = 200,
     db: AsyncSession = Depends(get_async_db)
 ):
+    if rating_min is not None and rating_max is not None and rating_min > rating_max:
+        raise HTTPException(status_code=422, detail="rating_min must be <= rating_max")
+
     if min_lat > max_lat:
         min_lat, max_lat = max_lat, min_lat
     if min_lon > max_lon:
@@ -661,10 +720,10 @@ async def list_restaurants_in_viewport(
     if price_max is not None:
         stmt = stmt.where(Restaurant.price_max <= price_max)
 
-    # ---------------------------
-    # 태그 조건 준비
-    # ---------------------------
-    category_expanded_sets = []
+    if rating_min is not None:
+        stmt = stmt.where(Restaurant.rating >= rating_min)
+    if rating_max is not None:
+        stmt = stmt.where(Restaurant.rating <= rating_max)
 
     if tag_ids:
         req_ids = list(map(int, tag_ids.split(",")))
@@ -679,6 +738,8 @@ async def list_restaurants_in_viewport(
                     )
                 ).correlate(Restaurant)
             )
+
+    candidates = (await db.execute(stmt.limit(5000))).scalars().all()
     # ---------------------------
     # 필터링
     # ---------------------------
@@ -691,16 +752,6 @@ async def list_restaurants_in_viewport(
             .where(RestaurantTag.restaurant_id == r.id)
         )
         tag_list = [{"id": t[0], "name": t[1]} for t in trows.all()]
-        current_tag_ids = {t["id"] for t in tag_list}
-
-        if category_expanded_sets:
-            is_match = True
-            for expanded_set in category_expanded_sets:
-                if current_tag_ids.isdisjoint(expanded_set):
-                    is_match = False
-                    break
-            if not is_match:
-                continue
 
         results.append({
             "id": r.id,
@@ -727,10 +778,10 @@ async def update_restaurant(
 ):
     result = await db.execute(select(Restaurant).where(Restaurant.id == restaurant_id))
     restaurant = result.scalar_one_or_none()
-    user = await db.get(User, restaurant.uploaded_by)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
+    user = await db.get(User, restaurant.uploaded_by)
     await assert_can_edit_restaurant(restaurant, current_user)
 
     update_data = payload.dict(exclude_unset=True)
@@ -740,20 +791,33 @@ async def update_restaurant(
         return await get_restaurant(restaurant_id, db)
 
     # -------------------------
-    # 주소 재추출 필요한 경우
+    # 중복 검사 (링크/주소/근접)
+    # - 수정 시 자기 자신은 제외
     # -------------------------
-    if "location_link" in update_data:
-        try:
-            loc = await anyio.to_thread.run_sync(
-                extract_location_from_link,
-                str(update_data["location_link"])
-            )
-            if loc:
-                restaurant.address = loc.get("road_address") or loc.get("address")
-                restaurant.latitude = loc.get("lat")
-                restaurant.longitude = loc.get("lng")
-        except Exception as e:
-            print(f"(Update) 주소 추출 에러: {e}")
+    next_link = update_data.get("location_link", restaurant.location_link)
+    next_address = update_data.get("address", restaurant.address)
+    next_lat = update_data.get("latitude", restaurant.latitude)
+    next_lon = update_data.get("longitude", restaurant.longitude)
+    next_name = update_data.get("name", restaurant.name)
+
+    dup_response = await check_update_restaurant_duplicates(
+        db,
+        restaurant_id=restaurant.id,
+        name=str(next_name),
+        location_link=next_link,
+        address=next_address,
+        lat=next_lat,
+        lon=next_lon,
+    )
+    if dup_response:
+        return dup_response
+
+    # -------------------------
+    # 주소, 위도, 경도는 프론트에서 이미 추출한 값 사용
+    # -------------------------
+    for field in ["address", "latitude", "longitude"]:
+        if field in update_data:
+            setattr(restaurant, field, update_data[field])
 
     # -------------------------
     # 일반 필드 반영
@@ -770,7 +834,14 @@ async def update_restaurant(
         "recommended_menus"
     ]:
         if field in update_data:
-            setattr(restaurant, field, update_data[field])
+            if field == "location_link":
+                setattr(
+                    restaurant,
+                    field,
+                    normalize_link(update_data[field]) or update_data[field],
+                )
+            else:
+                setattr(restaurant, field, update_data[field])
 
     # -------------------------
     # 태그 갱신 (있을 때만)
