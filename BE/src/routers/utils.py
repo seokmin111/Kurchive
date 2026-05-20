@@ -6,7 +6,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 import anyio
 
-from AddressLatLong import extract_location_from_link
+from BE.AddressLatLong import extract_location_from_link
 from BE.src.models.restaurants import Restaurant
 from BE.src.utils.duplicate_det import find_duplicate_candidates
 
