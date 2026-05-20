@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import styles from "./page.module.css";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
@@ -21,10 +21,39 @@ import client from "../../api/client";
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const params = new URLSearchParams(location.search);
+  const initialTagId = params.get("tag_id");
+  const initialTagName = params.get("tag_name");
+  const initialRegionId = params.get("region_id");
+  const initialRegionName = params.get("region_name");
+
+  const initialSelectedTags: SelectedItem[] = [];
+  
+
+if (initialTagId && initialTagName) {
+  initialSelectedTags.push({
+    type: "tag",
+    id: Number(initialTagId),
+    name: initialTagName,
+  });
+}
+
+if (initialRegionId && initialRegionName) {
+  initialSelectedTags.push({
+    type: "region",
+    id: Number(initialRegionId),
+    name: initialRegionName,
+  });
+}
+
+  const [isTagSearchOpen, setIsTagSearchOpen] = useState<boolean>(
+    initialSelectedTags.length > 0
+  );
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]); // 백엔드가 객체 배열로 내려줌
-  const [isTagSearchOpen, setIsTagSearchOpen] = useState<boolean>(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -142,7 +171,11 @@ export default function SearchPage() {
       )}
 
 
-      {isTagSearchOpen && (<TagSearch isTagSearchOpen={isTagSearchOpen} setIsTagSearchOpen={setIsTagSearchOpen}/>
+      {isTagSearchOpen && (<TagSearch
+  isTagSearchOpen={isTagSearchOpen}
+  setIsTagSearchOpen={setIsTagSearchOpen}
+  initialSelectedTags={initialSelectedTags}
+/>
 )}
     </main>
   );
@@ -151,6 +184,7 @@ export default function SearchPage() {
 interface IsTagSearchOpenProps {
   isTagSearchOpen: boolean;
   setIsTagSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  initialSelectedTags?: SelectedItem[];
 }
 
 //sellectedTags에 들어갈 아이템의 type
@@ -163,18 +197,23 @@ type SelectedItem = {
 };
 
 //태그로 검색하기 누르면 올라오는 Modal
-function TagSearch({ isTagSearchOpen, setIsTagSearchOpen }: IsTagSearchOpenProps) {
+function TagSearch({
+  isTagSearchOpen,
+  setIsTagSearchOpen,
+  initialSelectedTags = [],
+}: IsTagSearchOpenProps) {
   // 태그 카테고리 위치
   const regionRef = useRef<HTMLDivElement>(null);
-const foodRef = useRef<HTMLDivElement>(null);
-const priceRef = useRef<HTMLDivElement>(null);
-const atmoRef = useRef<HTMLDivElement>(null);
+  const foodRef = useRef<HTMLDivElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
+  const atmoRef = useRef<HTMLDivElement>(null);
 
   // 기본 state
   const navigate = useNavigate();
   const tags: string[] = ["지역", "음식 종류", "가격", "분위기"];
   const [activeTag, setActiveTag] = useState<string>("");
-  const [sellectedTags, setSellectedTags] = useState<SelectedItem[]>([]);
+  const [sellectedTags, setSellectedTags] =
+  useState<SelectedItem[]>(initialSelectedTags);
   const [PriceRange, setPriceRange] = useState({ min: 1000, max: 500000 });
   const scrollRef = useRef<HTMLDivElement>(null);
 
