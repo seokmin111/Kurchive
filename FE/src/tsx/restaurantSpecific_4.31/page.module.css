@@ -51,6 +51,18 @@
   white-space: nowrap;
 }
 
+
+.tags_tag {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+.line{
+    height: 1px;
+    width: 100%;
+    background-color: black;
+    margin-bottom: 20px;
+
 .actionBtn {
   display: inline-flex;
   align-items: center;
@@ -65,6 +77,7 @@
   .actionBtn:hover {
     transform: scale(1.08);
   }
+
 }
 
 .upper_boxes {

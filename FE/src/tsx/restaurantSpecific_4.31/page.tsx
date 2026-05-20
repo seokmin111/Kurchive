@@ -1,6 +1,9 @@
 "use client";
+
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
+
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+
 import style from "./page.module.css";
 import client from "../../api/client";
 import StarRating from "../../components/StarRating";
@@ -447,6 +450,10 @@ const canManageReview = (review: RestaurantReview) => {
   if (loading) return <div className={style.main}>불러오는 중...</div>;
   if (err || !restaurant) return <div className={style.main}>{err}</div>;
 
+  const region = restaurant.region;
+
+if (!region) return;
+
   return (
     <div className={style.main}>
       {/* ===== 상단 네비 ===== */}
@@ -510,11 +517,9 @@ const canManageReview = (review: RestaurantReview) => {
         </div>
 
         <div className={style.rightBox}>
-        <div className={style.infoGrid}>
-          <div className={style.infoGridSection}>
-            <div className={style.infoGridLabel}>한줄평</div>
-            <div className={style.infoGridValue}>{restaurant.summary}</div>
-          </div>
+          <div className={style.infoGrid}>
+            <div style={{ color: "#8B0029", fontWeight: 800 }}>한줄평</div>
+            <div>{restaurant.summary ?? "요약 없음"}</div>
 
           <div className={style.infoGridSection}>
             <div className={style.infoGridLabel}>주소</div>
@@ -580,20 +585,42 @@ const canManageReview = (review: RestaurantReview) => {
 
   <div className={style.tags}>
     {restaurant.region && (
-      <div className={style.tags_tag}>
-        {restaurant.region.name}
-      </div>
-    )}
+  <button
+    type="button"
+    className={style.tags_tag}
+    onClick={() => {
+  const region = restaurant.region;
+  if (!region) return;
 
-    {restaurant.tags.map((tag) => (
-      <div key={tag.id} className={style.tags_tag}>
+  nav(
+    `/restaurant/search?region_id=${region.id}&region_name=${encodeURIComponent(
+      region.name
+    )}`
+  );
+}}
+  >
+    {restaurant.region.name}
+  </button>
+)}
+
+   {restaurant.tags.map((tag) => (
+  <button
+    key={tag.id}
+    type="button"
+    className={style.tags_tag}
+    onClick={() =>
+      nav(
+        `/restaurant/search?tag_id=${tag.id}&tag_name=${encodeURIComponent(tag.name)}`
+      )
+    }
+  >
         {tag.parent_name && (
           <span className={style.parentTag}>
             {tag.parent_name}
           </span>
         )}
         <span>{tag.name}</span>
-      </div>
+      </button>
     ))}
 
     {!restaurant.region && restaurant.tags.length === 0 && (
