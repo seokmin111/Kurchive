@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import client from "../../api/client";
+import LanguageSelect from "../../components/LanguageSelect";
 
 
 type Restaurant = {
@@ -88,6 +89,9 @@ export default function RestaurantSearchPage() {
               <p className={styles.sub_title} style={{ display: "inline" }}>
                 우리만의 미식 지도
         </p>
+              <div className={styles.languageSlot}>
+                <LanguageSelect />
+              </div>
       </div>
 
       <Link to="/restaurant/search">

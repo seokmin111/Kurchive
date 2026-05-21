@@ -87,21 +87,21 @@ div {
     position: fixed;  /* 화면에 고정 */
     bottom: 0;        /* 아래쪽 붙이기 */
     left: 0;          /* 왼쪽 끝 */
-    width: 100%; 
+    width: 100%;
     box-sizing: border-box;
-    
+
     display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-end;
-    
+
 	padding: 0 6vw 3vh;
     color: #8B0029;
-    background: linear-gradient(to top, 
+    background: linear-gradient(to top,
                                 rgba(139,0,41,0.3) 0%,    /* 아래 0% */
                                 #F2ECE5 60%,             /* 중간 50% */
                                 rgba(139,0,41,0) 100%);  /* 위 100% */
-    
+
 }
 .contactButton {
 	display: inline-flex;
@@ -168,4 +168,11 @@ div {
 	font-size: 0.92rem;
 	font-weight: 400;
 	line-height: 1.5;
+}
+/* language select */
+.language-slot {
+    position: absolute;
+    top: 20px;
+    right: 86px;
+    z-index: 20;
 }

@@ -64,7 +64,7 @@
     box-sizing: content-box;
     width: 60%;
     height: 20px;
-    line-height: 20px;  
+    line-height: 20px;
     margin: 10px;
     padding: 20px 25px 25px;
     border-radius: 18px;
@@ -73,7 +73,7 @@
     background-color: #8B0029;
     color: #F2ECE5;
     cursor: pointer;
-}  
+}
 
 .ivory_btn{
     font-family: 'SlowGothic', sans-serif;
@@ -81,7 +81,7 @@
     box-sizing: content-box;
     width: 60%;
     height: 20px;
-    line-height: 20px;  
+    line-height: 20px;
     margin: 50px auto 20px;
     padding: 20px 25px 25px;
     border-radius: 18px;
@@ -96,9 +96,9 @@
     position: fixed;  /* 화면에 고정 */
     bottom: 0;        /* 아래쪽 붙이기 */
     left: 0;          /* 왼쪽 끝 */
-    width: 100%; 
+    width: 100%;
     height: 50vh;
-    background: linear-gradient(to top, 
+    background: linear-gradient(to top,
                                 rgba(218, 176, 155, 0.3) 90%,    /* 아래 0% */
                                 rgba(242, 236, 229, 0.2) 98%,             /* 중간 50% */
                                 rgba(139,0,41,0) 100%);  /* 위 100% */
@@ -116,7 +116,7 @@
   grid-auto-rows: 120px;
 
   column-gap: 25px;
-  row-gap: 30px; 
+  row-gap: 30px;
 
   width: 100%;
   height: auto;
@@ -156,7 +156,7 @@
   background: white;
   border-radius: 30px 30px 0 0;
 
-  overflow: hidden;  
+  overflow: hidden;
 }
 
 .scroll_area {
@@ -164,13 +164,20 @@
   overflow-y: auto;
 
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: 120px;
   column-gap: 25px;
   row-gap: 30px;
 
   padding: 20px;
   box-sizing: border-box;
+}
+
+/* responsive grid */
+@media (max-width: 900px) {
+  .scroll_area {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* =========================
@@ -265,7 +272,7 @@
   line-height: 1;
 
   flex-shrink: 0;            /* 절대 찌그러지지 않음 */
-   margin-left: auto; 
+   margin-left: auto;
 }
 
 
@@ -273,7 +280,7 @@
   font-family: var(--font-pretendard), sans-serif;
   font-size: 12px;
   color: rgb(141, 141, 141);
-  
+
   white-space: nowrap;
 }
 .restaurant_underContainer {
@@ -323,7 +330,7 @@
 
 /* =========================
    Mobile (Carousel)
-========================= 
+=========================
 @media (max-width: 600px) {
   .restaurant_container {
     grid-template-columns: unset;
@@ -446,4 +453,12 @@
   font-weight: 600;
   color: #8B0029; /* 커카이브 버건디 */
   letter-spacing: 0.5px;
+}
+/* language select */
+.languageSlot {
+  position: absolute;
+  top: 30px;
+  right: 20px;
+  --language-select-height: 48px;
+  --language-select-mobile-width: 48px;
 }

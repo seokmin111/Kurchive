@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "./components/main.css"; // CSS 위치 맞게 조정
+import LanguageSelect from "./components/LanguageSelect";
 import {
   getMyPage,
   updateNickname as updateNicknameAPI,
@@ -10,6 +11,10 @@ export default function MainPage() {
   return (
     <div>
       {/* 프로필 이미지 */}
+      <div className="language-slot">
+        <LanguageSelect />
+      </div>
+
 
       <Link to="/mypage">
       <img src="/kurchive_profile.png" className="mypage"></img>

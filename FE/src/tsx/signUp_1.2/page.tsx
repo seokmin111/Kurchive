@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
 import client from "../../api/client";
+import LanguageSelect from "../../components/LanguageSelect";
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -173,6 +174,9 @@ export default function SignupPage() {
 
   return (
     <div className={styles.container}>
+      <div className={styles.languageSlot}>
+        <LanguageSelect />
+      </div>
       {/* 배너(피그마의 배너 이미지 영역) */}
       <div className={styles.header}>배너 이미지</div>
 

@@ -150,3 +150,21 @@
   font-weight: bold;
   cursor: pointer;
 }
+
+/* language select */
+.languageSlot {
+  position: absolute;
+  top: 72px;
+  right: 18px;
+}
+
+@media (max-width: 480px) {
+  .languageSlot {
+    top: 72px;
+    right: 12px;
+  }
+}
+
+.container {
+  position: relative;
+}

@@ -219,3 +219,21 @@
   font-size: 14px;
   cursor: pointer;
 }
+
+/* language select */
+.languageSlot {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+}
+
+@media (max-width: 480px) {
+  .languageSlot {
+    top: 22px;
+    right: 22px;
+  }
+}
+
+.container {
+  position: relative;
+}

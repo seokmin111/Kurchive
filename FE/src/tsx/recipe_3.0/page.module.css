@@ -133,7 +133,7 @@
     box-sizing: content-box;
     width: 60%;
     height: 20px;
-    line-height: 20px;  
+    line-height: 20px;
     margin: 50px auto 20px;
     padding: 20px 25px 25px;
     border-radius: 18px;
@@ -151,7 +151,7 @@
     box-sizing: content-box;
     width: 60%;
     height: 20px;
-    line-height: 20px;  
+    line-height: 20px;
     margin: 10px;
     padding: 20px 25px 25px;
     border-radius: 18px;
@@ -160,7 +160,7 @@
     background-color: #8B0029;
     color: #F2ECE5;
     cursor: pointer;
-}  
+}
 
 
 /* =========================
@@ -355,7 +355,7 @@
   z-index: 0;
 }
 .recipe_text {
-  margin-bottom: 10px;  
+  margin-bottom: 10px;
 }
 
 .recipe_title,
@@ -401,3 +401,12 @@
   }
 }
   */
+
+/* language select */
+.languageSlot {
+  position: absolute;
+  top: 30px;
+  right: 20px;
+  --language-select-height: 48px;
+  --language-select-mobile-width: 48px;
+}

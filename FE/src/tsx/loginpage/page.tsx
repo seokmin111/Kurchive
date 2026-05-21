@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
 import client from "../../api/client"; // 
+import LanguageSelect from "../../components/LanguageSelect";
 
 interface FormData {
   id: string;
@@ -56,6 +57,9 @@ export default function LoginPage() {
 
   return (
     <div className={style.container}>
+      <div className={style.languageSlot}>
+        <LanguageSelect />
+      </div>
       <header className={style.header}>이 웹페이지는 고려대학교 동아리인 커리손으로먹기연구회와 KUCC의 협력으로 제작되었습니다.</header>
       <main className={style.main}>
         <div className={style.logoGroup}>

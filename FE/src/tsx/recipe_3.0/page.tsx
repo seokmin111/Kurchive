@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
 import client from "../../api/client";
+import LanguageSelect from "../../components/LanguageSelect";
 
 type Recipe = {
   id: number;
@@ -78,6 +79,9 @@ export default function RecipeMainPage() {
         <p className={styles.sub_title} style={{ display: "inline" }}>
           우리만의 미식 지도
         </p>
+        <div className={styles.languageSlot}>
+          <LanguageSelect />
+        </div>
       </div>
 
       {/* 검색창 제거 / 아이보리 버튼만 */}
