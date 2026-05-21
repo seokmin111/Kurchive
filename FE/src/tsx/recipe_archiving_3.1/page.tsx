@@ -9,9 +9,15 @@ import {
   uploadStepImages,
 } from "../../api/recipe";
 import { searchIngredients } from "../../api/ingredient";
+import {
+  DEFAULT_UNIT_MAP,
+  UNIT_TYPE_LABEL,
+  getUnitOptions,
+  getUnitTypeLabelByUnitName,
+  normalizeUnitType,
+  type UnitType,
+} from "../../constants/recipeUnits";
 import style from "./page.module.css";
-
-type UnitType = "mass" | "volume" | "count" | "misc";
 
 type DraftIngredient = {
   local_id: string;
@@ -34,13 +40,6 @@ type SuggestItem = {
 };
 
 export default function RecipeCreate() {
-  const defaultUnitMap: Record<UnitType, string[]> = {
-    mass: ["g", "kg"],
-    volume: ["ml", "L"],
-    count: ["개"],
-    misc: [],
-  };
-
   const nav = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -91,7 +90,7 @@ export default function RecipeCreate() {
               name: value,
               ingredient_id: -1,
               unit_name: "",
-              unit_type: "mass",
+              unit_type: "weight",
               is_existing: false,
             }
           : it
@@ -127,6 +126,7 @@ export default function RecipeCreate() {
 
   const onPickIngredient = async (idx: number, pick: SuggestItem) => {
     const created = await getOrCreateIngredient(pick.name);
+    const firstUnit = created.units?.[0] ?? "";
 
     setIngredients((prev) =>
       prev.map((it, i) =>
@@ -135,8 +135,8 @@ export default function RecipeCreate() {
               ...it,
               ingredient_id: created.id,
               name: created.name,
-              unit_type: created.unit_type as UnitType,
-              unit_name: created.units?.[0] ?? "",
+              unit_name: firstUnit,
+              unit_type: normalizeUnitType(created.unit_type, firstUnit),
               is_existing: true,
             }
           : it
@@ -161,7 +161,7 @@ export default function RecipeCreate() {
         name: "",
         quantity: 0,
         unit_name: "g",
-        unit_type: "mass",
+        unit_type: "weight",
         is_existing: false,
       },
     ]);
@@ -224,10 +224,12 @@ export default function RecipeCreate() {
         }
 
         const created = await getOrCreateIngredient(ing.name, ing.unit_type);
+        const firstUnit = created.units?.[0] ?? "";
         resolvedIngredients.push({
           ...ing,
           ingredient_id: created.id,
-          unit_name: created.units?.[0] ?? "",
+          unit_name: firstUnit,
+          unit_type: normalizeUnitType(created.unit_type, firstUnit),
           is_existing: true,
         });
       }
@@ -335,7 +337,15 @@ export default function RecipeCreate() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ingredients.map((item, idx) => (
+                  {ingredients.map((item, idx) => {
+                    const unitOptions = getUnitOptions(
+                      item.ingredient_id,
+                      item.unit_type,
+                      item.unit_name,
+                      allowedUnits
+                    );
+
+                    return (
                     <tr key={item.local_id}>
                       <td className={style.ingCell}>
                         <input
@@ -410,10 +420,7 @@ export default function RecipeCreate() {
                             )
                           }
                         >
-                          {(item.ingredient_id > 0
-                            ? allowedUnits[item.ingredient_id] ?? []
-                            : defaultUnitMap[item.unit_type]
-                          ).map((u) => (
+                          {unitOptions.map((u) => (
                             <option key={u}>{u}</option>
                           ))}
                         </select>
@@ -421,12 +428,7 @@ export default function RecipeCreate() {
 
                       <td>
                         {item.is_existing ? (
-                          <span>
-                            {item.unit_type === "mass" && "질량"}
-                            {item.unit_type === "volume" && "부피"}
-                            {item.unit_type === "count" && "개수"}
-                            {item.unit_type === "misc" && "기타"}
-                          </span>
+                          <span>{getUnitTypeLabelByUnitName(item.unit_name)}</span>
                         ) : (
                           <select
                             value={item.unit_type}
@@ -436,9 +438,9 @@ export default function RecipeCreate() {
                                   i === idx
                                     ? {
                                         ...it,
-                                        unit_type: e.target.value as UnitType,
-                                        unit_name:
-                                          defaultUnitMap[
+                                      unit_type: e.target.value as UnitType,
+                                      unit_name:
+                                          DEFAULT_UNIT_MAP[
                                             e.target.value as UnitType
                                           ][0] ?? "",
                                       }
@@ -447,9 +449,9 @@ export default function RecipeCreate() {
                               )
                             }
                           >
-                            <option value="mass">질량</option>
-                            <option value="volume">부피</option>
-                            <option value="count">개수</option>
+                            <option value="weight">{UNIT_TYPE_LABEL.weight}</option>
+                            <option value="volume">{UNIT_TYPE_LABEL.volume}</option>
+                            <option value="count">{UNIT_TYPE_LABEL.count}</option>
                           </select>
                         )}
                       </td>
@@ -460,7 +462,8 @@ export default function RecipeCreate() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

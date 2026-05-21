@@ -35,7 +35,7 @@ router = APIRouter(prefix="/api/recipe", tags=["Recipe"])
 # -------- DTO 정의 --------
 class IngredientGetOrCreateRequest(BaseModel):
     name: str
-    unit_type: Optional[str] = "mass"
+    unit_type: Optional[str] = "weight"
     
 class IngredientDTO(BaseModel):
     ingredient_id: int
@@ -47,7 +47,7 @@ class IngredientCreateDTO(BaseModel):
     name: str
     quantity: float
     unit_name: str
-    unit_type: Optional[str] = "mass"
+    unit_type: Optional[str] = "weight"
 
 
 class IngredientDetailDTO(BaseModel):
@@ -74,7 +74,7 @@ class RecipeStepDTO(BaseModel):
 class IngredientUpsertDTO(BaseModel):
     ingredient_id: Optional[int] = None
     name: Optional[str] = None
-    unit_type: Optional[str] = "mass"
+    unit_type: Optional[str] = "weight"
     quantity: float
     unit_name: str
 
@@ -178,10 +178,16 @@ def _build_recipe_response(recipe: Recipe):
 
 # 재료 추가 API
 '''DB에 없는 재료가 들어올 경우, 기본 재료 타입과 유닛 타입 지정'''
+def normalize_unit_type(unit_type: Optional[str]) -> str:
+    if unit_type == "mass":
+        return "weight"
+    return unit_type or "weight"
+
+
 async def get_or_create_ingredient(
     db: AsyncSession,
     name: str,
-    unit_type: str = "mass",
+    unit_type: str = "weight",
     is_custom: bool = True
 ):
     result = await db.execute(
@@ -192,6 +198,8 @@ async def get_or_create_ingredient(
     if ingredient:
         return ingredient
 
+    unit_type = normalize_unit_type(unit_type)
+
     ingredient = Ingredient(
         name=name,
         unit_type=unit_type,
@@ -201,8 +209,8 @@ async def get_or_create_ingredient(
     await db.flush()  # commit 대신 flush
 
     default_units = {
-        "mass": ["g", "kg"],
-        "volume": ["ml", "L"],
+        "weight": ["g", "kg"],
+        "volume": ["ml", "L", "tbsp", "tsp", "cup"],
         "count": ["개"],
         "misc": []
     }
@@ -231,7 +239,7 @@ async def get_or_create_ingredient_api(
     ingredient = await get_or_create_ingredient(
         db=db,
         name=payload.name,
-        unit_type=payload.unit_type or "mass",
+        unit_type=normalize_unit_type(payload.unit_type),
     )
 
     unit_result = await db.execute(
@@ -385,7 +393,7 @@ async def create_recipe(
     await db.refresh(recipe)
 
     for ing in data.ingredients:
-        ingredient = await get_or_create_ingredient(db, ing.name, ing.unit_type or "mass")
+        ingredient = await get_or_create_ingredient(db, ing.name, normalize_unit_type(ing.unit_type))
 
         db.add(RecipeIngredient(
             recipe_id=recipe.id,
@@ -449,7 +457,7 @@ async def update_recipe(
                 ingredient = await get_or_create_ingredient(
                     db=db,
                     name=ing.name,
-                    unit_type=ing.unit_type or "mass",
+                    unit_type=normalize_unit_type(ing.unit_type),
                     is_custom=True,
                 )
                 ingredient_id = ingredient.id

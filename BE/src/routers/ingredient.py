@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/ingredient", tags=["Ingredient"])
 class IngredientSearchItem(BaseModel):
     id: int
     name: str
-    unit_type: Optional[str] = "mass"
+    unit_type: Optional[str] = "weight"
 
 
 @router.get("/search", response_model=List[IngredientSearchItem])
@@ -93,5 +93,4 @@ async def get_ingredient_info(
 
     else:
         raise HTTPException(400, "Invalid mode. Use 1 or 2.")
-
 

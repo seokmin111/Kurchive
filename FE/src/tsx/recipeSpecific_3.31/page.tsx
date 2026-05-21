@@ -5,6 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import style from "./page.module.css";
 import { getIngredientUnitsByName, searchIngredients } from "../../api/ingredient";
+import {
+  DEFAULT_UNIT_MAP,
+  UNIT_TYPE_LABEL,
+  getUnitOptions,
+  getUnitTypeLabelByUnitName,
+  normalizeUnitType,
+  type UnitType,
+} from "../../constants/recipeUnits";
 
 import { Pencil, Heart } from "lucide-react";
 
@@ -43,8 +51,6 @@ type RecipeDetail = {
   unit_type: UnitType;
   }[];
 };
-
-type UnitType = "mass" | "volume" | "count" | "misc";
 
 type DraftIngredient = {
   local_id: string;
@@ -204,7 +210,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
       name: x.name,
       quantity: x.quantity,
       unit_name: x.unit_name,
-      unit_type: x.unit_type as UnitType,
+      unit_type: normalizeUnitType(x.unit_type, x.unit_name),
       is_existing: true,
           }))
     );
@@ -274,13 +280,6 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
   const onClickBack = () => nav(-1);
 
-  const defaultUnitMap: Record<UnitType, string[]> = {
-  mass: ["g", "kg"],
-  volume: ["ml", "L"],
-  count: ["개"],
-  misc:[],
-  };
-
   const onChangeIngredientName = (idx: number, v: string) => {
   const localId = ingredientsDraft[idx].local_id;
 
@@ -292,7 +291,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
               name: v,
               ingredient_id: -1,
               unit_name: "",
-              unit_type: "mass",
+              unit_type: "weight",
               is_existing: false,
       }
           : it
@@ -340,7 +339,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
               ingredient_id: pick.id,
               name: pick.name,
               unit_name: first,
-              unit_type: (pick.unit_type as UnitType) ?? "mass",
+              unit_type: normalizeUnitType(pick.unit_type, first),
               is_existing: true,
       }
           : it
@@ -418,7 +417,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
           name: x.name,
           quantity: x.quantity,
           unit_name: x.unit_name,
-          unit_type: x.unit_type as UnitType,
+          unit_type: normalizeUnitType(x.unit_type, x.unit_name),
           is_existing: true,
     }))
       );
@@ -486,7 +485,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
           name: x.name,
           quantity: x.quantity,
           unit_name: x.unit_name,
-          unit_type: x.unit_type as UnitType,
+          unit_type: normalizeUnitType(x.unit_type, x.unit_name),
           is_existing: true,
     }))
       );
@@ -517,7 +516,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
           name: x.name,
           quantity: x.quantity,
           unit_name: x.unit_name,
-          unit_type: x.unit_type as UnitType,
+          unit_type: normalizeUnitType(x.unit_type, x.unit_name),
           is_existing: true,
     }))
       );
@@ -560,7 +559,7 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
     name: "",
     quantity: 0,
     unit_name: "g",
-    unit_type: "mass",
+    unit_type: "weight",
     is_existing: false,
       },
   ]);
@@ -792,17 +791,22 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
           <tbody>
       {ingredientsView.map((item, idx) => {
               const isConfirmed = item.ingredient_id > 0;
-              const units = allowedUnits[item.ingredient_id] ?? [];
               const unitValue =
         unitSelections[item.ingredient_id] ??
         (isEdit ? ingredientsDraft[idx]?.unit_name : item.unit_name) ??
         item.unit_name;
+              const unitOptions = getUnitOptions(
+        item.ingredient_id,
+        item.unit_type,
+        unitValue,
+        allowedUnits
+              );
 
               return (
         <tr key={item.local_id}>
                   <td className={style.ingCell}>
           {!isEdit ? (
-                      item.name
+                      <span className={style.ingredientName}>{item.name}</span>
           ) : (
                       <>
             <input
@@ -870,12 +874,8 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                   </td>
                   <td>
           <select
-                      value={
-            item.ingredient_id > 0
-                          ? (unitSelections[item.ingredient_id] ?? item.unit_name)
-                          : item.unit_name
-                      }
-                      disabled={item.ingredient_id > 0 ? (allowedUnits[item.ingredient_id]?.length ?? 0) === 0 : false}
+                      value={unitValue}
+                      disabled={item.ingredient_id > 0 ? unitOptions.length === 0 : false}
                       onChange={(e) => {
             const v = e.target.value;
             if (item.ingredient_id > 0) {
@@ -887,23 +887,14 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
             );
                       }}
           >
-                      {item.ingredient_id > 0
-            ? (allowedUnits[item.ingredient_id] ??[]).map((u) => (
-              <option key={u} value={u}>{u}</option>
-                          ))
-            : (defaultUnitMap[item.unit_type] ??[]).map((u) => (
+                      {unitOptions.map((u) => (
               <option key={u} value={u}>{u}</option>
                           ))}
           </select>
                   </td>
                   <td>
           {item.is_existing ? (
-                      <span>
-            {item.unit_type === "mass" && "질량"}
-            {item.unit_type === "volume" && "부피"}
-            {item.unit_type === "count" && "개수"}
-            {item.unit_type === "misc" && "기타"}
-                      </span>
+                      <span>{getUnitTypeLabelByUnitName(unitValue)}</span>
           ) : (
                       <select
             value={item.unit_type}
@@ -914,16 +905,16 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
                 ? {
                   ...it,
                   unit_type: e.target.value as UnitType,
-                  unit_name: defaultUnitMap[e.target.value as UnitType][0] ?? "",
+                  unit_name: DEFAULT_UNIT_MAP[e.target.value as UnitType][0] ?? "",
                                   }
                 : it
               )
                           )
             }
                       >
-            <option value="mass">질량</option>
-            <option value="volume">부피</option>
-            <option value="count">개수</option>
+            <option value="weight">{UNIT_TYPE_LABEL.weight}</option>
+            <option value="volume">{UNIT_TYPE_LABEL.volume}</option>
+            <option value="count">{UNIT_TYPE_LABEL.count}</option>
                       </select>
           )}
                   </td>

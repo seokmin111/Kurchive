@@ -1,4 +1,4 @@
-/* ===== Base ===== */
+/* common */
 .container {
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
   text-rendering: optimizeLegibility;
 }
 
-/* ===== Banner ===== */
+/* header */
 .banner {
   width: calc(100% + 40px);
   height: 150px;
@@ -63,7 +63,7 @@
   background: #ffe3eb;
 }
 
-/* ===== Titles / Sections ===== */
+/* section titles */
 .foodTitle {
   margin: 20px 0 14px;
   font-size: 24px;
@@ -99,7 +99,7 @@
   margin: 6px 0;
 }
 
-/* ===== Form controls ===== */
+/* form controls */
 input,
 select,
 textarea,
@@ -132,7 +132,7 @@ select {
   padding-right: 28px;
 }
 
-/* ===== Portion ===== */
+/* serving controls */
 .portionBody {
   width: 100%;
   display: flex;
@@ -155,7 +155,7 @@ select {
   filter: brightness(0.98);
 }
 
-/* ===== Buttons ===== */
+/* buttons */
 .applyUnitBtn {
   border: 1px solid #8b0028;
   background-color: #fff;
@@ -177,7 +177,7 @@ select {
   cursor: not-allowed;
 }
 
-/* ===== Ingredient header ===== */
+/* ingredients */
 .ingredientHeader {
   width: 100%;
   display: flex;
@@ -187,7 +187,6 @@ select {
   margin-bottom: 8px;
 }
 
-/* ===== Table ===== */
 .table {
   width: 100% !important;
   min-width: 0 !important;
@@ -204,11 +203,6 @@ select {
   width: 100%;
   overflow-x: hidden;
   display: block;
-}
-
-.ingredientBody .table {
-  width: 100% !important;
-  min-width: 0 !important;
 }
 
 .table th,
@@ -298,7 +292,6 @@ select {
   background: #f7f7f7;
 }
 
-/* ===== Row actions ===== */
 .addRowBtn {
   width: 100%;
   margin: 12px 0 2px;
@@ -350,7 +343,7 @@ select {
   cursor: not-allowed;
 }
 
-/* ===== Recipe Steps ===== */
+/* recipe steps */
 .recipeBody {
   width: 100%;
   display: flex;
@@ -452,17 +445,6 @@ select {
   letter-spacing: -0.2px;
 }
 
-.stepPlaceholder {
-  position: absolute;
-  inset: 10px;
-  z-index: 1;
-}
-
-.stepPickedText {
-  color: #555555;
-  font-size: 12px;
-}
-
 .stepImageList {
   display: flex;
   flex-wrap: wrap;
@@ -536,85 +518,16 @@ select {
   background: rgba(139, 0, 40, 0.14);
 }
 
-/* ===== Ingredient Autocomplete ===== */
-
 .ingCell {
-  position: relative;   /* 드롭다운 기준점 */
+  position: relative;
   overflow: visible !important;
 }
 
-.ingDropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
+.ingredientName {
+  display: block;
   width: 100%;
-  min-width: 160px;
-
-  background: #fff;
-  border: 1px solid #e4e4e4;
-  border-radius: 12px;
-
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-  z-index: 999;
-
-  max-height: 220px;
-  overflow-y: auto;
-}
-
-/* 스크롤 부드럽게 */
-.ingDropdown::-webkit-scrollbar {
-  width: 6px;
-}
-.ingDropdown::-webkit-scrollbar-thumb {
-  background: #ddd;
-  border-radius: 6px;
-}
-
-/* 각 항목 */
-.ingDropdownItem {
-  padding: 12px 14px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.15s ease;
-}
-
-.ingDropdownItem:hover {
-  background: rgba(139, 0, 40, 0.06);
-}
-
-/* 검색중 표시 */
-.ingDropdownLoading {
-  padding: 12px 14px;
-  font-size: 13px;
-  color: #666;
-}
-
-/* 저장하기 버튼 */
-/* ===== Create Button ===== */
-
-.createActionWrap {
-  width: 100%;
-  margin: 32px 0 60px;
-}
-
-.createBtn {
-  width: 100%;
-  height: 52px;
-  border-radius: 16px;
-  border: none;
-  background-color: #8b0028;
-  color: #ffffff;
-  font-weight: 900;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.createBtn:hover {
-  background-color: #6f001f;
-}
-
-.createBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }

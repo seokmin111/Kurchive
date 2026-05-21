@@ -8,7 +8,7 @@ export type IngredientCreateInput = {
   name: string;
   quantity: number;
   unit_name: string;
-  unit_type?: string; // "mass", "volume", "count" 등
+  unit_type?: string; // "weight", "volume", "count" 등
 };
 
 // 레시피 수정 시 재료 타입 (ID 등록)
