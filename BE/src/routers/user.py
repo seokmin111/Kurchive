@@ -60,6 +60,11 @@ class LoginResponse(BaseModel):
     status: str
     access_token: str
 
+class LogoutResponse(BaseModel):
+    success: bool
+    message: str
+    status: str
+
 
 # -------- API --------
 @router.post("/signup")
@@ -175,3 +180,14 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_async_db)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
+@router.post("/logout", response_model=LogoutResponse)
+async def logout():
+    """
+    로그아웃 API
+    JWT 토큰 방식이므로, 실제 토큰 삭제는 프론트엔드에서 처리
+    """
+    return {
+        "success": True,
+        "message": "로그아웃 성공",
+        "status": "ok"
+    }
