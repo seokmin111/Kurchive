@@ -100,8 +100,8 @@ export const createRestaurant = (body: RestaurantBody) =>
 // Update 관련
 
 // 식당 정보 수정
-export const updateRestaurant = (restaurantId: number, body: RestaurantBody) =>
-  client.put(`/api/restaurants/${restaurantId}`, body).then(r => r.data);
+export const updateRestaurant = (restaurantId: number, body: Partial<RestaurantBody>) =>
+  client.patch(`/api/restaurants/${restaurantId}`, body).then(r => r.data);
 
 // 이미지 메타정보 수정 (대표사진 등)
 export const updateImageMeta = (restaurantId: number, imageId: number, body: ImagePatchBody) =>
@@ -137,6 +137,18 @@ export const uploadRestaurantImages = (
 
   return client.post(`/api/restaurants/${restaurantId}/images`, formData, {
     params: { replace },
+    headers: { "Content-Type": "multipart/form-data" },
+  }).then(r => r.data);
+};
+
+export const uploadRestaurantThumbnail = (
+  restaurantId: number,
+  file: File
+) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return client.post(`/api/restaurants/${restaurantId}/thumbnail`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   }).then(r => r.data);
 };
