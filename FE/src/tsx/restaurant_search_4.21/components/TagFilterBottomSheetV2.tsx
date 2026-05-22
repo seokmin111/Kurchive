@@ -14,11 +14,13 @@ import AtmosphereSelector from "./AtmosphereSelector";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  initialSelectedTags?: SelectedItem[];
 };
 
 const TAGS = ["지역", "음식 종류", "가격", "별점", "분위기"] as const;
 
-export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
+export default function TagFilterBottomSheetV2({ isOpen, onClose, initialSelectedTags = [],
+}: Props) {
   const navigate = useNavigate();
   const regionRef = useRef<HTMLDivElement>(null);
   const foodRef = useRef<HTMLDivElement>(null);
@@ -28,7 +30,12 @@ export default function TagFilterBottomSheetV2({ isOpen, onClose }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [activeTag, setActiveTag] = useState("");
-  const [selectedTags, setSelectedTags] = useState<SelectedItem[]>([]);
+  const [selectedTags, setSelectedTags] =
+    useState<SelectedItem[]>(initialSelectedTags);
+
+  useEffect(() => {
+    setSelectedTags(initialSelectedTags);
+  }, [initialSelectedTags])
 
   useEffect(() => {
     const content = scrollRef.current;
