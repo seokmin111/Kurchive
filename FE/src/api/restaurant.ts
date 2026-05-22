@@ -137,7 +137,7 @@ export const uploadRestaurantImages = (
 
   return client.post(`/api/restaurants/${restaurantId}/images`, formData, {
     params: { replace },
-    headers: { "Content-Type": "multipart/form-data" },
+    // headers 제거
   }).then(r => r.data);
 };
 
@@ -148,7 +148,6 @@ export const uploadRestaurantThumbnail = (
   const formData = new FormData();
   formData.append("file", file);
 
-  return client.post(`/api/restaurants/${restaurantId}/thumbnail`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  }).then(r => r.data);
+  return client.post(`/api/restaurants/${restaurantId}/thumbnail`, formData)
+    .then(r => r.data);
 };
