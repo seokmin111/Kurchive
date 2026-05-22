@@ -119,6 +119,7 @@ class RestaurantCreate(BaseModel):
     description: str
     price_min: int
     price_max: int
+    recommended_menus: Optional[List[str]] = []
     tag_ids: List[int]
     force: Optional[bool] = False # 중복 의심이어도 등록할건지 말건지
 
