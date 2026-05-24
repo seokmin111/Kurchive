@@ -111,7 +111,7 @@ export default function MapPage() {
 
       <NaverMap restaurantIds={restaurantIds} />
 
-      <button className={style.backButton} onClick={() => navigate(-1)}>
+      <button className={style.backButton} onClick={() => navigate("/restaurant")}>
         <img
           src="/backstep_button.svg.png"
           alt="Back"

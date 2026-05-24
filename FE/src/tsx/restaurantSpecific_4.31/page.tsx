@@ -487,6 +487,30 @@ const canManageReview = (review: RestaurantReview) => {
   if (err || !restaurant) return <div className={style.main}>{err}</div>;
 
   const region = restaurant.region;
+  const summaryText = restaurant.summary ?? "요약 없음";
+  const isShortSummary = summaryText.length <= 25;
+  const isCompactSummary = summaryText.length > 45 && summaryText.length <= 70;
+  const isDenseSummary = summaryText.length > 70;
+  const infoGridClassName = [
+    style.infoGrid,
+    isShortSummary ? style.infoGridShort : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const summarySectionClassName = [
+    style.summarySection,
+    isShortSummary ? style.summarySectionShort : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const summaryValueClassName = [
+    style.summaryValue,
+    isShortSummary ? style.summaryValueShort : "",
+    isCompactSummary ? style.summaryValueCompact : "",
+    isDenseSummary ? style.summaryValueDense : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
 if (!region) return;
 
@@ -553,19 +577,32 @@ if (!region) return;
         </div>
 
         <div className={style.rightBox}>
-          <div className={style.infoGrid}>
-            <div style={{ color: "#8B0029", fontWeight: 800 }}>한줄평</div>
-            <div>{restaurant.summary ?? "요약 없음"}</div>
+          <div className={infoGridClassName}>
+            <div className={summarySectionClassName}>
+              <div className={style.summaryLabel}>
+                <MessageSquare size={11} strokeWidth={2.4} />
+                <span>한줄평</span>
+              </div>
+              <div className={summaryValueClassName}>
+                {summaryText}
+              </div>
+            </div>
 
-          <div className={style.infoGridSection}>
-            <div className={style.infoGridLabel}>주소</div>
+          <div className={`${style.infoGridSection} ${style.addressSection}`}>
+            <div className={style.infoGridLabel}>
+              <MapPin size={11} strokeWidth={2.4} />
+              <span>주소</span>
+            </div>
             <div className={style.infoGridValue}>
               {restaurant.address ?? "주소 정보 없음"}
             </div>
           </div>
 
           <div className={style.infoGridSection}>
-            <div className={style.infoGridLabel}>가격대</div>
+            <div className={style.infoGridLabel}>
+              <Tag size={11} strokeWidth={2.4} />
+              <span>가격대</span>
+            </div>
             <div className={style.infoGridValue}>
               {formatPrice(restaurant.price_min, restaurant.price_max)}
             </div>
