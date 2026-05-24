@@ -62,28 +62,25 @@ _REGION = None
 
 
 def _ensure_client():
-    global _config, _object_storage, _REGION
+    global _config, _object_storage, _NAMESPACE, _REGION
+
     if _object_storage is not None:
         return _object_storage
 
     try:
-        _config = oci.config.from_file("~/.oci/config")
+        _config = oci.config.from_file("/root/.oci/config")# 로컬 백엔드면 바꿔야 함.
+        # 홍지우 로컬 : C:\Users\82105\.oci\config
+        # 
         _object_storage = oci.object_storage.ObjectStorageClient(_config)
 
-        # 여기서 진짜 namespace를 받아온다
-        global _NAMESPACE, _REGION
         _NAMESPACE = _object_storage.get_namespace().data
         _REGION = _config.get("region")
 
         print(f"✅ OCI initialized: namespace={_NAMESPACE}, region={_REGION}")
 
-        print("✅ OCI ObjectStorageClient initialized")
-    except oci.exceptions.ConfigFileNotFound:
-        print("⚠️ OCI config not found — skipping OCI features.")
-        _object_storage = None
     except Exception as e:
-        print(f"⚠️ OCI init failed: {e}")
-        _object_storage = None
+        print(f"⚠️ OCI init failed: {type(e).__name__}: {e}")
+        raise e
 
     return _object_storage
 

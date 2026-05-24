@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getMyPage } from "../../api/mypage";
 import { MyPageUser } from "../../api/mypage";
+import { logout as logoutApi } from "../../api/auth";
 
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import { config } from '@fortawesome/fontawesome-svg-core';
@@ -29,11 +30,6 @@ export default function Mypage() {
     };
 
     // logout
-    
-    function logout() {
-    localStorage.removeItem("access_token");
-    navigate("/");
-    }
 
     useEffect(() => {
         document.body.style.overflowX = 'hidden';
@@ -48,6 +44,19 @@ export default function Mypage() {
                 navigate("/login");
             });
     }, [navigate]);
+
+    async function logout() {
+        if (!confirm("로그아웃 하시겠습니까?")) return;
+        try {
+            await logoutApi(); 
+        } catch (err) {
+            console.error(err);
+        } finally {
+            localStorage.removeItem("access_token");
+            alert("로그아웃 되었습니다.");
+            navigate("/");
+        }
+    }
 
     if (!user) return <div>로딩중...</div>;
 
@@ -169,8 +178,15 @@ export default function Mypage() {
                 </div>
 
             </div>
+            <div 
+                className={styles.leave} 
+                onClick={logout} 
+                style={{ cursor: 'pointer' }}
+            >
+                <div className={styles.leave__title} style={{ color: '#8B0028', fontWeight: '500' }}>로그아웃</div>
+            </div>
             
-            <div className={styles.leave} onClick={() => navigate("/quitpage")}>
+            <div className={styles.leave} onClick={() => navigate("/quitpage")} style={{ marginTop: '8px' }}>
                 <div className={styles.leave__title}>회원 탈퇴하기</div>
                 <div className={styles.leave__bar}></div>
             </div>

@@ -51,6 +51,18 @@
   white-space: nowrap;
 }
 
+
+.tags_tag {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+.line{
+    height: 1px;
+    width: 100%;
+    background-color: black;
+    margin-bottom: 20px;
+}
 .actionBtn {
   display: inline-flex;
   align-items: center;
@@ -65,6 +77,7 @@
   .actionBtn:hover {
     transform: scale(1.08);
   }
+
 }
 
 .upper_boxes {
@@ -748,4 +761,59 @@
   color: white;
   border-color: #444;
   transform: scale(0.96);
+}
+
+
+/* 이미지 */
+.reviewImageUploadBox {
+  margin-top: 12px;
+}
+
+.reviewImageUploadButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: #f7e9ee;
+  color: #8b0029;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reviewImagePreviewList {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.reviewImagePreviewItem {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex: 0 0 auto;
+}
+
+.reviewImagePreview {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #ead3db;
+}
+
+.reviewImageRemoveButton {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #8b0029;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
 }

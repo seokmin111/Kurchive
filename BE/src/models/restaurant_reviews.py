@@ -16,16 +16,21 @@ from datetime import datetime
 from BE.src.database import Base
 
 
-# ---------------------------
-# Review
-# ---------------------------
 class Review(Base):
     __tablename__ = "reviews"
 
     id = Column(Integer, primary_key=True, index=True)
 
-    restaurant_id = Column(Integer, ForeignKey("restaurants.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    restaurant_id = Column(
+        Integer,
+        ForeignKey("restaurants.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
 
     content = Column(String(300), nullable=False)
     rating = Column(Float, nullable=False)
@@ -42,41 +47,75 @@ class Review(Base):
     menus = relationship(
         "ReviewMenu",
         back_populates="review",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+    )
+
+    images = relationship(
+        "ReviewImage",
+        back_populates="review",
+        cascade="all, delete-orphan",
+        order_by="ReviewImage.sort_order",
     )
 
     reactions = relationship(
         "ReviewReaction",
         back_populates="review",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
 
 
-# ---------------------------
-# Review Menu
-# ---------------------------
 class ReviewMenu(Base):
     __tablename__ = "review_menus"
 
     id = Column(Integer, primary_key=True)
 
-    review_id = Column(Integer, ForeignKey("reviews.id", ondelete="CASCADE"), nullable=False)
+    review_id = Column(
+        Integer,
+        ForeignKey("reviews.id", ondelete="CASCADE"),
+        nullable=False
+    )
 
     name = Column(String(100), nullable=False)
 
     review = relationship("Review", back_populates="menus")
 
 
-# ---------------------------
-# Review Reaction
-# ---------------------------
+class ReviewImage(Base):
+    __tablename__ = "review_images"
+
+    id = Column(Integer, primary_key=True)
+
+    review_id = Column(
+        Integer,
+        ForeignKey("reviews.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    image_url = Column(String(500), nullable=False)
+
+    # 여러 장일 때 표시 순서
+    sort_order = Column(Integer, default=0, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    review = relationship("Review", back_populates="images")
+
+
 class ReviewReaction(Base):
     __tablename__ = "review_reactions"
 
     id = Column(Integer, primary_key=True)
 
-    review_id = Column(Integer, ForeignKey("reviews.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    review_id = Column(
+        Integer,
+        ForeignKey("reviews.id", ondelete="CASCADE"),
+        nullable=False
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
 
     reaction = Column(Enum("like", "dislike", name="reaction_enum"), nullable=False)
 

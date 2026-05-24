@@ -30,8 +30,8 @@ export default function RestaurantSearchResultsPage() {
   const tag_ids = (params.get("tag_ids") || "").trim();
   const price_min = (params.get("price_min") || "").trim();
   const price_max = (params.get("price_max") || "").trim();
-  const min_rating = (params.get("min_rating") || "").trim();
-  const max_rating = (params.get("max_rating") || "").trim();
+ const rating_min = (params.get("rating_min") || "").trim();
+const rating_max = (params.get("rating_max") || "").trim();
 
   const [items, setItems] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,8 +57,8 @@ export default function RestaurantSearchResultsPage() {
             ...(tag_ids ? { tag_ids } : {}),
             ...(price_min ? { price_min } : {}),
             ...(price_max ? { price_max } : {}),
-            ...(min_rating ? { min_rating } : {}),
-            ...(max_rating ? { max_rating } : {}),
+            ...(rating_min ? { rating_min } : {}),
+            ...(rating_max ? { rating_max } : {}),
           },
         });
 
@@ -80,7 +80,7 @@ export default function RestaurantSearchResultsPage() {
     };
 
     fetchResults();
-  }, [q, region_id, tag_ids, price_min, price_max, min_rating, max_rating]);
+  }, [q, region_id, tag_ids, price_min, price_max, rating_min, rating_max]);
 
   return (
     <main className={styles.container}>

@@ -22,7 +22,7 @@ import BE.src.models
 
 from BE.src.database import Base, async_engine, set_sqlite_pragmas
 
-from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, restaurant_review, location
+from BE.src.routers import user, map, recipe, mypage, restaurant, admin, ingredient, comment, location, restaurant_review
 from BE.src.errors import register_exception_handlers
 
 
@@ -38,17 +38,22 @@ logging.basicConfig(
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",  # React 개발 환경
+    "http://localhost:3000",
     "http://localhost:5173",
-    "http://146.56.117.219:8000"    # 서버 도메인/IP
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://146.56.117.219:8000",
+    
+    "https://kurchive.com",
+    "https://www.kurchive.com"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],           # 허용할 Origin 리스트
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],             # 허용할 HTTP 메소드
-    allow_headers=["*"],             # 허용할 HTTP 헤더
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.on_event("startup")

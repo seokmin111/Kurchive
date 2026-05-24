@@ -24,3 +24,6 @@ export const validateSignupCode = (code: string) =>
 // 백엔드가 ID/PW 대문자 필드를 요구함
 export const login = (ID: string, PW: string) =>
   client.post("/login", { ID, PW }).then(r => r.data);
+
+export const logout = () =>
+  client.post("/logout").then(r => r.data);

@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
 import client from "../../api/client";
 import { extractLocationFromLink, geocodeAddress } from "../../api/location";
+import {
+  uploadRestaurantThumbnail,
+  uploadRestaurantImages,
+} from "../../api/restaurant";
+
 // 여기서는 extlocfromlink 사용
 type TagGroup = "region" | "food" | "price";
 type Region = {
@@ -344,17 +349,14 @@ export default function RestaurantFormPage() {
                 return;
             }
             // 이미지 업로드
-            const files: File[] = [];
-            if (mainImageFile)
-                files.push(mainImageFile);
-            if (detailImageFile)
-                files.push(detailImageFile);
-            if (files.length) {
-                const fd = new FormData();
-                files.forEach((f) => fd.append("files", f));
-                await client.post(`/restaurants/${restaurantId}/images`, fd, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
+            // 썸네일 업로드
+            if (mainImageFile) {
+                await uploadRestaurantThumbnail(restaurantId, mainImageFile);
+            }
+
+            // 상세 이미지 업로드
+            if (detailImageFile) {
+                await uploadRestaurantImages(restaurantId, [detailImageFile]);
             }
             alert("식당 등록 완료!");
             navigate("/restaurant", { replace: true });

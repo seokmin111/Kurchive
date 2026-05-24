@@ -1,6 +1,9 @@
 "use client";
+
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
+
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+
 import style from "./page.module.css";
 import client from "../../api/client";
 import StarRating from "../../components/StarRating";
@@ -63,9 +66,10 @@ type RestaurantReview = {
   nickname?: string;
   writer_name?: string;
   menus: string[];
+  images: string[];
 };
 
-
+console.log("RestaurantSpecific mounted");
 
 function formatPrice(min?: number, max?: number) {
   const a = min ?? 0;
@@ -134,6 +138,9 @@ export default function RestaurantSpecific() {
   const [editReviewRating, setEditReviewRating] = useState(5);
   const [editReviewMenus, setEditReviewMenus] = useState("");
 
+  // 리뷰 이미지 관련 상태
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+
   
 
 
@@ -175,49 +182,85 @@ export default function RestaurantSpecific() {
   }, [restaurant?.name]);
 
   // 식당 상세 및 찜하기 상태 로드
-  useEffect(() => {
-    const id = Number(restaurantId);
-    if (!id) return;
+// 식당 상세 로드
+useEffect(() => {
+  const id = Number(restaurantId);
+  if (!id) return;
 
-    (async () => {
-      try {
-        setLoading(true);
-        // 상세 정보와 즐겨찾기 상태를 동시에 가져옴
-        const token = localStorage.getItem("access_token");
-
-        const detailPromise = client.get(`/restaurants/${id}`);
-
-        const favPromise = token
-          ? client.get(`/restaurants/${id}/favorite`)
-          : Promise.resolve({ data: { is_favorite: false } });
-
-        const [detailRes, favRes] = await Promise.all([
-          detailPromise,
-          favPromise
-        ]);
-        setRestaurant(detailRes.data.data || detailRes.data);
-        setIsZzim(favRes.data.is_favorite);
-        console.log(detailRes.data);
-      } catch (e: any) {
-        setErr(e?.response?.data?.detail ?? "식당 정보를 불러오지 못했습니다.");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [restaurantId]);
-  
-
-  // 즐겨찾기 토글 함수
-  const toggleFavorite = async () => {
+  const fetchRestaurantDetail = async () => {
     try {
-      const res = await client.post(`/restaurants/${restaurantId}/favorite`);
-      setIsZzim(res.data.is_favorite);
-    } catch (e) {
-      console.error(e);
-      alert("즐겨찾기 상태를 변경할 수 없습니다.");
+      setLoading(true);
+      setErr("");
+
+      const detailRes = await client.get(`/restaurants/${id}`);
+      setRestaurant(detailRes.data.data || detailRes.data);
+    } catch (e: any) {
+      console.error("식당 상세 조회 실패:", e);
+      setErr(e?.response?.data?.detail ?? "식당 정보를 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  fetchRestaurantDetail();
+}, [restaurantId]);
+
+// 로그인 유저일 때만 찜 상태 로드
+useEffect(() => {
+  const id = Number(restaurantId);
+  if (!id) return;
+
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    setIsZzim(false);
+    return;
+  }
+
+  const fetchFavoriteState = async () => {
+    try {
+      const favRes = await client.get(`/restaurants/${id}/favorite`);
+      setIsZzim(Boolean(favRes.data.is_favorite));
+    } catch (e: any) {
+      console.warn("찜 상태 조회 실패:", e);
+
+      if (e?.response?.status === 401) {
+        setIsZzim(false);
+      }
+    }
+  };
+
+  fetchFavoriteState();
+}, [restaurantId]);
+  
+
+  // 즐겨찾기 토글 함수
+  // 즐겨찾기 토글 함수
+const toggleFavorite = async () => {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    alert("로그인이 필요합니다.");
+    nav("/login");
+    return;
+  }
+
+  try {
+    const res = await client.post(`/restaurants/${restaurantId}/favorite`);
+    setIsZzim(Boolean(res.data.is_favorite));
+  } catch (e: any) {
+    console.error("찜 변경 실패:", e);
+
+    if (e?.response?.status === 401) {
+      alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      localStorage.removeItem("access_token");
+      nav("/login");
+      return;
+    }
+
+    alert("즐겨찾기 상태를 변경할 수 없습니다.");
+  }
+};
 useEffect(() => {
   fetchReviews();
 }, [restaurantId]);
@@ -232,7 +275,17 @@ const fetchReviews = async () => {
 
   try {
     const data = await getRestaurantReviews(Number(restaurantId));
-    setReviews(data);
+
+    console.log("리뷰 API 응답:", data);
+
+    setReviews(
+      data.map((review: any) => ({
+        ...review,
+        images: review.images ?? [],
+        menus: review.menus ?? [],
+      }))
+    );
+    
   } catch (err) {
     console.error("리뷰 조회 실패:", err);
   }
@@ -242,43 +295,57 @@ const fetchReviews = async () => {
 // 리뷰 작성
 // -----------------------------
 const createReview = async () => {
-  if (!restaurantId) return;
-
   if (!reviewContent.trim()) {
-    alert("후기를 입력해주세요.");
+    alert("리뷰 내용을 입력하세요.");
     return;
   }
 
   try {
-    setReviewSubmitting(true);
+    const formData = new FormData();
 
-    await createRestaurantReview(Number(restaurantId), {
-      content: reviewContent.trim(),
-      rating: reviewRating,
-      menus: reviewMenus
-        .split(",")
-        .map((menu) => menu.trim())
-        .filter(Boolean),
+    formData.append("content", reviewContent.trim());
+    formData.append("rating", String(reviewRating));
+    formData.append("menus", reviewMenus); // "마라탕,꿔바로우"
+
+    reviewImages.forEach((image) => {
+      formData.append("files", image); // ⚠️ files로 보내야 함
     });
 
+    await client.post(
+      `/restaurants/${restaurantId}/reviews`,
+      formData
+    );
+
+    // 성공 후 초기화
     setReviewContent("");
     setReviewRating(5);
     setReviewMenus("");
-    setReviewOpen(false);
+    setReviewImages([]);
 
-    await fetchReviews();
-  } catch (err: any) {
-    console.error("리뷰 작성 실패: 로그인이 필요합니다.", err);
-    alert(err.response?.data?.detail ?? "리뷰 작성 실패");
-  } finally {
-    setReviewSubmitting(false);
+    fetchReviews();
+
+  } catch (err) {
+    console.error(err);
+    alert("리뷰 등록 실패");
   }
 };
 
 // -----------------------------
-// 리뷰 수정
+// 리뷰 이미지
 // -----------------------------
+const handleReviewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files ?? []);
 
+  const imageFiles = files.filter((file) =>
+    file.type.startsWith("image/")
+  );
+
+  setReviewImages((prev) => [...prev, ...imageFiles].slice(0, 5));
+};
+
+const removeReviewImage = (index: number) => {
+  setReviewImages((prev) => prev.filter((_, i) => i !== index));
+};
 
 // -----------------------------
 // 리뷰 삭제
@@ -419,6 +486,10 @@ const canManageReview = (review: RestaurantReview) => {
   if (loading) return <div className={style.main}>불러오는 중...</div>;
   if (err || !restaurant) return <div className={style.main}>{err}</div>;
 
+  const region = restaurant.region;
+
+if (!region) return;
+
   return (
     <div className={style.main}>
       {/* ===== 상단 네비 ===== */}
@@ -482,11 +553,9 @@ const canManageReview = (review: RestaurantReview) => {
         </div>
 
         <div className={style.rightBox}>
-        <div className={style.infoGrid}>
-          <div className={style.infoGridSection}>
-            <div className={style.infoGridLabel}>한줄평</div>
-            <div className={style.infoGridValue}>{restaurant.summary}</div>
-          </div>
+          <div className={style.infoGrid}>
+            <div style={{ color: "#8B0029", fontWeight: 800 }}>한줄평</div>
+            <div>{restaurant.summary ?? "요약 없음"}</div>
 
           <div className={style.infoGridSection}>
             <div className={style.infoGridLabel}>주소</div>
@@ -552,20 +621,42 @@ const canManageReview = (review: RestaurantReview) => {
 
   <div className={style.tags}>
     {restaurant.region && (
-      <div className={style.tags_tag}>
-        {restaurant.region.name}
-      </div>
-    )}
+  <button
+    type="button"
+    className={style.tags_tag}
+    onClick={() => {
+  const region = restaurant.region;
+  if (!region) return;
 
-    {restaurant.tags.map((tag) => (
-      <div key={tag.id} className={style.tags_tag}>
+  nav(
+    `/restaurant/search?region_id=${region.id}&region_name=${encodeURIComponent(
+      region.name
+    )}`
+  );
+}}
+  >
+    {restaurant.region.name}
+  </button>
+)}
+
+   {restaurant.tags.map((tag) => (
+  <button
+    key={tag.id}
+    type="button"
+    className={style.tags_tag}
+    onClick={() =>
+      nav(
+        `/restaurant/search?tag_id=${tag.id}&tag_name=${encodeURIComponent(tag.name)}`
+      )
+    }
+  >
         {tag.parent_name && (
           <span className={style.parentTag}>
             {tag.parent_name}
           </span>
         )}
         <span>{tag.name}</span>
-      </div>
+      </button>
     ))}
 
     {!restaurant.region && restaurant.tags.length === 0 && (
@@ -659,7 +750,41 @@ const canManageReview = (review: RestaurantReview) => {
       placeholder="이 식당에 대한 리뷰를 남겨주세요. 500자내로 남겨주세요."
       maxLength={500}
     />
+  {/* 이미지 UI */}
+  <div className={style.reviewImageUploadBox}>
+  <label className={style.reviewImageUploadButton}>
+    이미지 추가
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      hidden
+      onChange={handleReviewImageChange}
+    />
+  </label>
 
+  {reviewImages.length > 0 && (
+    <div className={style.reviewImagePreviewList}>
+      {reviewImages.map((file, index) => (
+        <div key={index} className={style.reviewImagePreviewItem}>
+          <img
+            src={URL.createObjectURL(file)}
+            alt="리뷰 이미지 미리보기"
+            className={style.reviewImagePreview}
+          />
+
+          <button
+            type="button"
+            className={style.reviewImageRemoveButton}
+            onClick={() => removeReviewImage(index)}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
     <div className={style.reviewFormBottom}>
       <span className={style.reviewLength}>
         {reviewContent.length}/500
@@ -694,6 +819,7 @@ const canManageReview = (review: RestaurantReview) => {
   ) : (
     <div className={style.reviewList}>
       {reviews.map((review) => (
+        
         <div key={review.id} className={style.reviewCard}>
           <div className={style.reviewCardTop}>
             <div className={style.reviewWriterArea}>
@@ -757,9 +883,34 @@ const canManageReview = (review: RestaurantReview) => {
   </div>
 ) : (
   <>
+  {/* 리뷰 내용 */}
+  
     <div className={style.reviewContent}>
       {review.content}
     </div>
+
+    {review.images && review.images.length > 0 && (
+  <div className={style.reviewImageGallery}>
+    {review.images?.map((imageUrl, idx) => {
+  console.log("렌더링 이미지 URL:", imageUrl);
+
+  return (
+   <img
+  key={idx}
+  src={String(imageUrl)}
+  alt="리뷰 이미지"
+  className={style.reviewGalleryImage}
+  onError={(e) => {
+    console.log("이미지 로드 실패 src:", e.currentTarget.src);
+  }}
+  onLoad={() => {
+    console.log("이미지 로드 성공:", imageUrl);
+  }}
+/>
+  );
+})}
+  </div>
+)}
 
     {review.menus && review.menus.length > 0 && (
       <div className={style.reviewMenuLine}>
