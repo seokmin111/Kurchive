@@ -1,155 +1,344 @@
+@font-face {
+  font-family: "SlowGothic";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/neurimboGothicRegular.woff2")
+    format("woff2");
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Pretendard";
+  src: url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-Regular.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* page */
 .mainPage {
+  --brand: #8b0029;
+  --brand-dark: #540019;
+  --text: #333333;
+  --muted: #ababab;
+  --paper: #ffffff;
+  --soft-brand: rgba(139, 0, 41, 0.2);
+  --hairline: rgba(139, 0, 41, 0.18);
+
   display: flex;
   flex-direction: column;
-  width: 700px;
-  height: 999px;
+  width: min(100%, 480px);
+  min-height: 100vh;
   margin: 0 auto;
+  padding: 22px 20px 28px;
+  box-sizing: border-box;
   background-color: #ffffffb8;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
 }
 
+/* header */
 .title {
   display: flex;
-  font-size: 1.2rem;
-  font-weight: bold;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  margin: 0 0 64px;
+  padding: 0;
+  color: var(--brand);
   line-height: 1.2;
-  margin-left: 1vw;
-  padding-left: 5%;
+  text-align: center;
 }
 
-#kurchive {
-  margin-right: 1.5%;
+.title h2,
+.title h3 {
+  margin: 0 !important;
+  color: inherit !important;
+  line-height: 1.2;
+  white-space: nowrap;
 }
+
+.title h2 {
+  font-family: "SlowGothic", sans-serif;
+  font-size: 30px;
+  font-weight: 500;
+}
+
+.title h3 {
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  transform: translateY(4px);
+}
+
+/* action card */
 .stackedContainer {
   position: relative;
   width: 100%;
-  height: 100%;
-  justify-items: center;
+  min-height: 346px;
+  display: flex;
+  justify-content: center;
 }
-.backgroundBlock {
+
+.mainBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: clamp(280px, 78%, 380px);
+  min-height: 330px;
+  margin-top: 0;
+  padding: 50px 28px 28px;
+  box-sizing: border-box;
+  background-color: var(--paper);
+  border: 1.5px solid var(--brand);
+  border-radius: 35px;
+  box-shadow: 8px 8px 0 var(--soft-brand);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.cardWatermark {
   position: absolute;
-
-  width: 70%;
-  height: 70%;
-
-  top: 17%;
-  left: 17%;
-  border: 1px solid #8b0029;
-  opacity: 0.39;
-  background-color: #ffffff;
-  border-radius: 8%;
+  top: 46%;
+  left: 50%;
+  width: min(68%, 270px);
+  height: auto;
+  opacity: 0.16;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
   z-index: 0;
 }
+
+.nickname {
+  position: relative;
+  z-index: 1;
+  color: var(--brand-dark);
+  font-size: clamp(17px, 4.2vw, 22px);
+  font-weight: bold;
+  text-align: center;
+}
+
+.nickname span {
+  color: var(--brand);
+}
+
+.favoriteBox {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  min-height: 146px;
+  margin-top: 20px;
+  padding: 6px 0;
+  box-sizing: border-box;
+  background-color: transparent;
+}
+
+.favoriteRes,
+.favoriteRec,
+.favoriteArchive {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 4px;
+  box-sizing: border-box;
+}
+
+.favoriteRes,
+.favoriteRec {
+  border-bottom: 1px dotted var(--hairline);
+}
+
+.recordIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  margin-right: 9px;
+  border-radius: 999px;
+  color: var(--brand);
+  background: #f7e9ed;
+  box-shadow: inset 0 0 0 1px rgba(139, 0, 41, 0.08);
+}
+
+.favtitle {
+  flex: 1 1 auto;
+  margin-left: 0;
+  color: var(--text);
+  font-family: "Pretendard", sans-serif;
+  font-size: clamp(14px, 3.4vw, 17px);
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.recordValue {
+  display: grid;
+  grid-template-columns: 34px 20px;
+  align-items: baseline;
+  justify-content: end;
+  flex: 0 0 62px;
+  column-gap: 6px;
+}
+
+.number {
+  min-width: 0;
+  margin: 0;
+  color: var(--brand);
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: bold;
+  line-height: 1;
+  text-align: right;
+}
+
+.unit {
+  min-width: 0;
+  margin-right: 0;
+  color: var(--muted);
+  font-size: clamp(13px, 3.2vw, 16px);
+  font-weight: bold;
+  text-align: left;
+}
+
+.cardBrand {
+  position: relative;
+  z-index: 1;
+  padding-top: 0;
+  color: var(--brand);
+  font-size: clamp(26px, 6.8vw, 34px);
+  font-family: "SlowGothic", sans-serif;
+  opacity: 0.18;
+  transform: translateY(-4px);
+}
+
+/* footer */
 .FootBlock {
   display: flex;
   flex-direction: column;
-  justify-items: center;
   align-items: center;
   width: 100%;
-  height: 30%;
+  margin-top: 48px;
+}
+
+.FootBlock > div:first-child {
+  margin-bottom: 32px !important;
+  color: var(--brand) !important;
+  font-size: clamp(16px, 4vw, 20px) !important;
+  font-weight: bold;
+  text-align: center;
 }
 
 .buttonBox {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   width: 100%;
-  max-width: 550px; /* 최대 너비 제한 (선택 사항) */
+  max-width: 420px;
 }
-.no {
-  flex-grow: 2;
-  height: 40%;
-  padding: 15px 10px;
-  background-color: #404040;
-  color: white;
-  border: 2px solid #8b0029;
+
+.no,
+.yes {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 2px solid var(--brand);
   border-radius: 8px;
-
-  font-size: 16px;
+  box-sizing: border-box;
+  font-size: 14px;
   font-weight: bold;
-  cursor: pointer;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
+  cursor: pointer;
+}
 
+.no {
+  flex: 2 1 0;
+  background-color: #404040;
+  color: var(--paper);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .yes {
-  height: 40%;
-  flex-grow: 1;
-  padding: 15px 10px;
-
-  background-color: white;
-  color: #404040; /* 어두운 글자색 */
-  border: 2px solid #8b0029; /* 붉은색 테두리 */
-  border-radius: 8px; /* 둥근 모서리 */
-
-  /* 폰트 스타일 */
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
+  flex: 1 1 0;
+  background-color: var(--paper);
+  color: #404040;
 }
 
-.mainBlock {
-  display: flex;
-  width: 70%;
-  height: 70%;
-  background-color: white;
-  margin-top: 15%;
-  flex-direction: column;
-  align-items: center;
-  border: 1px solid #8b0029;
-  border-radius: 8%;
-  position: relative;
-  z-index: 1;
-}
-.nickname {
-  padding-top: 12.5%;
-  color: #540019;
-  font-weight: bold;
-}
-.favoriteBox {
-  margin-top: 10px;
-  padding: 15px 20px;
-  background-color: #ffffff;
-  border: 1px solid #000000;
-  border-radius: 10%;
-  width: 70%;
-  height: 45%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  justify-content: space-evenly;
+/* responsive */
+@media (max-width: 520px) {
+  .stackedContainer {
+    min-height: 316px;
+  }
+
+  .mainBlock {
+    height: 300px;
+    min-height: 0;
+    padding: 42px 28px 28px;
+  }
+
+  .cardWatermark {
+    width: min(72%, 270px);
+  }
+
+  .nickname {
+    font-size: 18px;
+  }
+
+  .favtitle {
+    font-size: 15px;
+  }
+
+  .number {
+    font-size: 22px;
+  }
+
+  .unit {
+    font-size: 15px;
+  }
+
+  .FootBlock {
+    margin-top: 34px;
+  }
+
+  .FootBlock > div:first-child {
+    font-size: 18px !important;
+  }
 }
 
-.favoriteRes {
-  display: flex;
-  width: 80%;
-}
-.favoriteRec {
-  display: flex;
-  width: 80%;
-}
-.favoriteArchive {
-  display: flex;
-  width: 80%;
-}
-.favtitle {
-  flex-grow: 1;
-  margin-left: 5%;
-}
-.number {
-  color: #8b0029;
-  font-weight: bold;
-  margin-right: 10%;
-  font-size: 20px;
-}
-.unit {
-  font-weight: bold;
-  margin-right: 20%;
-  color: #ababab;
-  font-size: 15px;
+@media (max-width: 380px) {
+  .mainPage {
+    padding-inline: 16px;
+  }
+
+  .title {
+    margin-bottom: 48px;
+  }
+
+  .mainBlock {
+    width: 82%;
+    height: 292px;
+    min-height: 0;
+  }
+
+  .recordIcon {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .cardWatermark {
+    width: 72%;
+  }
 }
