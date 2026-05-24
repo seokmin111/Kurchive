@@ -16,6 +16,9 @@ type Restaurant = {
   thumbnail_url?: string | null;
 };
 
+const formatPriceValue = (price?: number | null) =>
+  price == null ? "-" : `${price}\uc6d0`;
+
 export default function RestaurantSearchResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -115,9 +118,10 @@ const rating_max = (params.get("rating_max") || "").trim();
               <div className={styles.sub}>{r.address || "주소 정보 없음"}</div>
 
               <div className={styles.ratingRow}>
-                ⭐ {r.rating ?? 0}
-                {" · "}
-                {`${r.price_min}원` ?? "-"} ~ {`${r.price_max}원` ?? "-"}
+                <span className={styles.ratingText}>⭐ {r.rating ?? 0}</span>
+                <span className={styles.priceText}>
+                  {formatPriceValue(r.price_min)} ~ {formatPriceValue(r.price_max)}
+                </span>
               </div>
 
               {r.summary ? <div className={styles.sub}>{r.summary}</div> : null}

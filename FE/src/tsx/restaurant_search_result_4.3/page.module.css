@@ -91,15 +91,33 @@
   margin-top: auto;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: clamp(16px, 4.6vw, 15px);
+  flex-wrap: nowrap;
+  gap: 6px;
+  font-size: clamp(12px, 3.6vw, 15px);
   color: #8b0029;
   padding-top: 10px;
   max-width: 100%;
   line-height: 1.25;
-  white-space: normal;
-  overflow: visible;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ratingText,
+.priceText {
+  display: inline-block;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ratingText {
+  flex-shrink: 0;
+}
+
+.priceText::before {
+  content: "· ";
 }
 
 .cardRight {

@@ -12,22 +12,22 @@
   position: absolute;
   top: 20px;
   left: 0;
-  width: 100%;
+  right: 0;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  flex-wrap: nowrap;
   gap: 8px;
   z-index: 100;
   padding: 0 10px;
-  overflow-x: auto; /* 화면 작을 때 스크롤 */
-  -ms-overflow-style: none; /* 스크롤바 숨김 */
-  scrollbar-width: none;
-}
-.topBar::-webkit-scrollbar {
-  display: none;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 .button {
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: max-content;
+  max-width: none;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 20px;
@@ -38,6 +38,7 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   cursor: pointer;
   white-space: nowrap;
+  text-align: center;
 }
 
 .button:active {
@@ -62,6 +63,30 @@
   align-items: center;
   justify-content: center;
   filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+}
+
+/* responsive */
+@media (max-width: 520px) {
+  .topBar {
+    justify-content: flex-start;
+    gap: 4px;
+    padding-left: 74px;
+    padding-right: 8px;
+  }
+
+  .button {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    padding: 7px 4px;
+    font-size: 11px;
+  }
+
+  .backButton {
+    left: 14px !important;
+    width: 52px;
+    height: 52px;
+  }
 }
 
 /* 지도 컨트롤 (커스텀 줌, 내위치) */

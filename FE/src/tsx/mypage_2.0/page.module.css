@@ -187,7 +187,7 @@ html, body {
 .body__main__date {
     margin-top: 25px;
     font-family: var(--font-geist-mono);
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 300;
     color: #898989;
 }
@@ -196,14 +196,17 @@ html, body {
 .info_change {
     font-family: var(--font-geist-mono);
     align-self: flex-end; /* 부모(컬럼) 기준 오른쪽 끝으로 */
-    margin-top: 35px;
+    margin-top: 28px;
     margin-right: 7.5%; /* 카드의 너비 비율과 맞춤 */
-    background-color: #ECEBEA;
-    border: 1px solid black;
-    border-radius: 10px;
-    padding: 8px 14px;
     font-size: 12px;
-    color: #414141;
+    font-weight: 500;
+    color: #8B0028;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    line-height: 1.6;
+    background: none;
+    border: 0;
+    padding: 0;
     cursor: pointer;
 }
 
@@ -253,7 +256,7 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 50px;
+    margin-top: 36px;
     cursor: pointer;
 }
 
@@ -285,7 +288,7 @@ html, body {
   color:white;
   border-radius:40px;
   overflow:hidden;
-  margin-top:20px;
+  margin-top:28px;
 }
 
 .splitItem{
@@ -305,21 +308,8 @@ html, body {
 }
 
 .buttonTitle{
-  font-size:18px;
+  font-size:16px;
   font-weight:700;
-}
-
-.buttonSub{
-  margin-top:6px;
-  font-size:14px;
-  opacity:0.9;
-}
-
-.buttonSubRow{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin-top:6px;
 }
 
 .buttonSub{
@@ -329,7 +319,7 @@ html, body {
 /* 식당 | 레시피 줄 */
 .buttonSubRow{
   margin-top:6px;
-  font-size:14px;
+  font-size:13px;
   opacity:0.9;
   display:flex;
   justify-content:center;
