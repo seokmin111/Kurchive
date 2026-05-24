@@ -5,9 +5,9 @@ import americanFlag from "../assets/american-flag.svg";
 
 type LanguageCode = "KOR" | "ENG";
 
-const LANGUAGES: { code: LanguageCode; label: string; flag: string }[] = [
-  { code: "KOR", label: "한국어", flag: koreanFlag },
-  { code: "ENG", label: "English", flag: americanFlag },
+const LANGUAGES: { code: LanguageCode; triggerCode: string; label: string; flag: string }[] = [
+  { code: "KOR", triggerCode: "KR", label: "한국어", flag: koreanFlag },
+  { code: "ENG", triggerCode: "EN", label: "English", flag: americanFlag },
 ];
 
 export default function LanguageSelect() {
@@ -15,7 +15,6 @@ export default function LanguageSelect() {
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedLanguage = LANGUAGES.find((language) => language.code === selected) ?? LANGUAGES[0];
-  const otherLanguages = LANGUAGES.filter((language) => language.code !== selected);
 
   return (
     <div className={styles.languageSelect}>
@@ -26,25 +25,25 @@ export default function LanguageSelect() {
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <img src={selectedLanguage.flag} alt="" className={styles.flag} />
-        <span className={styles.code}>{selectedLanguage.code}</span>
+        <span className={styles.triggerCode}>{selectedLanguage.triggerCode}</span>
         <span className={`${styles.chevron} ${isOpen ? styles.open : ""}`} />
       </button>
 
       {isOpen && (
         <div className={styles.menu}>
-          {otherLanguages.map((language) => (
+          {LANGUAGES.map((language) => (
             <button
               key={language.code}
               type="button"
-              className={styles.option}
+              className={`${styles.option} ${language.code === selected ? styles.selected : ""}`}
               onClick={() => {
                 setSelected(language.code);
                 setIsOpen(false);
               }}
             >
               <img src={language.flag} alt="" className={styles.flag} />
-              <span className={styles.code}>{language.code}</span>
+              <span className={styles.label}>{language.label}</span>
+              {language.code === selected && <span className={styles.check}>✓</span>}
             </button>
           ))}
         </div>

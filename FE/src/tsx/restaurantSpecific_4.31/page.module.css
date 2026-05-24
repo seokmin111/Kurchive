@@ -2,6 +2,7 @@
   --page-padding: clamp(20px, 6vw, 32px);
   --content-gap: clamp(6px, 1.8vw, 10px);
   --media-size: clamp(128px, 37vw, 176px);
+  --media-height: clamp(158px, 43vw, 206px);
   width: min(100%, 480px);
   min-height: 100vh;
   margin: 0 auto;
@@ -83,7 +84,7 @@
 .upper_boxes {
   display: grid;
   grid-template-columns: var(--media-size) minmax(0, 1fr);
-  grid-template-rows: var(--media-size);
+  grid-template-rows: var(--media-height);
   gap: var(--content-gap);
   width: 100%;
   min-width: 0;
@@ -91,7 +92,7 @@
 
 .leftBox,
 .rightBox {
-  height: var(--media-size);
+  height: var(--media-height);
   min-width: 0;
   min-height: 0;
   border: 1px dotted #111;
@@ -181,7 +182,7 @@
   gap: clamp(3px, 0.8vw, 5px);
   width: var(--info-label-width);
   color: #8b0029;
-  font-size: clamp(8px, 2.25vw, 11px);
+  font-size: clamp(11px, 2.6vw, 12px);
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
@@ -192,8 +193,8 @@
   max-width: 100%;
   align-self: center;
   color: #111;
-  font-size: clamp(8px, 2.2vw, 11px);
-  line-height: 1.24;
+  font-size: clamp(11px, 2.65vw, 13px);
+  line-height: 1.28;
   text-align: left;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -201,18 +202,18 @@
 }
 
 .summaryValueShort {
-  font-size: clamp(10px, 2.8vw, 14px);
-  line-height: 1.26;
+  font-size: clamp(12px, 3vw, 14px);
+  line-height: 1.28;
 }
 
 .summaryValueCompact {
-  font-size: clamp(8px, 2.3vw, 11px);
-  line-height: 1.24;
+  font-size: clamp(10.5px, 2.5vw, 12px);
+  line-height: 1.26;
 }
 
 .summaryValueDense {
-  font-size: clamp(7px, 2vw, 10px);
-  line-height: 1.22;
+  font-size: clamp(9.5px, 2.35vw, 11px);
+  line-height: 1.24;
 }
 
 .infoGridSection {
@@ -238,7 +239,7 @@
   gap: clamp(3px, 0.8vw, 5px);
   width: var(--info-label-width);
   color: #8b0029;
-  font-size: clamp(8px, 2.25vw, 11px);
+  font-size: clamp(11px, 2.6vw, 12px);
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
@@ -251,8 +252,8 @@
   min-width: 0;
   min-height: 0;
   color: #111;
-  font-size: clamp(7px, 2vw, 10px);
-  line-height: 1.16;
+  font-size: clamp(10.5px, 2.45vw, 12px);
+  line-height: 1.2;
   align-self: center;
   justify-self: stretch;
   text-align: left;
@@ -453,6 +454,7 @@
     --page-padding: 20px;
     --content-gap: 12px;
     --media-size: clamp(108px, 33vw, 116px);
+    --media-height: clamp(146px, 42vw, 154px);
   }
 
   .navbar {
@@ -472,7 +474,7 @@
   }
 
   .infoGridValue {
-    font-size: 10px;
+    font-size: 10.5px;
   }
 }
 
