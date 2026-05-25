@@ -135,7 +135,7 @@ export const uploadRestaurantImages = (
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 
-  return client.post(`/api/restaurants/${restaurantId}/images`, formData, {
+  return client.post(`/restaurants/${restaurantId}/images`, formData, {
     params: { replace },
     // headers 제거
   }).then(r => r.data);
@@ -148,6 +148,6 @@ export const uploadRestaurantThumbnail = (
   const formData = new FormData();
   formData.append("file", file);
 
-  return client.post(`/api/restaurants/${restaurantId}/thumbnail`, formData)
+  return client.post(`/restaurants/${restaurantId}/thumbnail`, formData)
     .then(r => r.data);
 };
