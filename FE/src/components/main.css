@@ -59,10 +59,11 @@ div {
     padding: 20px 50px 25px;
     border-radius: 15px;
     border: 0px;
-    font-size: 20px;
+    font-size: clamp(15px, 3.7vw, 20px);
     background-color: #F2ECE5;
     color: #8B0029;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .red-btn {
@@ -77,10 +78,11 @@ div {
     padding: 20px 50px 25px;
     border-radius: 15px;
     border: 0px;
-    font-size: 20px;
+    font-size: clamp(15px, 3.7vw, 20px);
     background-color: #8B0029;
     color: #F2ECE5;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .footer {
@@ -117,7 +119,7 @@ div {
 	color: #8b0029;
 	text-decoration: none;
 	font-family: "Pretendard", sans-serif;
-	font-size: 0.95rem;
+	font-size: 0.85rem;
 	font-weight: 600;
 
 	transition: background-color 0.2s ease, transform 0.2s ease;
@@ -156,18 +158,20 @@ div {
 }
 
 .footerDescription {
-	color: #8b0029;
-	font-size: 0.95rem;
-	font-weight: 500;
-	line-height: 1.5;
+    color: #8b0029;
+    font-size: clamp(0.68rem, 2.4vw, 0.95rem);
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
 }
 
 .footerCredit {
-	margin-top: 0.45rem;
-	color: rgba(139, 0, 41, 0.82);
-	font-size: 0.92rem;
-	font-weight: 400;
-	line-height: 1.5;
+    margin-top: 0.45rem;
+    color: rgba(139, 0, 41, 0.82);
+    font-size: clamp(0.68rem, 2.3vw, 0.92rem);
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: nowrap;
 }
 /* language select */
 .language-slot {

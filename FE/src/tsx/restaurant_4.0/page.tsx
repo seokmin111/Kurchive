@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import client from "../../api/client";
 import LanguageSelect from "../../components/LanguageSelect";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 
 type Restaurant = {
@@ -26,6 +27,8 @@ type Restaurant = {
 };
 export default function RestaurantSearchPage() {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const restaurantMain = messages.restaurantMain;
   const short = (s?: string | null, n = 24) =>
     (s ?? "").length > n ? (s ?? "").slice(0, n) + "…" : (s ?? "");
 
@@ -60,9 +63,9 @@ export default function RestaurantSearchPage() {
     } catch (e: any) {
       console.error(e);
       if (e?.response?.status === 401) {
-        setErrMsg("로그인이 필요합니다.");
+        setErrMsg(restaurantMain.loginRequired);
       } else {
-        setErrMsg("식당 목록을 불러오지 못했습니다.");
+        setErrMsg(restaurantMain.loadFailed);
       }
       setItems([]);
     } finally {
@@ -84,10 +87,10 @@ export default function RestaurantSearchPage() {
                 &lt;
               </button>
               <h1 className={styles.title} style={{ display: "inline" }}>
-                커카이브
+                {messages.brand.name}
               </h1>
               <p className={styles.sub_title} style={{ display: "inline" }}>
-                우리만의 미식 지도
+                {messages.brand.tagline}
         </p>
               <div className={styles.languageSlot}>
                 <LanguageSelect />
@@ -95,17 +98,17 @@ export default function RestaurantSearchPage() {
       </div>
 
       <Link to="/restaurant/search">
-        <button className={styles.ivory_btn}>식당 검색하기</button>
+        <button className={styles.ivory_btn}>{restaurantMain.search}</button>
       </Link>
 
       <Link to="/restaurant/archive">
-        <button className={styles.red_btn}>식당 아카이빙</button>
+        <button className={styles.red_btn}>{restaurantMain.archive}</button>
       </Link>
 
       {/* 실데이터 렌더 */}
       <div className={styles.restaurant_container}>
         <div className={styles.scroll_area}>
-        {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
+        {loading && <div style={{ gridColumn: "1 / -1" }}>{restaurantMain.loading}</div>}
         {!loading && errMsg && (
           <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>
         )}
@@ -118,13 +121,13 @@ export default function RestaurantSearchPage() {
               className={styles.restaurant_item}
               onClick={() => navigate(`/restaurant/${r.id}`)}
               style={{ cursor: "pointer" }}
-              title="클릭해서 식당 상세페이지로 이동"
+              title={restaurantMain.detailTitle}
             >
               <div className={styles.restaurant_contentCarrier}>
                 <h4 className={styles.restaurant_title}>{r.name}</h4>
 
                 <div className={styles.restaurant_text}>
-                  {r.summary ? short(r.summary, 24) : "요약 없음"}
+                  {r.summary ? short(r.summary, 24) : restaurantMain.noSummary}
                 </div>
 
                 <div className={styles.restaurant_descriptionContainer}>
@@ -132,11 +135,11 @@ export default function RestaurantSearchPage() {
                     <div className={styles.restaurant_reviewer}>⭐ {r.rating ?? 0}</div>
 
                     <div className={styles.restaurant_uploader}>
-                      업로더: {r.uploader?.nickname ?? `user_${r.uploaded_by}`}
+                      {restaurantMain.uploader}: {r.uploader?.nickname ?? `user_${r.uploaded_by}`}
                     </div>
 
                     <div className={styles.restaurant_address}>
-                      {r.address ?? "주소 정보 없음"}
+                      {r.address ?? restaurantMain.noAddress}
                     </div>
                   </div>
 
@@ -156,18 +159,18 @@ export default function RestaurantSearchPage() {
         <button
           className={styles.mapFab}
           onClick={() => navigate("/restaurant/map")}
-          aria-label="지도 탐색"
+          aria-label={restaurantMain.mapAriaLabel}
         >
           <img
             src="/map.svg"
-            alt="지도"
+            alt={restaurantMain.mapAlt}
             className={styles.mapFabIcon}
           />
-          <span className={styles.mapFabText}>지도</span>
+          <span className={styles.mapFabText}>{restaurantMain.map}</span>
         </button>
 
         {!loading && !errMsg && items.length === 0 && (
-          <div style={{ gridColumn: "1 / -1" }}>등록된 식당이 없습니다</div>
+          <div style={{ gridColumn: "1 / -1" }}>{restaurantMain.empty}</div>
         )}
       </div>
 

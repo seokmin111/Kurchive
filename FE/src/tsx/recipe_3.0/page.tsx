@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
 import client from "../../api/client";
 import LanguageSelect from "../../components/LanguageSelect";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 type Recipe = {
   id: number;
@@ -21,6 +22,8 @@ type Recipe = {
 
 export default function RecipeMainPage() {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const recipeMain = messages.recipeMain;
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,8 +54,8 @@ export default function RecipeMainPage() {
       setRecipes(recent8);
     } catch (e: any) {
       console.error(e);
-      if (e?.response?.status === 401) setErrMsg("로그인이 필요합니다. 다시 로그인해줘!");
-      else setErrMsg("레시피 목록을 불러오지 못했어.");
+      if (e?.response?.status === 401) setErrMsg(recipeMain.loginRequired);
+      else setErrMsg(recipeMain.loadFailed);
       setRecipes([]);
     } finally {
       setLoading(false);
@@ -74,10 +77,10 @@ export default function RecipeMainPage() {
           &lt;
         </button>
         <h1 className={styles.title} style={{ display: "inline" }}>
-          커카이브
+          {messages.brand.name}
         </h1>
         <p className={styles.sub_title} style={{ display: "inline" }}>
-          우리만의 미식 지도
+          {messages.brand.tagline}
         </p>
         <div className={styles.languageSlot}>
           <LanguageSelect />
@@ -87,20 +90,20 @@ export default function RecipeMainPage() {
       {/* 검색창 제거 / 아이보리 버튼만 */}
       <Link to="/recipe/search">
         <button className={styles.ivory_btn}>
-          레시피 검색하기
+          {recipeMain.search}
         </button>
       </Link>
       <Link to="/recipe/archive">
-        <button className={styles.red_btn}>레시피 아카이빙</button>
+        <button className={styles.red_btn}>{recipeMain.archive}</button>
       </Link>
 
       {/* 하단 패널 (카드) */}
       <div className={styles.recipe_container}>
         <div className={styles.scroll_area}>
-          {loading && <div style={{ gridColumn: "1 / -1" }}>로딩중...</div>}
+          {loading && <div style={{ gridColumn: "1 / -1" }}>{recipeMain.loading}</div>}
           {!loading && errMsg && <div style={{ gridColumn: "1 / -1" }}>{errMsg}</div>}
           {!loading && !errMsg && recipes.length === 0 && (
-            <div style={{ gridColumn: "1 / -1" }}>등록된 레시피가 없습니다</div>
+            <div style={{ gridColumn: "1 / -1" }}>{recipeMain.empty}</div>
           )}
 
           {!loading &&
@@ -111,19 +114,19 @@ export default function RecipeMainPage() {
                 className={styles.recipe_item}
                 onClick={() => navigate(`/recipe/${r.id}`)}
                 style={{ cursor: "pointer" }}
-                title="클릭해서 레시피 상세로 이동"
+                title={recipeMain.detailTitle}
               >
                 <div className={styles.recipe_contentCarrier}>
                   <h4 className={styles.recipe_title}>{r.title}</h4>
 
                   <div className={styles.recipe_text}>
-                    기준 인분: {r.base_serving}
+                    {recipeMain.baseServing}: {r.base_serving}
                   </div>
 
                   <div className={styles.recipe_descriptionContainer}>
                     <div className={styles.recipe_underContainer}>
                       <div className={styles.recipe_uploader}>
-                        업로더: {r.uploader?.nickname ?? `user_${r.uploader_id}`}
+                        {recipeMain.uploader}: {r.uploader?.nickname ?? `user_${r.uploader_id}`}
                       </div>
 
                       <div className={styles.recipe_date}>

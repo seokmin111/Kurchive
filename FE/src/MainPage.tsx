@@ -6,8 +6,12 @@ import {
   updateNickname as updateNicknameAPI,
   updatePassword as updatePasswordAPI,
 } from "../../api/mypage";
+import { useKurchiveI18n } from "./i18n/LocaleContext";
 
 export default function MainPage() {
+  const { messages } = useKurchiveI18n();
+  const main = messages.main;
+
   return (
     <div>
       {/* 프로필 이미지 */}
@@ -25,20 +29,20 @@ export default function MainPage() {
         <br />
         <br />
         <br />
-        <h1 className="title">커카이브</h1>
-        <p className="sub-title">우리만의 미식 지도</p>
+        <h1 className="title">{messages.brand.name}</h1>
+        <p className="sub-title">{messages.brand.tagline}</p>
         <br />
         <br />
 
         {/* React Router 연결 */}
         <Link to="/restaurant" className="red-btn">
-          식당 아카이브
+          {main.restaurantArchive}
         </Link>
 
         <br />
 
         <Link to="/recipe" className="ivory-btn">
-          레시피 아카이브
+          {main.recipeArchive}
         </Link>
       </div>
 
@@ -48,16 +52,16 @@ export default function MainPage() {
           target="_blank"
           rel="noopener noreferrer"
           className="contactButton"
-          aria-label="문의하기"
+          aria-label={main.contact}
         >
           <span className="contactIcon">📩</span>
-          <span className="contactButtonText">문의하기</span>
+          <span className="contactButtonText">{main.contact}</span>
         </a>
 
         <div className="footerDivider"></div>
 
-        <p className="footerDescription">커리손연구회 커리 아카이빙 서비스</p>
-        <p className="footerCredit">Built with 💗 by Kurchive Team</p>
+        <p className="footerDescription">{main.footerDescription}</p>
+        <p className="footerCredit">{main.footerCredit}</p>
       </div>
     </div>
   );
