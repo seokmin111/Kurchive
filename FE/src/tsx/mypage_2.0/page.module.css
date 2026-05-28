@@ -282,7 +282,7 @@ html, body {
     pointer-events: none;
 }
 .bigButtonSplit{
-  width: 80%;
+  width: 88%;
   display:flex;
   background:#8B0029;
   color:white;
@@ -293,7 +293,8 @@ html, body {
 
 .splitItem{
   flex:1;
-  padding:22px 10px;
+  min-width:0;
+  padding:22px 6px;
   text-align:center;
   cursor:pointer;
 }
@@ -308,8 +309,9 @@ html, body {
 }
 
 .buttonTitle{
-  font-size:16px;
+  font-size:15px;
   font-weight:700;
+  line-height:1.2;
 }
 
 .buttonSub{
@@ -319,18 +321,20 @@ html, body {
 /* 식당 | 레시피 줄 */
 .buttonSubRow{
   margin-top:6px;
-  font-size:13px;
+  font-size:12px;
   opacity:0.9;
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:8px;              /* ← 간격 조절 */
+  flex-wrap:wrap;
+  gap:4px 6px;              /* ← 간격 조절 */
   font-family: var(--font-geist-mono);
 }
 
 /* 식당 / 레시피 텍스트 */
 .subItem{
   cursor:pointer;
+  white-space:nowrap;
 }
 
 /* | */

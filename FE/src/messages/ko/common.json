@@ -107,6 +107,101 @@
       }
     }
   },
+  "myPage": {
+    "title": "마이페이지",
+    "activityCard": {
+      "prefix": "나의",
+      "brand": "커카이브",
+      "suffix": "활동카드",
+      "name": "이름",
+      "nickname": "닉네임",
+      "joined": "가입일",
+      "role": "등급",
+      "roles": {
+        "admin": "관리자",
+        "staff": "운영진",
+        "member": "일반 회원"
+      }
+    },
+    "actions": {
+      "editProfile": "사용자 정보 수정하기",
+      "favorites": "나의 찜목록",
+      "activity": "내 활동기록",
+      "restaurants": "식당",
+      "recipes": "레시피",
+      "logout": "로그아웃",
+      "deleteAccount": "회원 탈퇴하기"
+    },
+    "messages": {
+      "loginRequired": "로그인이 필요합니다.",
+      "logoutConfirm": "로그아웃 하시겠습니까?",
+      "logoutSuccess": "로그아웃 되었습니다.",
+      "profileLoadFailed": "내 정보를 불러오지 못했습니다.",
+      "newNicknameRequired": "새 닉네임을 입력해주세요.",
+      "nicknameUpdated": "닉네임이 변경되었습니다.",
+      "passwordFieldsRequired": "모든 비밀번호를 입력해주세요.",
+      "passwordMismatch": "새 비밀번호가 일치하지 않습니다.",
+      "passwordUpdated": "비밀번호가 변경되었습니다. 다시 로그인해주세요.",
+      "passwordUpdateFailed": "비밀번호 변경에 실패했습니다."
+    },
+    "edit": {
+      "changeNickname": "닉네임 변경",
+      "currentNickname": "현재 닉네임",
+      "newNickname": "새 닉네임을 입력해주세요",
+      "saveChanges": "변경사항 저장하기",
+      "changePassword": "비밀번호 변경",
+      "currentPassword": "현재 비밀번호를 입력해주세요",
+      "currentPasswordPlaceholder": "현재 비밀번호 입력",
+      "newPassword": "변경할 비밀번호를 입력해주세요",
+      "newPasswordPlaceholder": "변경할 비밀번호 입력",
+      "confirmPassword": "변경할 비밀번호를 다시 입력해주세요",
+      "confirmPasswordPlaceholder": "변경할 비밀번호 재입력"
+    },
+    "delete": {
+      "activityRecord": "님의 활동 기록",
+      "favoriteRestaurants": "즐겨찾기 식당",
+      "favoriteRecipes": "즐겨찾기 레시피",
+      "restaurantArchives": "식당 아카이빙",
+      "items": "개",
+      "confirm": "정말 탈퇴하시겠습니까?",
+      "no": "아니요",
+      "yes": "예"
+    },
+    "activity": {
+      "favorites": "즐겨찾기 목록",
+      "recentTitle": "내가 최근 저장한 식당 & 레시피",
+      "emptyRecent": "최근 저장한 항목이 없습니다.",
+      "rating": "별점",
+      "serves": "기본"
+    }
+  },
+  "archiveCommon": {
+    "userFallback": "사용자",
+    "noAddress": "주소 정보 없음",
+    "archivedByMe": "내가 아카이빙",
+    "uploadedByMe": "내가 업로드",
+    "savedRestaurant": "저장한 식당",
+    "savedRecipe": "저장한 레시피",
+    "restaurantArchiveTitle": "{nickname}님의 식당 아카이브",
+    "recipeArchiveTitle": "{nickname}님의 레시피 아카이브",
+    "savedRestaurantsTitle": "{nickname}님이 찜한 식당",
+    "savedRecipesTitle": "{nickname}님이 찜한 레시피",
+    "searchMyArchive": "내 아카이브 검색",
+    "searchMyRecipes": "내 레시피 검색",
+    "searchFavorites": "즐겨찾기 내 검색",
+    "removeConfirm": "아카이브에서 삭제하시겠습니까?",
+    "removeRestaurantFailed": "식당을 아카이브에서 삭제하는 데 실패했습니다.",
+    "removeRecipeFailed": "레시피를 아카이브에서 삭제하는 데 실패했습니다.",
+    "noSearchResults": "검색 결과가 없습니다.",
+    "noArchivedRestaurants": "아직 아카이빙한 식당이 없습니다.",
+    "noUploadedRecipes": "아직 업로드한 레시피가 없습니다.",
+    "noSavedRestaurants": "아직 저장한 식당이 없습니다.",
+    "noSavedRecipes": "아직 저장한 레시피가 없습니다.",
+    "recipeImageLabel": "레시피",
+    "serves": "기본 {count}인분",
+    "rating": "별점",
+    "removeItem": "{title} 삭제"
+  },
   "restaurantArchive": {
     "submit": {
       "idle": "완료",

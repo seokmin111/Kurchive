@@ -128,7 +128,15 @@ const rating_max = (params.get("rating_max") || "").trim();
             </div>
 
             <div className={styles.cardRight}>
-              <span className={styles.cardRightText}>음식 사진</span>
+              {r.thumbnail_url ? (
+                <img
+                  src={r.thumbnail_url}
+                  alt={r.name}
+                  className={styles.cardImage}
+                />
+              ) : (
+                <span className={styles.cardRightText}>음식 사진</span>
+              )}
             </div>
           </div>
         ))}

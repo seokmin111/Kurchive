@@ -48,6 +48,7 @@ class MyRestaurantDTO(BaseModel):
     address: Optional[str]
     rating: Optional[float]
     created_at: Optional[datetime]
+    thumbnail_url: Optional[str]
     
 class NicknameUpdateRequest(BaseModel):
     nickname: str

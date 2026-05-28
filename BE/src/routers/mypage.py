@@ -14,8 +14,6 @@ from BE.src.models.recipes import Recipe
 from BE.src.models.restaurants import Restaurant
 
 from BE.src.models.favorites import Favorite, RecipeFavorite
-from BE.src.models.restaurants import RestaurantImage
-
 from BE.src.dto.mypage_dto import MessageResponse, MyRecipeDTO, MyRestaurantDTO, UserResponseDTO, FavoriteRecipeDTO, FavoriteRestaurantDTO, NicknameUpdateRequest, PasswordUpdateRequest
 
 
@@ -71,14 +69,9 @@ async def get_my_favorite_restaurants(
             Restaurant.name,
             Restaurant.address,
             Restaurant.rating,
-            RestaurantImage.image_url
+            Restaurant.thumbnail_url
         )
         .join(Favorite, Favorite.restaurant_id == Restaurant.id)
-        .outerjoin(
-            RestaurantImage,
-            (RestaurantImage.restaurant_id == Restaurant.id)
-            & (RestaurantImage.is_cover == True)
-        )
         .where(Favorite.user_id == current_user.id)
         .order_by(Favorite.created_at.desc())
     )
@@ -91,7 +84,7 @@ async def get_my_favorite_restaurants(
             name=r.name,
             address=r.address,
             rating=r.rating,
-            thumbnail_url=r.image_url
+            thumbnail_url=r.thumbnail_url
         )
         for r in result
     ]
@@ -147,12 +140,7 @@ async def get_my_uploaded_restaurants(
             Restaurant.address,
             Restaurant.rating,
             Restaurant.created_at,
-            RestaurantImage.image_url
-        )
-        .outerjoin(
-            RestaurantImage,
-            (RestaurantImage.restaurant_id == Restaurant.id)
-            & (RestaurantImage.is_cover == True)
+            Restaurant.thumbnail_url
         )
         .where(Restaurant.uploaded_by == current_user.id)
         .order_by(Restaurant.created_at.desc())
@@ -167,7 +155,7 @@ async def get_my_uploaded_restaurants(
         address=r.address,
         rating=r.rating,
         created_at=r.created_at,
-        thumbnail_url=r.image_url
+        thumbnail_url=r.thumbnail_url
     )
         for r in result
     ]

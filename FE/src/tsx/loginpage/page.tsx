@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import style from "./page.module.css";
-import client from "../../api/client"; // 
+import client from "../../api/client";
 import LanguageSelect from "../../components/LanguageSelect";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 interface FormData {
   id: string;
   password: string;
 }
 
-export default function LoginPage() { 
+export default function LoginPage() {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const login = messages.auth.login;
 
   const [formData, setFormData] = useState<FormData>({
     id: "",
@@ -33,22 +36,22 @@ export default function LoginPage() {
       });
 
       const token = res.data?.access_token;
-      if (!token) throw new Error("access_token 없음");
+      if (!token) throw new Error("Missing access_token");
 
       // 프로젝트 전체에서 이 키로 통일(인터셉터가 이거 읽음)
       localStorage.setItem("access_token", token);
-      navigate("/"); 
+      navigate("/");
     } catch (err: any) {
       const status = err?.response?.status;
       const detail = err?.response?.data?.detail;
 
       // 422면 “요청 형식 틀림” (대부분 키 불일치)
       if (status === 422) {
-        alert("로그인 요청 형식이 잘못됐어(422). ID/PW 키 확인해줘.");
+        alert(login.errors.invalidRequest);
       } else if (status === 401) {
-        alert("아이디/비밀번호가 틀렸습니다.");
+        alert(login.errors.invalidCredentials);
       } else {
-        alert(detail || "로그인 실패");
+        alert(detail || login.errors.failed);
       }
 
       console.error(err);
@@ -60,22 +63,24 @@ export default function LoginPage() {
       <div className={style.languageSlot}>
         <LanguageSelect />
       </div>
-      <header className={style.header}>이 웹페이지는 고려대학교 동아리인 커리손으로먹기연구회와 KUCC의 협력으로 제작되었습니다.</header>
+      <header className={style.header}>
+        {login.notice}
+      </header>
       <main className={style.main}>
         <div className={style.logoGroup}>
           <img className={style.logo} src="/curson_logo.png" alt="logo" />
-          <div className={style.brandName}>커카이브</div>
-          <div className={style.pageTitle}>로그인 페이지</div>
+          <div className={style.brandName}>{messages.brand.name}</div>
+          <div className={style.pageTitle}>{login.title}</div>
         </div>
 
         <form className={style.loginForm} onSubmit={handleSubmit}>
           <div className={style.inputGroup}>
-            <label htmlFor="id">ID</label>
+            <label htmlFor="id">{login.idLabel}</label>
             <input
               type="text"
               id="id"
               name="id"
-              placeholder="ID"
+              placeholder={login.idPlaceholder}
               required
               value={formData.id}
               onChange={handleChange}
@@ -83,12 +88,12 @@ export default function LoginPage() {
           </div>
 
           <div className={style.inputGroup}>
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{login.passwordLabel}</label>
             <input
               type="password"
               id="password"
               name="password"
-              placeholder="Password"
+              placeholder={login.passwordPlaceholder}
               required
               value={formData.password}
               onChange={handleChange}
@@ -96,16 +101,9 @@ export default function LoginPage() {
           </div>
 
           <button type="submit" className={style.loginButton}>
-            로그인
+            {login.submit}
           </button>
         </form>
-{/*
-        <div className={style.linkGroup}>
-          <a href="#">아이디를 잊으셨나요?</a>
-          <span className={style.separator}>|</span>
-          <a href="#">비밀번호를 잊으셨나요?</a>
-        </div>
-        */}
       </main>
 
       <footer className={style.footer}>
@@ -114,10 +112,9 @@ export default function LoginPage() {
           className={style.signupButton}
           onClick={() => navigate("/signup")}
         >
-          회원가입
+          {login.signup}
         </button>
       </footer>
-
     </div>
   );
 }

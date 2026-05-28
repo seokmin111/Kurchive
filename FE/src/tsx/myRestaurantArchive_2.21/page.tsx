@@ -9,13 +9,39 @@ import ArchiveSearchBar from "../../components/common/ArchiveSearchBar";
 import ArchiveStatusMessage from "../../components/common/ArchiveStatusMessage";
 import client from "../../api/client";
 import { getMyPage, MyPageUser } from "../../api/mypage";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 import RestaurantFavoriteCard, {
   FavoriteRestaurantItem,
 } from "./components/RestaurantFavoriteCard";
 import styles from "./page.module.css";
 
+const hydrateRestaurantThumbnails = async (
+  restaurants: FavoriteRestaurantItem[],
+): Promise<FavoriteRestaurantItem[]> => {
+  return Promise.all(
+    restaurants.map(async (restaurant) => {
+      if (restaurant.thumbnail_url) return restaurant;
+
+      try {
+        const detailRes = await client.get(`/restaurants/${restaurant.id}`);
+        const detail = detailRes.data?.data || detailRes.data;
+
+        return {
+          ...restaurant,
+          thumbnail_url: detail?.thumbnail_url || restaurant.thumbnail_url,
+        };
+      } catch (error) {
+        console.error("Failed to load restaurant thumbnail:", error);
+        return restaurant;
+      }
+    }),
+  );
+};
+
 export default function RestaurantArchivePage() {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const archive = messages.archiveCommon;
 
   const [user, setUser] = useState<MyPageUser | null>(null);
   const [restaurants, setRestaurants] = useState<FavoriteRestaurantItem[]>([]);
@@ -34,8 +60,9 @@ export default function RestaurantArchivePage() {
 
         setUser(userData);
 
-        const favData = Array.isArray(favRes.data) ? favRes.data : (favRes.data?.data || []);
-        setRestaurants(favData);
+        const favData = Array.isArray(favRes.data) ? favRes.data : favRes.data?.data || [];
+        const hydratedFavorites = await hydrateRestaurantThumbnails(favData);
+        setRestaurants(hydratedFavorites);
       } catch (error: any) {
         console.error("Failed to load favorite restaurants:", error);
       } finally {
@@ -55,20 +82,20 @@ export default function RestaurantArchivePage() {
   );
 
   const handleDeleteItem = async (id: number) => {
-    if (!window.confirm("아카이브에서 삭제하시겠습니까?")) return;
+    if (!window.confirm(archive.removeConfirm)) return;
 
     try {
       await client.post(`/restaurants/${id}/favorite`);
       setRestaurants((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
       console.error("Failed to remove favorite restaurant:", error);
-      alert("식당을 아카이브에서 삭제하는 데 실패했습니다.");
+      alert(archive.removeRestaurantFailed);
     }
   };
 
   const emptyMessage = searchQuery
-    ? "검색 결과가 없습니다."
-    : "아직 저장한 식당이 없습니다.";
+    ? archive.noSearchResults
+    : archive.noSavedRestaurants;
 
   return (
     <div className={styles.container}>
@@ -79,20 +106,23 @@ export default function RestaurantArchivePage() {
       />
 
       <div className={styles.pageTitle}>
-        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님이 찜한 식당
+        {archive.savedRestaurantsTitle.replace(
+          "{nickname}",
+          user?.nickname || archive.userFallback
+        )}
       </div>
 
       <ArchiveSearchBar
         classNames={styles}
         value={searchQuery}
         onChange={setSearchQuery}
-        placeholder="즐겨찾기 내 검색"
+        placeholder={archive.searchFavorites}
         icon={<FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />}
       />
 
       <div className={styles.restaurantList}>
         {loading ? (
-          <ArchiveStatusMessage variant="loading">로딩 중...</ArchiveStatusMessage>
+          <ArchiveStatusMessage variant="loading">{messages.common.loading}</ArchiveStatusMessage>
         ) : filteredRestaurants.length > 0 ? (
           filteredRestaurants.map((restaurant) => (
             <RestaurantFavoriteCard

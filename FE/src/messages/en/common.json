@@ -107,6 +107,101 @@
       }
     }
   },
+  "myPage": {
+    "title": "My Page",
+    "activityCard": {
+      "prefix": "My",
+      "brand": "Kurchive",
+      "suffix": "Activity Card",
+      "name": "Name",
+      "nickname": "Nickname",
+      "joined": "Joined",
+      "role": "Role",
+      "roles": {
+        "admin": "Admin",
+        "staff": "Staff",
+        "member": "Member"
+      }
+    },
+    "actions": {
+      "editProfile": "Edit Profile",
+      "favorites": "My Favorites",
+      "activity": "My Activity",
+      "restaurants": "Restaurants",
+      "recipes": "Recipes",
+      "logout": "Log Out",
+      "deleteAccount": "Delete Account"
+    },
+    "messages": {
+      "loginRequired": "Please log in.",
+      "logoutConfirm": "Do you want to log out?",
+      "logoutSuccess": "You have been logged out.",
+      "profileLoadFailed": "Failed to load your profile.",
+      "newNicknameRequired": "Please enter a new nickname.",
+      "nicknameUpdated": "Nickname updated.",
+      "passwordFieldsRequired": "Please enter all password fields.",
+      "passwordMismatch": "New passwords do not match.",
+      "passwordUpdated": "Password updated. Please log in again.",
+      "passwordUpdateFailed": "Failed to update password."
+    },
+    "edit": {
+      "changeNickname": "Change Nickname",
+      "currentNickname": "Current Nickname",
+      "newNickname": "Enter a new nickname",
+      "saveChanges": "Save Changes",
+      "changePassword": "Change Password",
+      "currentPassword": "Enter your current password",
+      "currentPasswordPlaceholder": "Current password",
+      "newPassword": "Enter a new password",
+      "newPasswordPlaceholder": "New password",
+      "confirmPassword": "Confirm your new password",
+      "confirmPasswordPlaceholder": "Confirm new password"
+    },
+    "delete": {
+      "activityRecord": "'s activity record",
+      "favoriteRestaurants": "Favorite Restaurants",
+      "favoriteRecipes": "Favorite Recipes",
+      "restaurantArchives": "Restaurant Archives",
+      "items": "items",
+      "confirm": "Are you sure you want to delete your account?",
+      "no": "No",
+      "yes": "Yes"
+    },
+    "activity": {
+      "favorites": "Favorites",
+      "recentTitle": "Recently saved restaurants and recipes",
+      "emptyRecent": "No recently saved items.",
+      "rating": "Rating",
+      "serves": "Serves"
+    }
+  },
+  "archiveCommon": {
+    "userFallback": "User",
+    "noAddress": "No address information",
+    "archivedByMe": "Archived by me",
+    "uploadedByMe": "Uploaded by me",
+    "savedRestaurant": "Saved restaurant",
+    "savedRecipe": "Saved recipe",
+    "restaurantArchiveTitle": "{nickname}'s restaurant archive",
+    "recipeArchiveTitle": "{nickname}'s recipe archive",
+    "savedRestaurantsTitle": "{nickname}'s saved restaurants",
+    "savedRecipesTitle": "{nickname}'s saved recipes",
+    "searchMyArchive": "Search my archive",
+    "searchMyRecipes": "Search my recipes",
+    "searchFavorites": "Search favorites",
+    "removeConfirm": "Remove this item from your archive?",
+    "removeRestaurantFailed": "Failed to remove the restaurant from your archive.",
+    "removeRecipeFailed": "Failed to remove the recipe from your archive.",
+    "noSearchResults": "No search results found.",
+    "noArchivedRestaurants": "You have not archived any restaurants yet.",
+    "noUploadedRecipes": "You have not uploaded any recipes yet.",
+    "noSavedRestaurants": "You have not saved any restaurants yet.",
+    "noSavedRecipes": "You have not saved any recipes yet.",
+    "recipeImageLabel": "Recipe",
+    "serves": "Serves {count}",
+    "rating": "Rating",
+    "removeItem": "Remove {title}"
+  },
   "restaurantArchive": {
     "submit": {
       "idle": "Complete",

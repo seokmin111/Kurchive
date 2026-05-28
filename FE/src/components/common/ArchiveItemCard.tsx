@@ -1,4 +1,5 @@
 import styles from "./ArchiveItemCard.module.css";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 type ArchiveItemCardProps = {
   title: string;
@@ -13,8 +14,13 @@ type ArchiveItemCardProps = {
 };
 
 function RatingStars({ rating }: { rating: number }) {
+  const { messages } = useKurchiveI18n();
+
   return (
-    <span className={styles.stars} aria-label={`별점 ${rating.toFixed(1)}점`}>
+    <span
+      className={styles.stars}
+      aria-label={`${messages.archiveCommon.rating} ${rating.toFixed(1)}`}
+    >
       {[1, 2, 3, 4, 5].map((star) => (
         <span
           key={star}
@@ -38,6 +44,7 @@ export default function ArchiveItemCard({
   onClick,
   onDelete,
 }: ArchiveItemCardProps) {
+  const { messages } = useKurchiveI18n();
   const displayRating = typeof rating === "number" ? rating : null;
 
   return (
@@ -83,7 +90,7 @@ export default function ArchiveItemCard({
           <button
             className={styles.deleteButton}
             type="button"
-            aria-label={`${title} 삭제`}
+            aria-label={messages.archiveCommon.removeItem.replace("{title}", title)}
             onClick={(event) => {
               event.stopPropagation();
               onDelete();

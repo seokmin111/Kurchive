@@ -85,10 +85,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: clamp(280px, 78%, 380px);
+  width: min(88%, 400px);
   min-height: 330px;
   margin-top: 0;
-  padding: 50px 28px 28px;
+  padding: 50px 26px 28px;
   box-sizing: border-box;
   background-color: var(--paper);
   border: 1.5px solid var(--brand);
@@ -172,22 +172,24 @@
 
 .favtitle {
   flex: 1 1 auto;
+  min-width: 0;
   margin-left: 0;
   color: var(--text);
   font-family: "Pretendard", sans-serif;
-  font-size: clamp(14px, 3.4vw, 17px);
+  font-size: clamp(13px, 3.1vw, 16px);
   font-weight: 700;
   text-align: left;
-  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .recordValue {
   display: grid;
-  grid-template-columns: 34px 20px;
+  grid-template-columns: auto auto;
   align-items: baseline;
   justify-content: end;
-  flex: 0 0 62px;
-  column-gap: 6px;
+  flex: 0 0 auto;
+  min-width: 74px;
+  column-gap: 4px;
 }
 
 .number {
@@ -282,9 +284,10 @@
   }
 
   .mainBlock {
+    width: 88%;
     height: 300px;
     min-height: 0;
-    padding: 42px 28px 28px;
+    padding: 42px 22px 28px;
   }
 
   .cardWatermark {
@@ -296,7 +299,7 @@
   }
 
   .favtitle {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .number {
@@ -304,7 +307,7 @@
   }
 
   .unit {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   .FootBlock {
@@ -326,9 +329,10 @@
   }
 
   .mainBlock {
-    width: 82%;
+    width: 90%;
     height: 292px;
     min-height: 0;
+    padding-inline: 18px;
   }
 
   .recordIcon {

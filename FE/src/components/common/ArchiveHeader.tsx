@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 type ArchiveHeaderClassNames = {
   header: string;
@@ -23,27 +24,31 @@ export default function ArchiveHeader({
   classNames,
   onBack,
   onMyPage,
-  subtitle = "우리만의 미식 지도",
-  logo = "커카이브",
-  myPageLabel = "마이페이지",
+  subtitle,
+  logo,
+  myPageLabel,
 }: ArchiveHeaderProps) {
+  const { messages } = useKurchiveI18n();
+
   return (
     <header className={classNames.header}>
       <div className={classNames.headerLeft}>
         <img
           src="/backstep_white_background.png"
-          alt="뒤로가기"
+          alt={messages.common.back}
           className={classNames.backButton}
           onClick={onBack}
         />
         <div className={classNames.logoSection}>
-          <span className={classNames.logoSubtitle}>{subtitle}</span>
-          <span className={classNames.logo}>{logo}</span>
+          <span className={classNames.logoSubtitle}>
+            {subtitle ?? messages.brand.tagline}
+          </span>
+          <span className={classNames.logo}>{logo ?? messages.brand.name}</span>
         </div>
       </div>
 
       <button className={classNames.myPageButton} onClick={onMyPage}>
-        {myPageLabel}
+        {myPageLabel ?? messages.myPage.title}
       </button>
     </header>
   );

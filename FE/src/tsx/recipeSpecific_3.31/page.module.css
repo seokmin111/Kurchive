@@ -84,6 +84,17 @@
   color: #8b0028;
 }
 
+/* thumbnail */
+.thumbnailImage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
 .ingredientTitle,
 .recipeTitle {
   margin: 20px 0 12px;

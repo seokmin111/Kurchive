@@ -652,16 +652,11 @@ export default function RecipeSpecific({ mode }: { mode: "view" | "edit" }) {
 
       {/* 썸네일 (view 모드) */}
       {!isEdit && recipe?.thumbnail_url && (
-    <img
+        <img
           src={recipe.thumbnail_url}
           alt="thumbnail"
-          style={{
-      width: "100%",
-      borderRadius: 12,
-      marginBottom: 16,
-      objectFit: "cover",
-          }}
-    />
+          className={style.thumbnailImage}
+        />
       )}
 
       {/* 썸네일(편집일 때만 업로드) */}

@@ -9,11 +9,14 @@ import ArchiveSearchBar from "../../components/common/ArchiveSearchBar";
 import ArchiveStatusMessage from "../../components/common/ArchiveStatusMessage";
 import client from "../../api/client";
 import { getMyPage, MyPageUser } from "../../api/mypage";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 import RecipeFavoriteCard, { FavoriteRecipeItem } from "./components/RecipeFavoriteCard";
 import styles from "./page.module.css";
 
 export default function RecipeArchivePage() {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const archive = messages.archiveCommon;
 
   const [user, setUser] = useState<MyPageUser | null>(null);
   const [recipes, setRecipes] = useState<FavoriteRecipeItem[]>([]);
@@ -51,20 +54,20 @@ export default function RecipeArchivePage() {
   );
 
   const handleDeleteItem = async (id: number) => {
-    if (!window.confirm("아카이브에서 삭제하시겠습니까?")) return;
+    if (!window.confirm(archive.removeConfirm)) return;
 
     try {
       await client.post(`/recipe/${id}/favorite`);
       setRecipes((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
       console.error("Failed to remove favorite recipe:", error);
-      alert("레시피를 아카이브에서 삭제하는 데 실패했습니다.");
+      alert(archive.removeRecipeFailed);
     }
   };
 
   const emptyMessage = searchQuery
-    ? "검색 결과가 없습니다."
-    : "아직 저장한 레시피가 없습니다.";
+    ? archive.noSearchResults
+    : archive.noSavedRecipes;
 
   return (
     <div className={styles.container}>
@@ -75,27 +78,26 @@ export default function RecipeArchivePage() {
       />
 
       <div className={styles.pageTitle}>
-        <span className={styles.username}>{user?.nickname || "사용자"}</span> 님 찜한 레시피
+        {archive.savedRecipesTitle.replace(
+          "{nickname}",
+          user?.nickname || archive.userFallback
+        )}
       </div>
 
       <ArchiveSearchBar
         classNames={styles}
         value={searchQuery}
         onChange={setSearchQuery}
-        placeholder="즐겨찾기 내 검색"
+        placeholder={archive.searchFavorites}
         icon={<FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />}
       />
 
       <div className={styles.restaurantList}>
         {loading ? (
-          <ArchiveStatusMessage variant="loading">로딩 중...</ArchiveStatusMessage>
+          <ArchiveStatusMessage variant="loading">{messages.common.loading}</ArchiveStatusMessage>
         ) : filteredRecipes.length > 0 ? (
           filteredRecipes.map((recipe) => (
-            <RecipeFavoriteCard
-              key={recipe.id}
-              recipe={recipe}
-              onDelete={handleDeleteItem}
-            />
+            <RecipeFavoriteCard key={recipe.id} recipe={recipe} onDelete={handleDeleteItem} />
           ))
         ) : (
           <ArchiveStatusMessage variant="empty">{emptyMessage}</ArchiveStatusMessage>

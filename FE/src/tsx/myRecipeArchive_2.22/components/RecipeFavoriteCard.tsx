@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import ArchiveItemCard from "../../../components/common/ArchiveItemCard";
+import { useKurchiveI18n } from "../../../i18n/LocaleContext";
 
 export interface FavoriteRecipeItem {
   id: number;
@@ -16,6 +17,8 @@ type Props = {
 
 export default function RecipeFavoriteCard({ recipe, onDelete }: Props) {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const archive = messages.archiveCommon;
   const dateText = recipe.created_at
     ? new Date(recipe.created_at).toLocaleDateString()
     : "";
@@ -23,10 +26,10 @@ export default function RecipeFavoriteCard({ recipe, onDelete }: Props) {
   return (
     <ArchiveItemCard
       title={recipe.title}
-      description={`기본 ${recipe.base_serving}인분`}
-      metaLabel="저장한 레시피"
+      description={archive.serves.replace("{count}", String(recipe.base_serving))}
+      metaLabel={archive.savedRecipe}
       dateText={dateText}
-      imageLabel="레시피"
+      imageLabel={archive.noPhoto}
       thumbnailUrl={recipe.thumbnail_url}
       onClick={() => navigate(`/recipe/${recipe.id}`)}
       onDelete={() => onDelete(recipe.id)}

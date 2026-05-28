@@ -1,9 +1,13 @@
 import styles from "./page.module.css";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getMyPage, updateNickname as updateNicknameAPI, updatePassword as updatePasswordAPI } from "../../api/mypage";
+import {
+  getMyPage,
+  updateNickname as updateNicknameAPI,
+  updatePassword as updatePasswordAPI,
+} from "../../api/mypage";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
@@ -11,15 +15,16 @@ config.autoAddCss = false;
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
-
 export default function MainPage() {
+  const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const myPage = messages.myPage;
 
   // =====================
   // state
   // =====================
   const [nickname, setNickname] = useState("");
   const [newNickname, setNewNickname] = useState("");
-
   const [currentPW, setCurrentPW] = useState("");
   const [newPW, setNewPW] = useState("");
   const [confirmPW, setConfirmPW] = useState("");
@@ -32,25 +37,24 @@ export default function MainPage() {
 
     getMyPage()
       .then((me) => {
-      setNickname(me.nickname);
+        setNickname(me.nickname);
       })
       .catch(() => {
-      alert("내 정보를 불러오지 못했습니다.");
+        alert(myPage.messages.profileLoadFailed);
       });
 
     return () => {
       document.body.style.overflowY = "auto";
     };
-    }, []);
-
+  }, []);
 
   // =====================
   // 닉네임 변경
   // =====================
- 
+
   const updateNickname = async () => {
     if (!newNickname.trim()) {
-      alert("새 닉네임을 입력해주세요");
+      alert(myPage.messages.newNicknameRequired);
       return;
     }
 
@@ -59,86 +63,70 @@ export default function MainPage() {
     // ⭐ 서버 기준으로 다시 가져오기
     const me = await getMyPage();
     setNickname(me.nickname);
-
     setNewNickname("");
-    alert("닉네임이 변경되었습니다");
-    };
-
+    alert(myPage.messages.nicknameUpdated);
+  };
 
   // =====================
   // 비밀번호 변경
   // =====================
-  const navigate = useNavigate();
 
   const updatePassword = async () => {
     if (!currentPW || !newPW || !confirmPW) {
-      alert("모든 비밀번호를 입력해주세요");
+      alert(myPage.messages.passwordFieldsRequired);
       return;
     }
 
     if (newPW !== confirmPW) {
-      alert("새 비밀번호가 일치하지 않습니다");
+      alert(myPage.messages.passwordMismatch);
       return;
     }
 
     try {
       await updatePasswordAPI(currentPW, newPW);
 
-      alert("비밀번호가 변경되었습니다. 다시 로그인해주세요.");
-
+      alert(myPage.messages.passwordUpdated);
       localStorage.removeItem("access_token");
       navigate("/login", { replace: true });
-
     } catch (e: any) {
-      const msg =
-      e?.response?.data?.detail ??
-      "비밀번호 변경에 실패했습니다.";
+      const msg = e?.response?.data?.detail ?? myPage.messages.passwordUpdateFailed;
       alert(msg);
     }
-    };
-
+  };
 
   return (
     <main className={styles.nomrg}>
-      {/* 상단 */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.chevronLeft} onClick={() => navigate("/mypage")}>
-            <FontAwesomeIcon icon={faChevronLeft}/>
+            <FontAwesomeIcon icon={faChevronLeft} />
           </div>
           <div className={styles.header_title}>
-            <p className={styles.sub_title}>우리만의 미식 지도</p>
-            <h1 className={styles.title}>커카이브</h1>
+            <p className={styles.sub_title}>{messages.brand.tagline}</p>
+            <h1 className={styles.title}>{messages.brand.name}</h1>
           </div>
         </div>
-        <div
-          className={styles.mypage}
-          onClick={() => navigate("/mypage")}
-          >
-          마이페이지
+        <div className={styles.mypage} onClick={() => navigate("/mypage")}>
+          {myPage.title}
         </div>
-
       </div>
 
-      {/* 닉네임 변경 */}
       <div className={styles.nicknameChange}>
-        <h6 className={styles.nicknameChange__title}>닉네임 변경</h6>
+        <h6 className={styles.nicknameChange__title}>{myPage.edit.changeNickname}</h6>
         <div className={styles.nicknameChange__bar}></div>
 
         <div className={styles.nicknameChange__main}>
           <div className={styles.present__nickname}>
-            <div className={styles.present__nickname__title}>현재 닉네임</div>
-            <div className={styles.present__nickname__data}>
-              {nickname}
+            <div className={styles.present__nickname__title}>
+              {myPage.edit.currentNickname}
             </div>
+            <div className={styles.present__nickname__data}>{nickname}</div>
           </div>
 
           <div className={styles.divider}></div>
 
           <div className={styles.new__nickname}>
-            <div className={styles.new__nickname__title}>
-              새 닉네임을 입력해주세요
-            </div>
+            <div className={styles.new__nickname__title}>{myPage.edit.newNickname}</div>
             <input
               className={styles.new__nickname__input}
               value={newNickname}
@@ -147,58 +135,51 @@ export default function MainPage() {
           </div>
         </div>
 
-        <div
-          className={styles.nicknameChange__save}
-          onClick={updateNickname}
-        >
-          변경사항 저장하기
+        <div className={styles.nicknameChange__save} onClick={updateNickname}>
+          {myPage.edit.saveChanges}
         </div>
       </div>
 
-      {/* 비밀번호 변경 */}
       <div className={styles.passwordChange}>
-        <h6 className={styles.passwordChange__title}>비밀번호 변경</h6>
+        <h6 className={styles.passwordChange__title}>{myPage.edit.changePassword}</h6>
         <div className={styles.nicknameChange__bar}></div>
 
         <div>
           <div className={styles.passwordChange__input}>
-            <div>현재 비밀번호를 입력해주세요</div>
+            <div>{myPage.edit.currentPassword}</div>
             <input
               type="password"
               value={currentPW}
               onChange={(e) => setCurrentPW(e.target.value)}
-              placeholder="현재 비밀번호 입력"
+              placeholder={myPage.edit.currentPasswordPlaceholder}
             />
           </div>
 
           <div className={styles.passwordChange__input}>
-            <div>변경할 비밀번호를 입력해주세요</div>
+            <div>{myPage.edit.newPassword}</div>
             <input
               type="password"
               value={newPW}
               onChange={(e) => setNewPW(e.target.value)}
-              placeholder="변경할 비밀번호 입력"
+              placeholder={myPage.edit.newPasswordPlaceholder}
             />
           </div>
 
           <div className={styles.passwordChange__input}>
-            <div>변경할 비밀번호를 다시 입력해주세요</div>
+            <div>{myPage.edit.confirmPassword}</div>
             <input
               type="password"
               value={confirmPW}
               onChange={(e) => setConfirmPW(e.target.value)}
-              placeholder="변경할 비밀번호 재입력"
+              placeholder={myPage.edit.confirmPasswordPlaceholder}
             />
           </div>
         </div>
       </div>
 
       <div className={styles.passwordChange__submit__carrier}>
-        <div
-          className={styles.passwordChange__submit}
-          onClick={updatePassword}
-        >
-          비밀번호 변경하기
+        <div className={styles.passwordChange__submit} onClick={updatePassword}>
+          {myPage.edit.changePassword}
         </div>
         <div className={styles.passwordChange__submit__background}></div>
       </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./page.module.css";
-import client from "../../api/client"; 
+import client from "../../api/client";
 import { getMyPage, MyPageUser } from "../../api/mypage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
@@ -11,6 +11,7 @@ import ArchiveHeader from "../../components/common/ArchiveHeader";
 import ArchiveItemCard from "../../components/common/ArchiveItemCard";
 import ArchiveSearchBar from "../../components/common/ArchiveSearchBar";
 import ArchiveStatusMessage from "../../components/common/ArchiveStatusMessage";
+import { useKurchiveI18n } from "../../i18n/LocaleContext";
 
 interface MyRestaurant {
   id: number;
@@ -23,14 +24,16 @@ interface MyRestaurant {
 
 const RestaurantCard = ({ restaurant }: { restaurant: MyRestaurant }) => {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const archive = messages.archiveCommon;
 
   return (
     <ArchiveItemCard
       title={restaurant.name}
-      description={restaurant.address || "주소 정보 없음"}
-      metaLabel="내가 아카이빙"
+      description={restaurant.address || archive.noAddress}
+      metaLabel={archive.archivedByMe}
       rating={restaurant.rating ?? 0}
-      imageLabel="사진 없음"
+      imageLabel={messages.common.noPhoto}
       thumbnailUrl={restaurant.thumbnail_url}
       onClick={() => navigate(`/restaurant/${restaurant.id}`)}
     />
@@ -39,6 +42,8 @@ const RestaurantCard = ({ restaurant }: { restaurant: MyRestaurant }) => {
 
 export default function RestaurantArchivePage() {
   const navigate = useNavigate();
+  const { messages } = useKurchiveI18n();
+  const archive = messages.archiveCommon;
 
   const [user, setUser] = useState<MyPageUser | null>(null);
   const [restaurants, setRestaurants] = useState<MyRestaurant[]>([]);
@@ -46,39 +51,32 @@ export default function RestaurantArchivePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const fetchData = async () => {
       try {
-
         setLoading(true);
 
         const [userData, res] = await Promise.all([
           getMyPage(),
-          client.get("/mypage/logs/uploaded-restaurants")
+          client.get("/mypage/logs/uploaded-restaurants"),
         ]);
 
         setUser(userData);
 
-        const data = Array.isArray(res.data)
-          ? res.data
-          : (res.data?.data || []);
-
+        const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
         setRestaurants(data);
-
       } catch (error) {
-        console.error("데이터 로딩 실패:", error);
+        console.error("Failed to load data:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-
   }, []);
 
   const filteredRestaurants = restaurants.filter((r) =>
-  r.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
-);
+    r.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+  );
 
   return (
     <div className={styles.container}>
@@ -89,46 +87,35 @@ export default function RestaurantArchivePage() {
       />
 
       <div className={styles.pageTitle}>
-        <span className={styles.username}>
-          {user?.nickname || "사용자"}
-        </span>{" "}
-        님의 식당 아카이브
+        {archive.restaurantArchiveTitle.replace(
+          "{nickname}",
+          user?.nickname || archive.userFallback
+        )}
       </div>
 
       <ArchiveSearchBar
         classNames={styles}
         value={searchQuery}
         onChange={setSearchQuery}
-        placeholder="내 아카이브 검색"
+        placeholder={archive.searchMyArchive}
         icon={<FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchIcon} />}
       />
 
       <div className={styles.restaurantList}>
-
         {loading ? (
-          <ArchiveStatusMessage variant="loading">로딩 중...</ArchiveStatusMessage>
-
+          <ArchiveStatusMessage variant="loading">{messages.common.loading}</ArchiveStatusMessage>
         ) : filteredRestaurants.length > 0 ? (
-
           filteredRestaurants.map((restaurant) => (
-            <RestaurantCard
-              key={restaurant.id}
-              restaurant={restaurant}
-            />
+            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))
-
         ) : (
-
           <ArchiveStatusMessage variant="empty">
             {searchQuery
-              ? "검색 결과가 없습니다."
-              : "아직 아카이빙한 식당이 없습니다."}
+              ? archive.noSearchResults
+              : archive.noArchivedRestaurants}
           </ArchiveStatusMessage>
-
         )}
-
       </div>
-
     </div>
   );
 }
